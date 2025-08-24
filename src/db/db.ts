@@ -1,4 +1,4 @@
-import Dexie, { Table } from 'dexie';
+import Dexie, { type Table } from 'dexie';
 
 // Define the data structures for our local database.
 // These interfaces will ensure type safety when we interact with Dexie.

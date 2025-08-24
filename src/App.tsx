@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useState } from 'react';
 import { SetupPage } from './pages/SetupPage';
 import { LoginPage } from './pages/LoginPage';
 import { PosProfileSelectionPage } from './pages/PosProfileSelectionPage';
 import { authService } from './services/authService';
 import { syncService } from './services/syncService';
-import { db } from './db/db';
 import { ItemList } from './components/ItemList';
 import { CustomerList } from './components/CustomerList';
 import './App.css';

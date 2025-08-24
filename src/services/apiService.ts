@@ -1,5 +1,5 @@
 import { authService } from './authService';
-import { PosProfileData, Item, Customer, Warehouse } from '../db/db';
+import { type PosProfileData, type Item, type Customer, type Warehouse } from '../db/db';
 
 // The existing PosProfile type is for the list view, which is fine.
 export interface PosProfile {

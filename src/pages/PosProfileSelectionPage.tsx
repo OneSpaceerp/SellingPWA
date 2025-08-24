@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiService, PosProfile } from '../services/apiService';
+import { apiService, type PosProfile } from '../services/apiService';
 
 export const PosProfileSelectionPage: React.FC = () => {
   const [profiles, setProfiles] = useState<PosProfile[]>([]);

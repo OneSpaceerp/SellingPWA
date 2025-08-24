@@ -1,12 +1,12 @@
-// Forcing a change to trigger a new commit.
-import { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { SetupPage } from './pages/SetupPage';
 import { LoginPage } from './pages/LoginPage';
 import { PosProfileSelectionPage } from './pages/PosProfileSelectionPage';
 import { authService } from './services/authService';
-import { syncService } from './services/syncService';
-import { ItemList } from './components/ItemList';
-import { CustomerList } from './components/CustomerList';
+import { AppLayout } from './components/AppLayout';
+import { CatalogPage } from './pages/CatalogPage';
+import { CartPage } from './pages/CartPage';
+import { SettingsPage } from './pages/SettingsPage';
 import './App.css';
 
 function App() {
@@ -14,55 +14,21 @@ function App() {
   const isAuthenticated = authService.isAuthenticated();
   const selectedProfile = localStorage.getItem('erpnext-pos-profile');
 
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncError, setSyncError] = useState('');
-
-  const handleSync = async () => {
-    setIsSyncing(true);
-    setSyncError('');
-    try {
-      await syncService.syncAllData();
-      alert('Data synchronization completed successfully!');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during sync.';
-      setSyncError(errorMessage);
-      console.error('Sync failed:', error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // State-based routing for setup and authentication
+  // Render setup and authentication pages if not fully configured
   if (!erpNextUrl) return <SetupPage />;
   if (!isAuthenticated) return <LoginPage />;
   if (!selectedProfile) return <PosProfileSelectionPage />;
 
-  // Main application view once authenticated and configured
+  // Once authenticated, render the main application with its routes
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>PWA Sales App</h1>
-        <div style={{ margin: '20px', padding: '15px', border: '1px solid #555', borderRadius: '8px', width: '80%' }}>
-          <h3>Synchronization Control</h3>
-          <button onClick={handleSync} disabled={isSyncing} style={{ padding: '10px 15px', fontSize: '16px' }}>
-            {isSyncing ? 'Syncing...' : 'Sync All Data'}
-          </button>
-          {syncError && <p style={{ color: '#ff6666', fontSize: '0.9em' }}>Error: {syncError}</p>}
-        </div>
-      </header>
-
-      <main style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '100%', padding: '0 20px' }}>
-        <div style={{ flex: 1, maxWidth: '500px' }}><ItemList /></div>
-        <div style={{ flex: 1, maxWidth: '500px' }}><CustomerList /></div>
-      </main>
-
-      <footer style={{ marginTop: 'auto', padding: '20px', fontSize: '0.8em', color: '#ccc' }}>
-        <p>Instance: {erpNextUrl} | POS Profile: {selectedProfile}</p>
-        <button onClick={() => { authService.logout(); window.location.reload(); }} style={{ marginTop: '10px' }}>
-          Logout & Reset
-        </button>
-      </footer>
-    </div>
+    <Routes>
+      <Route element={<AppLayout />}>
+        {/* The default page will be the product catalog */}
+        <Route path="/" element={<CatalogPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Route>
+    </Routes>
   );
 }
 

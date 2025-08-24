@@ -7,6 +7,7 @@ import { AppLayout } from './components/AppLayout';
 import { CatalogPage } from './pages/CatalogPage';
 import { CartPage } from './pages/CartPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import './App.css';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
         <Route path="/" element={<CatalogPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
       </Route>
     </Routes>
   );

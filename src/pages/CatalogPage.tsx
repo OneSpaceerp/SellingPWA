@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/db';
 import { useCartStore } from '../store/cartStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { notifications } from '@mantine/notifications';
 import {
   Title,
@@ -21,6 +22,7 @@ import { IconSearch, IconCircleCheck } from '@tabler/icons-react';
 export function CatalogPage() {
   const [search, setSearch] = useState('');
   const addItemToCart = useCartStore((state) => state.addItem);
+  const currency = useSettingsStore((state) => state.currency);
 
   const items = useLiveQuery(async () => {
     const allItems = await db.items.toArray();
@@ -60,7 +62,7 @@ export function CatalogPage() {
             <Text fw={500} size="lg" truncate="end">{item.item_name}</Text>
             <Text size="sm" c="dimmed">{item.name}</Text>
             <Group justify="space-between" mt="md" mb="xs">
-              <Text fw={700} fz="xl">${item.standard_rate || '0.00'}</Text>
+              <Text fw={700} fz="xl">{currency} {item.standard_rate || '0.00'}</Text>
               <Badge color="pink" variant="light">{item.item_group}</Badge>
             </Group>
             <Button

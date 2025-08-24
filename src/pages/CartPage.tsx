@@ -1,20 +1,40 @@
+import { useState } from 'react';
 import { useCartStore } from '../store/cartStore';
-import { Title, Button, Group, Text, Paper, SimpleGrid, NumberInput, ActionIcon, Center } from '@mantine/core';
-import { IconTrash } from '@tabler/icons-react';
+import { useSettingsStore } from '../store/settingsStore';
+import { useDisclosure } from '@mantine/hooks';
+import { Title, Button, Group, Text, Paper, SimpleGrid, NumberInput, ActionIcon, Center, Box, Badge } from '@mantine/core';
+import { IconTrash, IconUserPlus, IconUserEdit } from '@tabler/icons-react';
+import { CustomerSearchModal } from '../components/CustomerSearchModal';
+import { type Customer } from '../db/db';
+import { useNavigate } from 'react-router-dom';
 
 export function CartPage() {
-  const { items, removeItem, updateQuantity, grandTotal, clearCart } = useCartStore();
+  const navigate = useNavigate();
+  const { items, customer, setCustomer, removeItem, updateQuantity, grandTotal, clearCart } = useCartStore();
+  const currency = useSettingsStore((state) => state.currency);
+  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
+
+  const handleSelectCustomer = (selectedCustomer: Customer) => {
+    setCustomer(selectedCustomer.name);
+    // You could also store the full customer object if needed, but the name/ID is often sufficient.
+  };
 
   if (items.length === 0) {
     return (
       <Center style={{ height: '50vh' }}>
-        <Text size="xl">Your cart is empty.</Text>
+        <Text size="xl">Your cart is empty. Add items from the Catalog.</Text>
       </Center>
     );
   }
 
   return (
     <>
+      <CustomerSearchModal
+        opened={modalOpened}
+        onClose={closeModal}
+        onSelect={handleSelectCustomer}
+      />
+
       <Group justify="space-between" mb="md">
         <Title order={1}>Shopping Cart</Title>
         <Button color="red" variant="outline" onClick={clearCart}>
@@ -22,47 +42,63 @@ export function CartPage() {
         </Button>
       </Group>
 
+      {/* Customer Selection Section */}
+      <Paper withBorder p="md" mb="md">
+        <Group justify="space-between">
+          <div>
+            <Text fw={500}>Customer</Text>
+            {customer ? (
+              <Badge size="lg" variant="light">{customer}</Badge>
+            ) : (
+              <Text c="dimmed">No customer selected</Text>
+            )}
+          </div>
+          <Button
+            onClick={openModal}
+            variant="outline"
+            leftSection={customer ? <IconUserEdit size={16} /> : <IconUserPlus size={16} />}
+          >
+            {customer ? 'Change Customer' : 'Select Customer'}
+          </Button>
+        </Group>
+      </Paper>
+
+      {/* Cart Items List */}
       <SimpleGrid cols={1} spacing="md">
         {items.map(item => (
           <Paper shadow="xs" p="md" withBorder key={item.name}>
             <Group justify="space-between">
               <div>
                 <Text fw={500}>{item.item_name}</Text>
-                <Text size="sm" c="dimmed">
-                  ${item.standard_rate?.toFixed(2) || '0.00'} each
-                </Text>
+                <Text size="sm" c="dimmed">{currency} {item.standard_rate?.toFixed(2) || '0.00'} each</Text>
               </div>
               <Group>
                 <NumberInput
                   value={item.quantity}
                   onChange={(value) => updateQuantity(item.name, Number(value))}
-                  min={0}
-                  step={1}
-                  style={{ width: '80px' }}
+                  min={0} step={1} style={{ width: '80px' }}
                 />
-                <Text fw={700} miw={80} ta="right">
-                  ${((item.standard_rate || 0) * item.quantity).toFixed(2)}
-                </Text>
-                <ActionIcon
-                  color="red"
-                  variant="subtle"
-                  onClick={() => removeItem(item.name)}
-                  aria-label={`Remove ${item.item_name}`}
-                >
-                  <IconTrash size={20} />
-                </ActionIcon>
+                <Text fw={700} miw={80} ta="right">{currency} {((item.standard_rate || 0) * item.quantity).toFixed(2)}</Text>
+                <ActionIcon color="red" variant="subtle" onClick={() => removeItem(item.name)} aria-label={`Remove ${item.item_name}`}><IconTrash size={20} /></ActionIcon>
               </Group>
             </Group>
           </Paper>
         ))}
       </SimpleGrid>
 
+      {/* Grand Total and Checkout */}
       <Paper withBorder p="xl" radius="md" mt="xl" style={{ position: 'sticky', bottom: '20px' }}>
         <Group justify="space-between">
           <Title order={2}>Grand Total:</Title>
-          <Title order={2}>${grandTotal().toFixed(2)}</Title>
+          <Title order={2}>{currency} {grandTotal().toFixed(2)}</Title>
         </Group>
-        <Button fullWidth mt="md" size="lg">
+        <Button
+          fullWidth
+          mt="md"
+          size="lg"
+          disabled={!customer}
+          onClick={() => navigate('/checkout')}
+        >
           Proceed to Checkout
         </Button>
       </Paper>

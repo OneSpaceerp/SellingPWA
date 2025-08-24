@@ -1,13 +1,15 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { CartPage } from './CartPage';
 import { useCartStore } from '../store/cartStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { MantineProvider } from '@mantine/core';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { type CartItem } from '../store/cartStore';
 
-// Mock the cart store dependency
+// Mock the store dependencies
 vi.mock('../store/cartStore');
+vi.mock('../store/settingsStore');
 
 // Mock data representing items in the cart
 const mockCartItems: CartItem[] = [
@@ -40,12 +42,21 @@ describe('CartPage', () => {
     // (1.5 * 2) + (2 * 3) = 3 + 6 = 9
     mockGrandTotal = vi.fn(() => 9);
 
-    (useCartStore as any).mockReturnValue({
-      items: mockCartItems,
-      updateQuantity: mockUpdateQuantity,
-      removeItem: mockRemoveItem,
-      clearCart: mockClearCart,
-      grandTotal: mockGrandTotal,
+    // This mock now correctly handles calls with or without a selector
+    (useCartStore as any).mockImplementation((selector: any) => {
+      const state = {
+        items: mockCartItems,
+        updateQuantity: mockUpdateQuantity,
+        removeItem: mockRemoveItem,
+        clearCart: mockClearCart,
+        grandTotal: mockGrandTotal,
+      };
+      return selector ? selector(state) : state;
+    });
+
+    (useSettingsStore as any).mockImplementation((selector: any) => {
+      const state = { currency: 'EGP' };
+      return selector ? selector(state) : state;
     });
   });
 
@@ -62,8 +73,8 @@ describe('CartPage', () => {
 
   it('should display the correct grand total from the store', () => {
     renderComponent();
-    // Check for the grand total, formatted as currency
-    expect(screen.getByText('$9.00')).toBeInTheDocument();
+    // Check for the grand total, formatted with the mocked currency
+    expect(screen.getByText('EGP 9.00')).toBeInTheDocument();
   });
 
   it('should call updateQuantity when a user changes the value in a NumberInput', () => {
@@ -92,6 +103,7 @@ describe('CartPage', () => {
     // Override the mock for this specific test
     (useCartStore as any).mockReturnValue({ items: [], grandTotal: () => 0 });
     renderComponent();
-    expect(screen.getByText('Your cart is empty.')).toBeInTheDocument();
+    // Match the full text content of the component
+    expect(screen.getByText('Your cart is empty. Add items from the Catalog.')).toBeInTheDocument();
   });
 });

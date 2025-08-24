@@ -9,9 +9,11 @@ export interface CartItem extends Item {
 // Define the shape of the store's state and actions
 interface CartState {
   items: CartItem[];
+  customer: string | null;
   addItem: (item: Item) => void;
   removeItem: (itemName: string) => void;
   updateQuantity: (itemName: string, quantity: number) => void;
+  setCustomer: (customerId: string | null) => void;
   clearCart: () => void;
   totalItems: () => number;
   grandTotal: () => number;
@@ -19,6 +21,7 @@ interface CartState {
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
+  customer: null,
 
   // Adds an item to the cart. If the item already exists, it increments the quantity.
   addItem: (itemToAdd) => {
@@ -57,8 +60,13 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  // Clears all items from the cart.
-  clearCart: () => set({ items: [] }),
+  // Action to set the customer for the transaction
+  setCustomer: (customerId) => {
+    set({ customer: customerId });
+  },
+
+  // Clears all items from the cart and resets the customer.
+  clearCart: () => set({ items: [], customer: null }),
 
   // Calculates the total number of items in the cart (e.g., 2 apples + 3 oranges = 5).
   totalItems: () => get().items.reduce((total, item) => total + item.quantity, 0),

@@ -100,7 +100,7 @@ export function CheckoutPage() {
         <Title order={3} mb="sm">Add a Payment</Title>
         <Radio.Group label="Payment Mode" value={currentPaymentMode} onChange={setCurrentPaymentMode} withAsterisk>
           <Group mt="xs">
-            {paymentModes.map(mode => <Radio key={mode} value={mode} label={mode} />)}
+            {paymentModes.map((mode: string) => <Radio key={mode} value={mode} label={mode} />)}
           </Group>
         </Radio.Group>
         <NumberInput label="Amount" value={currentPaymentAmount} onChange={setCurrentPaymentAmount} min={0} placeholder="Enter amount" mt="md" />

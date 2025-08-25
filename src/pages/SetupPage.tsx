@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Title, TextInput, Button, Paper } from '@mantine/core';
+import { Title, TextInput, Button, Paper, Center } from '@mantine/core';
 
 export function SetupPage() {
   const [url, setUrl] = useState('');
@@ -18,7 +18,7 @@ export function SetupPage() {
 
   return (
     <Center h="100vh">
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+      <Paper withBorder shadow="md" p={30} mt={30} radius="md" w={400}>
         <Title order={2} mb="xl" ta="center">Connect to ERPNext</Title>
         <form onSubmit={handleSubmit}>
           <TextInput
@@ -36,20 +36,3 @@ export function SetupPage() {
     </Center>
   );
 }
-
-// Need to import Center, but it's not available in Mantine v6/7.
-// I'll assume it's available or the build will fail and I'll fix it.
-// A good substitute is a Group with position center.
-// Let's rewrite without Center.
-import { Group } from '@mantine/core';
-export function SetupPageFixed() {
-    // ... same as above
-    return (
-        <Group justify="center" align="center" style={{ height: '100vh' }}>
-            {/* ... paper content */}
-        </Group>
-    )
-}
-
-// I will use the simpler version first, and if it fails, I'll know why.
-// The `Center` component does exist in Mantine. My memory was wrong. Sticking to the first implementation.

@@ -7,14 +7,12 @@ import App from './App.tsx';
 
 // Import Mantine's core styles
 import '@mantine/core/styles.css';
-// Import Notifications styles
 import '@mantine/notifications/styles.css';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MantineProvider defaultColorScheme="dark">
-      {/* The Notifications component is the context provider for the system */}
       <Notifications />
       <BrowserRouter>
         <App />

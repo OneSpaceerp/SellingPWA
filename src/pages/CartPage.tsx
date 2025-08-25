@@ -10,8 +10,6 @@ import { useNavigate } from 'react-router-dom';
 export function CartPage() {
   const navigate = useNavigate();
 
-  // Refactored to use individual selectors for each piece of state.
-  // This can sometimes resolve subtle re-rendering issues.
   const items = useCartStore((state) => state.items);
   const customer = useCartStore((state) => state.customer);
   const grandTotal = useCartStore((state) => state.grandTotal);
@@ -50,7 +48,6 @@ export function CartPage() {
         </Button>
       </Group>
 
-      {/* Customer Selection Section */}
       <Paper withBorder p="md" mb="md">
         <Group justify="space-between">
           <div>
@@ -71,7 +68,6 @@ export function CartPage() {
         </Group>
       </Paper>
 
-      {/* Cart Items List */}
       <SimpleGrid cols={1} spacing="md">
         {items.map(item => (
           <Paper shadow="xs" p="md" withBorder key={item.name}>
@@ -94,7 +90,6 @@ export function CartPage() {
         ))}
       </SimpleGrid>
 
-      {/* Grand Total and Checkout */}
       <Paper withBorder p="xl" radius="md" mt="xl" style={{ position: 'sticky', bottom: '20px' }}>
         <Group justify="space-between">
           <Title order={2}>Grand Total:</Title>

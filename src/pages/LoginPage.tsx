@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { authService } from '../services/authService';
+import { Title, TextInput, Button, Paper, Group, PasswordInput, Alert } from '@mantine/core';
+import { IconAlertCircle } from '@tabler/icons-react';
 
-export const LoginPage: React.FC = () => {
+export function LoginPage() {
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [error, setError] = useState('');
@@ -11,60 +13,47 @@ export const LoginPage: React.FC = () => {
     event.preventDefault();
     setError('');
     setLoading(true);
-
-    if (!apiKey || !apiSecret) {
-      setError('API Key and Secret cannot be empty.');
-      setLoading(false);
-      return;
-    }
-
     const result = await authService.login(apiKey, apiSecret);
     setLoading(false);
-
     if (result.success) {
-      alert(`Login successful! Welcome, ${result.user}.`);
-      // Reload the application to reflect the new authenticated state.
-      // This will be replaced with a router-based navigation later.
       window.location.reload();
     } else {
-      setError('Login failed. Please check your API Key and Secret and try again.');
+      setError('Login failed. Please check your API Key and Secret.');
     }
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
-      <h1>Login to ERPNext</h1>
-      <p>Please provide your API Key and API Secret to authenticate.</p>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="apiKey" style={{ display: 'block', marginBottom: '5px' }}>API Key</label>
-          <input
-            id="apiKey"
-            type="text"
+    <Group justify="center" align="center" style={{ height: '100vh' }}>
+      <Paper withBorder shadow="md" p={30} mt={30} radius="md" style={{ width: '400px' }}>
+        <Title order={2} mb="xl" ta="center">Login</Title>
+        <form onSubmit={handleSubmit}>
+          <TextInput
+            label="API Key"
+            placeholder="Enter your API Key"
+            required
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Enter your API Key"
-            style={{ width: '100%', padding: '8px', fontSize: '16px' }}
             disabled={loading}
           />
-        </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="apiSecret" style={{ display: 'block', marginBottom: '5px' }}>API Secret</label>
-          <input
-            id="apiSecret"
-            type="password"
+          <PasswordInput
+            label="API Secret"
+            placeholder="Enter your API Secret"
+            required
+            mt="md"
             value={apiSecret}
             onChange={(e) => setApiSecret(e.target.value)}
-            placeholder="Enter your API Secret"
-            style={{ width: '100%', padding: '8px', fontSize: '16px' }}
             disabled={loading}
           />
-        </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" disabled={loading} style={{ padding: '10px 15px', fontSize: '16px', cursor: 'pointer' }}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
-    </div>
+          {error && (
+            <Alert color="red" title="Login Error" icon={<IconAlertCircle />} mt="md">
+              {error}
+            </Alert>
+          )}
+          <Button fullWidth mt="xl" type="submit" loading={loading}>
+            Login
+          </Button>
+        </form>
+      </Paper>
+    </Group>
   );
-};
+}

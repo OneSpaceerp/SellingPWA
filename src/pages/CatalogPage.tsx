@@ -4,19 +4,7 @@ import { db, type Item } from '../db/db';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { notifications } from '@mantine/notifications';
-import {
-  Title,
-  TextInput,
-  SimpleGrid,
-  Card,
-  Text,
-  Button,
-  Group,
-  rem,
-  Center,
-  Loader,
-  Badge,
-} from '@mantine/core';
+import { Title, TextInput, SimpleGrid, Card, Text, Button, Group, rem, Center, Loader, Badge } from '@mantine/core';
 import { IconSearch, IconCircleCheck } from '@tabler/icons-react';
 
 export function CatalogPage() {
@@ -46,14 +34,10 @@ export function CatalogPage() {
 
   const renderContent = () => {
     if (items === undefined) {
-      return (
-        <Center style={{ height: '50vh' }}><Loader data-testid="catalog-loader" /></Center>
-      );
+      return <Center style={{ height: '50vh' }}><Loader data-testid="catalog-loader" /></Center>;
     }
     if (items.length === 0) {
-      return (
-        <Center style={{ height: '50vh' }}><Text>No products found.</Text></Center>
-      );
+      return <Center style={{ height: '50vh' }}><Text>No products found.</Text></Center>;
     }
     return (
       <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing={{ base: 'md', sm: 'xl' }}>
@@ -65,10 +49,7 @@ export function CatalogPage() {
               <Text fw={700} fz="xl">{currency} {item.standard_rate || '0.00'}</Text>
               <Badge color="pink" variant="light">{item.item_group}</Badge>
             </Group>
-            <Button
-              variant="light" color="blue" fullWidth mt="md" radius="md"
-              onClick={() => handleAddToCart(item)}
-            >
+            <Button variant="light" color="blue" fullWidth mt="md" radius="md" onClick={() => handleAddToCart(item)}>
               Add to Cart
             </Button>
           </Card>

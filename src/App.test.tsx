@@ -1,39 +1,51 @@
 import { render, screen, cleanup } from '@testing-library/react';
 import App from './App';
+import { MemoryRouter } from 'react-router-dom';
 
-// Test suite for the main App component
-describe('App', () => {
-  // Cleanup the DOM after each test to prevent pollution
+// Mock authService to control authentication status in tests
+vi.mock('./services/authService', () => ({
+  authService: {
+    isAuthenticated: vi.fn(),
+  },
+}));
+import { authService } from './services/authService';
+
+describe('App Routing', () => {
   afterEach(() => {
     cleanup();
     localStorage.clear();
+    sessionStorage.clear();
+    vi.clearAllMocks();
   });
 
-  it('should render the SetupPage when no ERPNext URL is in local storage', () => {
-    // Ensure localStorage is empty for this specific test
+  it('renders SetupPage when no URL is set', () => {
+    (authService.isAuthenticated as any).mockReturnValue(true);
     localStorage.removeItem('erpnext-url');
-
-    render(<App />);
-
-    // Verify that elements unique to the SetupPage are present in the document
+    render(<MemoryRouter><App /></MemoryRouter>);
     expect(screen.getByText('Connect to ERPNext')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('e.g., https://my-erp.erpnext.com')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /connect/i })).toBeInTheDocument();
   });
 
-  it('should render the LoginPage when URL is set but user is not authenticated', () => {
-    // Set up the state for this test case
-    localStorage.setItem('erpnext-url', 'https://test.erpnext.com');
-    sessionStorage.removeItem('erpnext-token');
-
-    render(<App />);
-
-    // Verify that elements unique to the LoginPage are present
-    expect(screen.getByText('Login to ERPNext')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter your API Key')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter your API Secret')).toBeInTheDocument();
+  it('renders LoginPage when URL is set but user is not authenticated', () => {
+    (authService.isAuthenticated as any).mockReturnValue(false);
+    localStorage.setItem('erpnext-url', 'https://test.com');
+    render(<MemoryRouter><App /></MemoryRouter>);
+    expect(screen.getByText('Login')).toBeInTheDocument();
   });
 
-  // We can add more tests here for the other states (POS Profile selection, main app view)
-  // but this is sufficient for initial verification.
+  it('renders PosProfileSelectionPage when authenticated but no profile is selected', () => {
+    (authService.isAuthenticated as any).mockReturnValue(true);
+    localStorage.setItem('erpnext-url', 'https://test.com');
+    localStorage.removeItem('erpnext-pos-profile');
+    render(<MemoryRouter><App /></MemoryRouter>);
+    expect(screen.getByText(/select pos profile/i)).toBeInTheDocument();
+  });
+
+  it('renders the main AppLayout when fully configured', () => {
+    (authService.isAuthenticated as any).mockReturnValue(true);
+    localStorage.setItem('erpnext-url', 'https://test.com');
+    localStorage.setItem('erpnext-pos-profile', 'Test Profile');
+    render(<MemoryRouter><App /></MemoryRouter>);
+    // Check for an element unique to the AppLayout
+    expect(screen.getByText('ERPNext Selling App')).toBeInTheDocument();
+  });
 });

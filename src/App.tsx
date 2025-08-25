@@ -15,16 +15,13 @@ function App() {
   const isAuthenticated = authService.isAuthenticated();
   const selectedProfile = localStorage.getItem('erpnext-pos-profile');
 
-  // Render setup and authentication pages if not fully configured
   if (!erpNextUrl) return <SetupPage />;
   if (!isAuthenticated) return <LoginPage />;
   if (!selectedProfile) return <PosProfileSelectionPage />;
 
-  // Once authenticated, render the main application with its routes
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        {/* The default page will be the product catalog */}
         <Route path="/" element={<CatalogPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/settings" element={<SettingsPage />} />

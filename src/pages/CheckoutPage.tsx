@@ -35,7 +35,6 @@ export function CheckoutPage() {
       return;
     }
     setPayments([...payments, { mode: currentPaymentMode, amount: +currentPaymentAmount }]);
-    // Do not reset mode, user might want to add another payment with the same type
     setCurrentPaymentAmount(0);
   };
 

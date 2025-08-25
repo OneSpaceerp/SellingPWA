@@ -1,11 +1,6 @@
-// This file is run before each test file, ensuring the testing environment is set up correctly.
-
-import ResizeObserver from 'resize-observer-polyfill';
+import 'resize-observer-polyfill';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
-
-// Polyfill for ResizeObserver
-window.ResizeObserver = ResizeObserver;
 
 // Mock window.matchMedia, which is used by Mantine but not implemented in JSDOM.
 // This prevents tests that render Mantine components from crashing.

@@ -1,7 +1,8 @@
-import { Title, Button, Box } from '@mantine/core';
 import { useState } from 'react';
+import { Title, Button, Box, Alert } from '@mantine/core';
 import { authService } from '../services/authService';
 import { syncService } from '../services/syncService';
+import { IconAlertCircle } from '@tabler/icons-react';
 
 export function SettingsPage() {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -33,16 +34,20 @@ export function SettingsPage() {
 
       <Box mt="xl">
         <Title order={3}>Data Synchronization</Title>
-        <p>Pull the latest data from your ERPNext instance.</p>
+        <p>Pull the latest data from your ERPNext instance. This may take a few moments.</p>
         <Button onClick={handleSync} loading={isSyncing}>
           Sync All Data
         </Button>
-        {syncError && <p style={{ color: 'red' }}>Error: {syncError}</p>}
+        {syncError && (
+          <Alert color="red" title="Sync Error" icon={<IconAlertCircle />} mt="md">
+            {syncError}
+          </Alert>
+        )}
       </Box>
 
       <Box mt="xl">
         <Title order={3}>Account</Title>
-        <p>Log out of the application.</p>
+        <p>Log out of the application and return to the login screen.</p>
         <Button color="red" onClick={handleLogout}>
           Logout
         </Button>

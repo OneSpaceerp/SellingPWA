@@ -1,10 +1,7 @@
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { useDisclosure } from '@mantine/hooks';
 import { Title, Button, Group, Text, Paper, SimpleGrid, NumberInput, ActionIcon, Center, Badge } from '@mantine/core';
 import { IconTrash, IconUserPlus, IconUserEdit } from '@tabler/icons-react';
-import { CustomerSearchModal } from '../components/CustomerSearchModal';
-import { type Customer } from '../db/db';
 import { useNavigate } from 'react-router-dom';
 
 export function CartPage() {
@@ -13,17 +10,11 @@ export function CartPage() {
   const items = useCartStore((state) => state.items);
   const customer = useCartStore((state) => state.customer);
   const grandTotal = useCartStore((state) => state.grandTotal);
-  const setCustomer = useCartStore((state) => state.setCustomer);
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const clearCart = useCartStore((state) => state.clearCart);
 
   const currency = useSettingsStore((state) => state.currency);
-  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
-
-  const handleSelectCustomer = (selectedCustomer: Customer) => {
-    setCustomer(selectedCustomer.name);
-  };
 
   if (items.length === 0) {
     return (
@@ -35,12 +26,6 @@ export function CartPage() {
 
   return (
     <>
-      <CustomerSearchModal
-        opened={modalOpened}
-        onClose={closeModal}
-        onSelect={handleSelectCustomer}
-      />
-
       <Group justify="space-between" mb="md">
         <Title order={1}>Shopping Cart</Title>
         <Button color="red" variant="outline" onClick={clearCart}>
@@ -59,7 +44,7 @@ export function CartPage() {
             )}
           </div>
           <Button
-            onClick={openModal}
+            onClick={() => navigate('/select-customer')}
             variant="outline"
             leftSection={customer ? <IconUserEdit size={16} /> : <IconUserPlus size={16} />}
           >

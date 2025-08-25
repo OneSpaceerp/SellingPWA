@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Title, Button, Box, Alert } from '@mantine/core';
+import { Title, Button, Box, Alert, Switch, useMantineColorScheme, Group } from '@mantine/core';
 import { authService } from '../services/authService';
 import { syncService } from '../services/syncService';
-import { IconAlertCircle } from '@tabler/icons-react';
+import { IconAlertCircle, IconSun, IconMoon } from '@tabler/icons-react';
 
 export function SettingsPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState('');
+  const { colorScheme, setColorScheme } = useMantineColorScheme();
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -31,6 +32,19 @@ export function SettingsPage() {
   return (
     <>
       <Title order={1}>Settings</Title>
+
+      <Box mt="xl">
+        <Title order={3}>Theme</Title>
+        <Group mt="xs">
+          <IconSun size={18} />
+          <Switch
+            checked={colorScheme === 'dark'}
+            onChange={(event) => setColorScheme(event.currentTarget.checked ? 'dark' : 'light')}
+            size="lg"
+          />
+          <IconMoon size={18} />
+        </Group>
+      </Box>
 
       <Box mt="xl">
         <Title order={3}>Data Synchronization</Title>

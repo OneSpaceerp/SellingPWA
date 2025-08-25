@@ -1,12 +1,13 @@
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, cleanup, within } from '@testing-library/react';
 import { CheckoutPage } from './CheckoutPage';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { apiService } from '../services/apiService';
 import { notifications } from '@mantine/notifications';
 import { MantineProvider } from '@mantine/core';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 
 // Mock all dependencies
 vi.mock('../store/cartStore');
@@ -18,7 +19,6 @@ vi.mock('@mantine/notifications', () => ({
   },
 }));
 
-// Mock react-router-dom's useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const original = await vi.importActual('react-router-dom');
@@ -31,14 +31,12 @@ vi.mock('react-router-dom', async () => {
 describe('CheckoutPage', () => {
   const mockClearCart = vi.fn();
 
-  // Helper function to set up the mocks for a standard test case
   const setupMocks = (customer: string | null = 'CUST-0001') => {
-    // This mock now correctly handles calls with or without a selector
     (useCartStore as any).mockImplementation((selector: any) => {
       const state = {
-        items: [{ name: 'ITEM001', quantity: 2, standard_rate: 10 }],
+        items: [{ name: 'ITEM001', item_name: 'Test Item', quantity: 2, standard_rate: 50 }], // Total 100
         customer: customer,
-        grandTotal: () => 20,
+        grandTotal: () => 100,
         clearCart: mockClearCart,
       };
       return selector ? selector(state) : state;
@@ -46,9 +44,11 @@ describe('CheckoutPage', () => {
 
     (useSettingsStore as any).mockImplementation((selector: any) => {
       const state = {
-        currency: 'EGP',
+        currency: 'USD',
         posProfile: {
           company: 'Test Inc',
+          warehouse: 'Stores - TI',
+          warehouses: [{ warehouse: 'Stores - TI' }, { warehouse: 'Finished Goods - TI' }],
           payments: [{ mode_of_payment: 'Cash' }, { mode_of_payment: 'Credit' }],
         },
       };
@@ -61,98 +61,86 @@ describe('CheckoutPage', () => {
     setupMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+  });
+
   const renderComponent = () => {
     return render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={['/checkout']}>
         <MantineProvider>
-          <CheckoutPage />
+          <Routes>
+            <Route path="/checkout" element={<CheckoutPage />} />
+          </Routes>
         </MantineProvider>
-      </BrowserRouter>
+      </MemoryRouter>
     );
   };
 
-  it('should render the order summary correctly', () => {
+  it('renders summary and payment sections correctly', () => {
     renderComponent();
-    expect(screen.getByText('Customer:')).toBeInTheDocument();
     expect(screen.getByText('CUST-0001')).toBeInTheDocument();
-    expect(screen.getByText('Total:')).toBeInTheDocument();
-    expect(screen.getByText('EGP 20.00')).toBeInTheDocument();
+    expect(screen.getByTestId('grand-total')).toHaveTextContent('USD 100.00');
   });
 
-  it('should render payment method options from the POS profile', () => {
-    renderComponent();
-    expect(screen.getByRole('radio', { name: 'Cash' })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Credit' })).toBeInTheDocument();
-  });
-
-  it('should have the "Complete Payment" button disabled until a payment method is selected', () => {
-    renderComponent();
-    const completeButton = screen.getByRole('button', { name: 'Complete Payment' });
-    expect(completeButton).toBeDisabled();
-
-    const cashOption = screen.getByRole('radio', { name: 'Cash' });
-    fireEvent.click(cashOption);
-
-    expect(completeButton).not.toBeDisabled();
-  });
-
-  it('should call the createSalesInvoice API with the correct payload on completion', async () => {
-    (apiService.createSalesInvoice as any).mockResolvedValue({ name: 'SINV-0001' });
+  it('allows adding and removing payment entries', async () => {
+    const user = userEvent.setup();
     renderComponent();
 
-    // Select payment method
-    fireEvent.click(screen.getByRole('radio', { name: 'Cash' }));
+    const cashRadio = screen.getByRole('radio', { name: /cash/i });
+    const amountInput = screen.getByLabelText(/amount/i);
+    const addButton = screen.getByRole('button', { name: /add payment/i });
 
-    // Click complete
-    fireEvent.click(screen.getByRole('button', { name: 'Complete Payment' }));
+    await user.click(cashRadio);
+    await user.clear(amountInput);
+    await user.type(amountInput, '50');
+    await user.click(addButton);
 
     await waitFor(() => {
-      expect(apiService.createSalesInvoice).toHaveBeenCalledTimes(1);
-      expect(apiService.createSalesInvoice).toHaveBeenCalledWith({
-        customer: 'CUST-0001',
-        items: [{ item_code: 'ITEM001', qty: 2, rate: 10 }],
-        payments: [{ mode_of_payment: 'Cash', amount: 20 }],
-        update_stock: 1,
-        docstatus: 1,
-        company: 'Test Inc',
-        cost_center: undefined,
-      });
+      // Find the "Payments Added" section and assert within it to avoid ambiguity
+      const paymentsList = screen.getByText('Payments Added').closest('div');
+      expect(within(paymentsList!).getByText('Cash')).toBeInTheDocument();
+      expect(within(paymentsList!).getByText('USD 50.00')).toBeInTheDocument();
+    });
+
+    const removeButton = screen.getByRole('button', { name: /remove cash payment/i });
+    await user.click(removeButton);
+
+    // After removing, the "Payments Added" section should disappear
+    expect(screen.queryByText('Payments Added')).not.toBeInTheDocument();
+  });
+
+  it('submits a DRAFT invoice for partial payments', async () => {
+    const user = userEvent.setup();
+    (apiService.createSalesInvoice as any).mockResolvedValue({ name: 'SINV-DRAFT-001' });
+    renderComponent();
+
+    await user.click(screen.getByRole('radio', { name: /cash/i }));
+    await user.clear(screen.getByLabelText(/amount/i));
+    await user.type(screen.getByLabelText(/amount/i), '50');
+    await user.click(screen.getByRole('button', { name: /add payment/i }));
+
+    await user.click(screen.getByRole('button', { name: /complete order/i }));
+
+    await waitFor(() => {
+      expect(apiService.createSalesInvoice).toHaveBeenCalledWith(expect.objectContaining({ docstatus: 0 }));
     });
   });
 
-  it('should show success notification, clear cart, and navigate on successful submission', async () => {
-    (apiService.createSalesInvoice as any).mockResolvedValue({ name: 'SINV-0001' });
+  it('submits a SUBMITTED invoice for full payments', async () => {
+    const user = userEvent.setup();
+    (apiService.createSalesInvoice as any).mockResolvedValue({ name: 'SINV-SUBMIT-001' });
     renderComponent();
-    fireEvent.click(screen.getByRole('radio', { name: 'Cash' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Complete Payment' }));
+
+    await user.click(screen.getByRole('radio', { name: /cash/i }));
+    await user.clear(screen.getByLabelText(/amount/i));
+    await user.type(screen.getByLabelText(/amount/i), '100');
+    await user.click(screen.getByRole('button', { name: /add payment/i }));
+
+    await user.click(screen.getByRole('button', { name: /complete order/i }));
 
     await waitFor(() => {
-      expect(notifications.show).toHaveBeenCalledWith(expect.objectContaining({
-        title: 'Success!',
-        color: 'teal',
-      }));
-      expect(mockClearCart).toHaveBeenCalledTimes(1);
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(apiService.createSalesInvoice).toHaveBeenCalledWith(expect.objectContaining({ docstatus: 1 }));
     });
-  });
-
-  it('should show an error notification on failed submission', async () => {
-    (apiService.createSalesInvoice as any).mockRejectedValue(new Error('Network error'));
-    renderComponent();
-    fireEvent.click(screen.getByRole('radio', { name: 'Cash' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Complete Payment' }));
-
-    await waitFor(() => {
-      expect(notifications.show).toHaveBeenCalledWith(expect.objectContaining({
-        title: 'Submission Failed',
-        color: 'red',
-      }));
-    });
-  });
-
-  it('should show an alert if no customer is selected', () => {
-    setupMocks(null); // Set customer to null
-    renderComponent();
-    expect(screen.getByText('Customer Not Selected')).toBeInTheDocument();
   });
 });

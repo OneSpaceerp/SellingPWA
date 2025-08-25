@@ -1,5 +1,5 @@
 import { authService } from './authService';
-import { type PosProfileData, type Item, type Customer, type Warehouse } from '../db/db';
+import { type PosProfileData, type Item, type Customer } from '../db/db';
 
 export interface PosProfile {
   name: string;

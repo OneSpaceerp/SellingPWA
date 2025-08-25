@@ -101,9 +101,28 @@ describe('CartPage', () => {
 
   it('should display an "empty cart" message if there are no items', () => {
     // Override the mock for this specific test
-    (useCartStore as any).mockReturnValue({ items: [], grandTotal: () => 0 });
+    (useCartStore as any).mockImplementation((selector: any) => {
+      const state = { items: [], customer: null };
+      return selector ? selector(state) : state;
+    });
     renderComponent();
     // Match the full text content of the component
     expect(screen.getByText('Your cart is empty. Add items from the Catalog.')).toBeInTheDocument();
+  });
+
+  it('should render the customer selection UI', () => {
+    // Use a specific mock for this test to ensure customer is null initially
+    (useCartStore as any).mockImplementation((selector: any) => {
+      const state = {
+        items: mockCartItems,
+        customer: null,
+        grandTotal: () => 99, // Add the missing function to the mock
+        // ... other functions can be mocked if needed by child components
+      };
+      return selector ? selector(state) : state;
+    });
+    renderComponent();
+    expect(screen.getByText('No customer selected')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select customer/i })).toBeInTheDocument();
   });
 });

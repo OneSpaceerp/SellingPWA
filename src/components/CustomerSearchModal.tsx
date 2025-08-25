@@ -37,7 +37,7 @@ export function CustomerSearchModal({ opened, onClose, onSelect }: CustomerSearc
   ));
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Select a Customer" size="xl">
+    <Modal opened={opened} onClose={onClose} title="Select a Customer" size="xl" zIndex={2000}>
       <TextInput
         placeholder="Search for a customer..."
         value={search}

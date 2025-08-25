@@ -51,7 +51,6 @@ const getPosProfiles = async (): Promise<PosProfile[]> => get<PosProfile[]>(`res
 const getPosProfileDetails = async (profileName: string): Promise<PosProfileData> => get<PosProfileData>(`resource/POS Profile/${encodeURIComponent(profileName)}`);
 const getItems = async (itemGroups: string[]): Promise<Item[]> => get<Item[]>(`resource/Item?fields=${encodeURIComponent('["name", "item_name", "item_group", "stock_uom", "standard_rate"]')}&filters=${encodeURIComponent(JSON.stringify([["item_group", "in", itemGroups]]))}&limit_page_length=0`);
 const getCustomers = async (customerGroups: string[]): Promise<Customer[]> => get<Customer[]>(`resource/Customer?fields=${encodeURIComponent('["name", "customer_name", "customer_group"]')}&filters=${encodeURIComponent(JSON.stringify([["customer_group", "in", customerGroups]]))}&limit_page_length=0`);
-const getWarehouses = async (warehouseNames: string[]): Promise<Warehouse[]> => get<Warehouse[]>(`resource/Warehouse?fields=${encodeURIComponent('["name", "warehouse_name", "company"]')}&filters=${encodeURIComponent(JSON.stringify([["name", "in", warehouseNames]]))}&limit_page_length=0`);
 const createSalesInvoice = async (payload: SalesInvoicePayload): Promise<any> => post<any>('resource/Sales Invoice', payload);
 
 export const apiService = {
@@ -59,6 +58,5 @@ export const apiService = {
   getPosProfileDetails,
   getItems,
   getCustomers,
-  getWarehouses,
   createSalesInvoice,
 };

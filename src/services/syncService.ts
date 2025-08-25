@@ -15,9 +15,9 @@ const syncAllData = async (): Promise<void> => {
 
   const itemGroups = posProfile.item_groups?.map((ig: any) => ig.item_group) || [];
   const customerGroups = posProfile.customer_groups?.map((cg: any) => cg.customer_group) || [];
-  const warehouses = posProfile.warehouses?.map((w: any) => w.warehouse) || [];
 
   if (itemGroups.length > 0) {
+    console.log(`Fetching items for groups: ${itemGroups.join(', ')}`);
     const items = await apiService.getItems(itemGroups);
     await db.items.bulkPut(items);
     console.log(`Synced ${items.length} items.`);
@@ -26,20 +26,16 @@ const syncAllData = async (): Promise<void> => {
   }
 
   if (customerGroups.length > 0) {
+    console.log(`Fetching customers for groups: ${customerGroups.join(', ')}`);
     const customers = await apiService.getCustomers(customerGroups);
     await db.customers.bulkPut(customers);
     console.log(`Synced ${customers.length} customers.`);
   } else {
-    console.log('No customer groups defined in POS Profile. Skipping customer sync.');
+      console.log('No customer groups defined in POS Profile. Skipping customer sync.');
   }
 
-  if (warehouses.length > 0) {
-    const warehouseDetails = await apiService.getWarehouses(warehouses);
-    await db.warehouses.bulkPut(warehouseDetails);
-    console.log(`Synced ${warehouseDetails.length} warehouses.`);
-  } else {
-    console.log('No warehouses defined in POS Profile. Skipping warehouse sync.');
-  }
+  // Warehouse sync is no longer needed as we use the default from the profile.
+  // The warehouse name is synced as part of the POS Profile object itself.
 
   console.log('Synchronization process completed successfully.');
 };

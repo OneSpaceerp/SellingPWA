@@ -3,8 +3,8 @@ import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { apiService, type SalesInvoicePayload } from '../services/apiService';
 import { notifications } from '@mantine/notifications';
-import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Select, NumberInput, ActionIcon, Radio, Stack } from '@mantine/core';
-import { IconAlertCircle, IconCircleCheck, IconTrash, IconPlus } from '@tabler/icons-react';
+import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Radio, Stack, NumberInput, ActionIcon, Badge } from '@mantine/core';
+import { IconAlertCircle, IconCircleCheck, IconTrash, IconPlus, IconBuildingWarehouse } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface PaymentEntry {
@@ -17,14 +17,13 @@ export function CheckoutPage() {
   const { currency, posProfile } = useSettingsStore();
   const navigate = useNavigate();
 
-  const [selectedWarehouse, setSelectedWarehouse] = useState<string | null>(posProfile?.warehouse || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [payments, setPayments] = useState<PaymentEntry[]>([]);
   const [currentPaymentMode, setCurrentPaymentMode] = useState<string | null>(null);
   const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number | string>(0);
 
   const paymentModes = posProfile?.payments?.map((p: any) => p.mode_of_payment) || [];
-  const warehouses = posProfile?.warehouses?.map((w: any) => w.warehouse) || [];
+  const warehouse = posProfile?.warehouse || null;
 
   const totalPaid = useMemo(() => payments.reduce((acc, p) => acc + p.amount, 0), [payments]);
   const outstandingAmount = useMemo(() => grandTotal() - totalPaid, [grandTotal, totalPaid]);
@@ -43,8 +42,8 @@ export function CheckoutPage() {
   };
 
   const handleCompletePayment = async () => {
-    if (!customer || !selectedWarehouse || payments.length === 0) {
-      notifications.show({ color: 'red', title: 'Error', message: 'Please select a customer, warehouse, and add at least one payment.' });
+    if (!customer || !warehouse || payments.length === 0) {
+      notifications.show({ color: 'red', title: 'Error', message: 'A customer, warehouse, and payment are required.' });
       return;
     }
     setIsSubmitting(true);
@@ -52,7 +51,7 @@ export function CheckoutPage() {
       const isPaidInFull = totalPaid >= grandTotal();
       const payload: SalesInvoicePayload = {
         customer: customer,
-        set_warehouse: selectedWarehouse,
+        set_warehouse: warehouse,
         items: items.map(item => ({ item_code: item.name, qty: item.quantity, rate: item.standard_rate || 0 })),
         payments: payments.map(p => ({ mode_of_payment: p.mode, amount: p.amount })),
         update_stock: 1,
@@ -89,7 +88,7 @@ export function CheckoutPage() {
       <Paper withBorder p="md" mb="xl">
         <Title order={3} mb="sm">Order Details</Title>
         <Group justify="space-between"><Text>Customer:</Text><Text fw={500}>{customer}</Text></Group>
-        <Select label="Warehouse" placeholder="Select a warehouse" data={warehouses} value={selectedWarehouse} onChange={setSelectedWarehouse} mt="md" required />
+        <Group justify="space-between" mt="sm"><Text>Warehouse:</Text><Badge leftSection={<IconBuildingWarehouse size={14}/>} variant="light">{warehouse || 'Not Set'}</Badge></Group>
         <Divider my="sm" />
         <Group justify="space-between"><Text>Grand Total:</Text><Text fw={700} size="xl" data-testid="grand-total">{currency} {grandTotal().toFixed(2)}</Text></Group>
         <Group justify="space-between"><Text c="blue">Total Paid:</Text><Text c="blue" fw={700} size="xl">{currency} {totalPaid.toFixed(2)}</Text></Group>
@@ -99,9 +98,7 @@ export function CheckoutPage() {
       <Paper withBorder p="md" mb="xl">
         <Title order={3} mb="sm">Add a Payment</Title>
         <Radio.Group label="Payment Mode" value={currentPaymentMode} onChange={setCurrentPaymentMode} withAsterisk>
-          <Group mt="xs">
-            {paymentModes.map((mode: string) => <Radio key={mode} value={mode} label={mode} />)}
-          </Group>
+          <Group mt="xs">{paymentModes.map((mode: string) => <Radio key={mode} value={mode} label={mode} />)}</Group>
         </Radio.Group>
         <NumberInput label="Amount" value={currentPaymentAmount} onChange={setCurrentPaymentAmount} min={0} placeholder="Enter amount" mt="md" />
         <Button onClick={handleAddPayment} leftSection={<IconPlus size={18} />} mt="md">Add Payment</Button>
@@ -116,9 +113,7 @@ export function CheckoutPage() {
                 <Text>{p.mode}</Text>
                 <Group>
                   <Text fw={500}>{currency} {p.amount.toFixed(2)}</Text>
-                  <ActionIcon color="red" size="sm" variant="light" onClick={() => handleRemovePayment(index)} aria-label={`Remove ${p.mode} payment`}>
-                    <IconTrash size={16} />
-                  </ActionIcon>
+                  <ActionIcon color="red" size="sm" variant="light" onClick={() => handleRemovePayment(index)} aria-label={`Remove ${p.mode} payment`}><IconTrash size={16} /></ActionIcon>
                 </Group>
               </Group>
             ))}
@@ -126,7 +121,7 @@ export function CheckoutPage() {
         </Paper>
       )}
 
-      <Button fullWidth size="lg" mt="xl" onClick={handleCompletePayment} disabled={payments.length === 0 || !selectedWarehouse || isSubmitting}>
+      <Button fullWidth size="lg" mt="xl" onClick={handleCompletePayment} disabled={payments.length === 0 || !warehouse || isSubmitting}>
         Complete Order
       </Button>
     </div>

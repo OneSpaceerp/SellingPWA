@@ -12,6 +12,7 @@ export function CartPage() {
   const grandTotal = useCartStore((state) => state.grandTotal);
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const updateRate = useCartStore((state) => state.updateRate);
   const clearCart = useCartStore((state) => state.clearCart);
 
   const currency = useSettingsStore((state) => state.currency);
@@ -59,14 +60,28 @@ export function CartPage() {
             <Group justify="space-between">
               <div>
                 <Text fw={500}>{item.item_name}</Text>
-                <Text size="sm" c="dimmed">{currency} {item.standard_rate?.toFixed(2) || '0.00'} each</Text>
+                <Group gap="xs" align="center">
+                  <NumberInput
+                    label="Rate"
+                    value={item.standard_rate}
+                    onChange={(value) => updateRate(item.name, Number(value))}
+                    prefix={`${currency} `}
+                    min={0}
+                    step={0.01}
+                    style={{ width: '120px' }}
+                    size="xs"
+                  />
+                  <Text size="sm" c="dimmed"> x </Text>
+                  <NumberInput
+                    label="Qty"
+                    value={item.quantity}
+                    onChange={(value) => updateQuantity(item.name, Number(value))}
+                    min={0} step={1} style={{ width: '80px' }}
+                    size="xs"
+                  />
+                </Group>
               </div>
               <Group>
-                <NumberInput
-                  value={item.quantity}
-                  onChange={(value) => updateQuantity(item.name, Number(value))}
-                  min={0} step={1} style={{ width: '80px' }}
-                />
                 <Text fw={700} miw={80} ta="right">{currency} {((item.standard_rate || 0) * item.quantity).toFixed(2)}</Text>
                 <ActionIcon color="red" variant="subtle" onClick={() => removeItem(item.name)} aria-label={`Remove ${item.item_name}`}><IconTrash size={20} /></ActionIcon>
               </Group>

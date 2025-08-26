@@ -7,10 +7,12 @@ export interface PosProfile {
   currency: string;
 }
 
-export interface SalesInvoicePayload {
+export interface SalesOrderPayload {
   customer: string;
   items: { item_code: string; qty: number; rate: number }[];
   payments: { mode_of_payment: string; amount: number }[];
+  additional_discount_percentage?: number;
+  discount_amount?: number;
   update_stock: 1;
   docstatus: 0 | 1;
   [key: string]: any;
@@ -51,12 +53,12 @@ const getPosProfiles = async (): Promise<PosProfile[]> => get<PosProfile[]>(`res
 const getPosProfileDetails = async (profileName: string): Promise<PosProfileData> => get<PosProfileData>(`resource/POS Profile/${encodeURIComponent(profileName)}`);
 const getItems = async (itemGroups: string[]): Promise<Item[]> => get<Item[]>(`resource/Item?fields=${encodeURIComponent('["name", "item_name", "item_group", "stock_uom", "standard_rate"]')}&filters=${encodeURIComponent(JSON.stringify([["item_group", "in", itemGroups]]))}&limit_page_length=0`);
 const getCustomers = async (customerGroups: string[]): Promise<Customer[]> => get<Customer[]>(`resource/Customer?fields=${encodeURIComponent('["name", "customer_name", "customer_group"]')}&filters=${encodeURIComponent(JSON.stringify([["customer_group", "in", customerGroups]]))}&limit_page_length=0`);
-const createSalesInvoice = async (payload: SalesInvoicePayload): Promise<any> => post<any>('resource/Sales Invoice', payload);
+const createSalesOrder = async (payload: SalesOrderPayload): Promise<any> => post<any>('resource/Sales Order', payload);
 
 export const apiService = {
   getPosProfiles,
   getPosProfileDetails,
   getItems,
   getCustomers,
-  createSalesInvoice,
+  createSalesOrder,
 };

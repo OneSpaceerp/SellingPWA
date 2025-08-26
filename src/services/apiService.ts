@@ -35,7 +35,7 @@ const post = async <T>(endpoint: string, payload: any): Promise<T> => {
   const erpNextUrl = localStorage.getItem('erpnext-url');
   if (!erpNextUrl) throw new Error('ERPNext URL not set.');
   const fullUrl = `${erpNextUrl}/api/${endpoint}`;
-  const headers = { ...authService.getAuthHeaders(), 'Content-Type': 'application/json' };
+  const headers = { ...authService.getAuthHeaders(), 'Content-Type': 'application/json', 'Expect': '' };
   const response = await fetch(fullUrl, {
     method: 'POST',
     headers,

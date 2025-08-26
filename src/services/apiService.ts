@@ -10,7 +10,6 @@ export interface PosProfile {
 export interface SalesOrderPayload {
   customer: string;
   items: { item_code: string; qty: number; rate: number }[];
-  payments: { mode_of_payment: string; amount: number }[];
   additional_discount_percentage?: number;
   discount_amount?: number;
   update_stock: 1;
@@ -56,10 +55,25 @@ const getItems = async (itemGroups: string[]): Promise<Item[]> => get<Item[]>(`r
 const getCustomers = async (customerGroups: string[]): Promise<Customer[]> => get<Customer[]>(`resource/Customer?fields=${encodeURIComponent('["name", "customer_name", "customer_group"]')}&filters=${encodeURIComponent(JSON.stringify([["customer_group", "in", customerGroups]]))}&limit_page_length=0`);
 const createSalesOrder = async (payload: SalesOrderPayload): Promise<any> => post<any>('resource/Sales Order', payload);
 
+export interface PaymentEntryPayload {
+  dt: string;
+  dn: string;
+  party_type: string;
+  party: string;
+  paid_amount: number;
+  paid_to: string;
+  mode_of_payment: string;
+  company: string;
+  posting_date: string;
+}
+
+const createPaymentEntry = async (payload: PaymentEntryPayload): Promise<any> => post<any>('method/erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry', payload);
+
 export const apiService = {
   getPosProfiles,
   getPosProfileDetails,
   getItems,
   getCustomers,
   createSalesOrder,
+  createPaymentEntry,
 };

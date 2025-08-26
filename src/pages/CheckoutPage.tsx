@@ -55,31 +55,64 @@ export function CheckoutPage() {
       const deliveryDate = futureDate.toISOString().split('T')[0];
 
       const isPaidInFull = totalPaid >= grandTotal();
-      const payload: SalesOrderPayload = {
+      const soPayload: SalesOrderPayload = {
         customer: customer,
         set_warehouse: warehouse,
-        hub_manager: user,
         items: items.map(item => ({
           item_code: item.name,
           qty: item.quantity,
           rate: item.standard_rate || 0,
           delivery_date: deliveryDate,
         })),
-        payments: payments.map(p => ({ mode_of_payment: p.mode, amount: p.amount })),
         additional_discount_percentage: additionalDiscountType === 'Percentage' ? additionalDiscountValue : 0,
         discount_amount: additionalDiscountType === 'Amount' ? additionalDiscountValue : 0,
         update_stock: 1,
         docstatus: isPaidInFull ? 1 : 0,
         company: posProfile?.company,
         cost_center: posProfile?.cost_center,
+        hub_manager: user,
       };
-      const result = await apiService.createSalesOrder(payload);
+      const soResult = await apiService.createSalesOrder(soPayload);
       notifications.show({
-        title: 'Success!',
-        message: `Order ${result.name} created as ${isPaidInFull ? 'Submitted' : 'Draft'}.`,
+        title: 'Sales Order Created',
+        message: `Order ${soResult.name} created as ${isPaidInFull ? 'Submitted' : 'Draft'}.`,
         color: 'teal',
         icon: <IconCircleCheck />,
       });
+
+      for (const p of payments) {
+        try {
+          const paymentAccount = posProfile?.payments?.find(pm => pm.mode_of_payment === p.mode)?.default_account;
+          if (!paymentAccount) {
+            throw new Error(`Could not find payment account for mode ${p.mode}`);
+          }
+          const pePayload: apiService.PaymentEntryPayload = {
+            dt: 'Sales Order',
+            dn: soResult.name,
+            party_type: 'Customer',
+            party: customer,
+            paid_amount: p.amount,
+            paid_to: paymentAccount,
+            mode_of_payment: p.mode,
+            company: posProfile.company,
+            posting_date: new Date().toISOString().split('T')[0],
+          };
+          await apiService.createPaymentEntry(pePayload);
+          notifications.show({
+            title: 'Payment Recorded',
+            message: `Payment of ${p.amount} via ${p.mode} recorded.`,
+            color: 'green',
+          });
+        } catch (peError) {
+          const errorMessage = peError instanceof Error ? peError.message : 'An unknown error occurred.';
+          notifications.show({
+            title: 'Payment Entry Failed',
+            message: `Could not record payment for ${p.amount} via ${p.mode}. ${errorMessage}`,
+            color: 'orange',
+          });
+        }
+      }
+
       clearCart();
       navigate('/');
     } catch (error) {

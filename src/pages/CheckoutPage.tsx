@@ -3,7 +3,7 @@ import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { apiService, type SalesOrderPayload } from '../services/apiService';
 import { notifications } from '@mantine/notifications';
-import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Select, NumberInput, ActionIcon, Radio, Stack, SegmentedControl } from '@mantine/core';
+import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Badge, NumberInput, ActionIcon, Radio, Stack, SegmentedControl } from '@mantine/core';
 import { IconAlertCircle, IconCircleCheck, IconTrash, IconPlus, IconBuildingWarehouse } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -104,7 +104,7 @@ export function CheckoutPage() {
         <Title order={3} mb="sm">Additional Discount</Title>
         <SegmentedControl
           value={additionalDiscountType}
-          onChange={(value: 'Percentage' | 'Amount') => setAdditionalDiscount(value, additionalDiscountValue)}
+          onChange={(value) => setAdditionalDiscount(value as 'Percentage' | 'Amount', additionalDiscountValue)}
           data={['Percentage', 'Amount']}
           mb="sm"
         />

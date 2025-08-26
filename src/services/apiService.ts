@@ -15,7 +15,6 @@ export interface SalesOrderPayload {
   discount_amount?: number;
   update_stock: 1;
   docstatus: 0 | 1;
-  delivery_date: string;
   [key: string]: any;
 }
 

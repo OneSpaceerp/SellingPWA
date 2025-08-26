@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { apiService, type SalesOrderPayload } from '../services/apiService';
+import { authService } from '../services/authService';
 import { notifications } from '@mantine/notifications';
 import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Badge, NumberInput, ActionIcon, Radio, Stack, SegmentedControl } from '@mantine/core';
 import { IconAlertCircle, IconCircleCheck, IconTrash, IconPlus, IconBuildingWarehouse } from '@tabler/icons-react';

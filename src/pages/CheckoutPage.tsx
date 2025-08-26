@@ -48,9 +48,9 @@ export function CheckoutPage() {
     }
     setIsSubmitting(true);
     try {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const deliveryDate = tomorrow.toISOString().split('T')[0];
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 2);
+      const deliveryDate = futureDate.toISOString().split('T')[0];
 
       const isPaidInFull = totalPaid >= grandTotal();
       const payload: SalesOrderPayload = {

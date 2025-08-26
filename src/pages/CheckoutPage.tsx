@@ -58,6 +58,7 @@ export function CheckoutPage() {
         discount_amount: additionalDiscountType === 'Amount' ? additionalDiscountValue : 0,
         update_stock: 1,
         docstatus: isPaidInFull ? 1 : 0,
+        delivery_date: new Date().toISOString().split('T')[0],
         company: posProfile?.company,
         cost_center: posProfile?.cost_center,
       };

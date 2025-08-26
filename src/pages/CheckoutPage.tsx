@@ -48,6 +48,10 @@ export function CheckoutPage() {
     }
     setIsSubmitting(true);
     try {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const deliveryDate = tomorrow.toISOString().split('T')[0];
+
       const isPaidInFull = totalPaid >= grandTotal();
       const payload: SalesOrderPayload = {
         customer: customer,
@@ -56,7 +60,7 @@ export function CheckoutPage() {
           item_code: item.name,
           qty: item.quantity,
           rate: item.standard_rate || 0,
-          delivery_date: new Date().toISOString().split('T')[0],
+          delivery_date: deliveryDate,
         })),
         payments: payments.map(p => ({ mode_of_payment: p.mode, amount: p.amount })),
         additional_discount_percentage: additionalDiscountType === 'Percentage' ? additionalDiscountValue : 0,

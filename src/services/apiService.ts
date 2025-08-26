@@ -15,6 +15,7 @@ export interface SalesOrderPayload {
   discount_amount?: number;
   update_stock: 1;
   docstatus: 0 | 1;
+  hub_manager: string;
   [key: string]: any;
 }
 

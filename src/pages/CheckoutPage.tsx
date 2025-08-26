@@ -42,8 +42,9 @@ export function CheckoutPage() {
   };
 
   const handleCompletePayment = async () => {
-    if (!customer || !warehouse || payments.length === 0) {
-      notifications.show({ color: 'red', title: 'Error', message: 'A customer, warehouse, and payment are required.' });
+    const user = authService.getLoggedInUser();
+    if (!customer || !warehouse || payments.length === 0 || !user) {
+      notifications.show({ color: 'red', title: 'Error', message: 'A customer, warehouse, payment, and logged-in user are required.' });
       return;
     }
     setIsSubmitting(true);
@@ -56,6 +57,7 @@ export function CheckoutPage() {
       const payload: SalesOrderPayload = {
         customer: customer,
         set_warehouse: warehouse,
+        hub_manager: user,
         items: items.map(item => ({
           item_code: item.name,
           qty: item.quantity,

@@ -16,6 +16,7 @@ const login = async (apiKey: string, apiSecret: string): Promise<{ success: bool
       const data = await response.json();
       const token = `${apiKey}:${apiSecret}`;
       sessionStorage.setItem('erpnext-token', token);
+      sessionStorage.setItem('erpnext-user', data.message);
       return { success: true, user: data.message };
     } else {
       console.error('Login failed:', response.status, await response.text());
@@ -29,11 +30,16 @@ const login = async (apiKey: string, apiSecret: string): Promise<{ success: bool
 
 const logout = () => {
   sessionStorage.removeItem('erpnext-token');
+  sessionStorage.removeItem('erpnext-user');
   localStorage.removeItem('erpnext-pos-profile');
 };
 
 const isAuthenticated = (): boolean => {
   return sessionStorage.getItem('erpnext-token') !== null;
+};
+
+const getLoggedInUser = (): string | null => {
+  return sessionStorage.getItem('erpnext-user');
 };
 
 const getAuthHeaders = (): HeadersInit => {
@@ -45,5 +51,6 @@ export const authService = {
   login,
   logout,
   isAuthenticated,
+  getLoggedInUser,
   getAuthHeaders,
 };

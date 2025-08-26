@@ -52,13 +52,17 @@ export function CheckoutPage() {
       const payload: SalesOrderPayload = {
         customer: customer,
         set_warehouse: warehouse,
-        items: items.map(item => ({ item_code: item.name, qty: item.quantity, rate: item.standard_rate || 0 })),
+        items: items.map(item => ({
+          item_code: item.name,
+          qty: item.quantity,
+          rate: item.standard_rate || 0,
+          delivery_date: new Date().toISOString().split('T')[0],
+        })),
         payments: payments.map(p => ({ mode_of_payment: p.mode, amount: p.amount })),
         additional_discount_percentage: additionalDiscountType === 'Percentage' ? additionalDiscountValue : 0,
         discount_amount: additionalDiscountType === 'Amount' ? additionalDiscountValue : 0,
         update_stock: 1,
         docstatus: isPaidInFull ? 1 : 0,
-        delivery_date: new Date().toISOString().split('T')[0],
         company: posProfile?.company,
         cost_center: posProfile?.cost_center,
       };
@@ -73,7 +77,7 @@ export function CheckoutPage() {
       navigate('/');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-      notifications.show({ title: 'Submission Failed', message: `Could not create invoice. ${errorMessage}`, color: 'red' });
+      notifications.show({ title: 'Submission Failed', message: `Could not create Sales Order. ${errorMessage}`, color: 'red' });
     } finally {
       setIsSubmitting(false);
     }

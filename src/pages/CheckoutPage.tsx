@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { apiService, type SalesOrderPayload } from '../services/apiService';
+import { apiService, type SalesOrderPayload, type PaymentEntryPayload } from '../services/apiService';
 import { authService } from '../services/authService';
 import { notifications } from '@mantine/notifications';
 import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Badge, NumberInput, ActionIcon, Radio, Stack, SegmentedControl } from '@mantine/core';
@@ -11,6 +11,11 @@ import { Link, useNavigate } from 'react-router-dom';
 interface PaymentEntry {
   mode: string;
   amount: number;
+}
+
+interface PosPaymentMethod {
+  mode_of_payment: string;
+  default_account: string;
 }
 
 export function CheckoutPage() {
@@ -82,11 +87,11 @@ export function CheckoutPage() {
 
       for (const p of payments) {
         try {
-          const paymentAccount = posProfile?.payments?.find(pm => pm.mode_of_payment === p.mode)?.default_account;
+          const paymentAccount = posProfile?.payments?.find((pm: PosPaymentMethod) => pm.mode_of_payment === p.mode)?.default_account;
           if (!paymentAccount) {
             throw new Error(`Could not find payment account for mode ${p.mode}`);
           }
-          const pePayload: apiService.PaymentEntryPayload = {
+          const pePayload: PaymentEntryPayload = {
             dt: 'Sales Order',
             dn: soResult.name,
             party_type: 'Customer',

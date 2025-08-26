@@ -1,4 +1,3 @@
-import 'resize-observer-polyfill';
 import { render, screen, waitFor, cleanup } from '../test/test-utils';
 import { CheckoutPage } from './CheckoutPage';
 import { useCartStore } from '../store/cartStore';

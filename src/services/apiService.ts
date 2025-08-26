@@ -31,11 +31,11 @@ const get = async <T>(endpoint: string): Promise<T> => {
   return data.data as T;
 };
 
-const post = async <T>(endpoint: string, payload: any): Promise<T> => {
+const post = async <T>(endpoint: string, payload: any, customHeaders: HeadersInit = {}): Promise<T> => {
   const erpNextUrl = localStorage.getItem('erpnext-url');
   if (!erpNextUrl) throw new Error('ERPNext URL not set.');
   const fullUrl = `${erpNextUrl}/api/${endpoint}`;
-  const headers = { ...authService.getAuthHeaders(), 'Content-Type': 'application/json', 'Expect': '' };
+  const headers = { ...authService.getAuthHeaders(), 'Content-Type': 'application/json', ...customHeaders };
   const response = await fetch(fullUrl, {
     method: 'POST',
     headers,
@@ -53,7 +53,7 @@ const getPosProfiles = async (): Promise<PosProfile[]> => get<PosProfile[]>(`res
 const getPosProfileDetails = async (profileName: string): Promise<PosProfileData> => get<PosProfileData>(`resource/POS Profile/${encodeURIComponent(profileName)}`);
 const getItems = async (itemGroups: string[]): Promise<Item[]> => get<Item[]>(`resource/Item?fields=${encodeURIComponent('["name", "item_name", "item_group", "stock_uom", "standard_rate"]')}&filters=${encodeURIComponent(JSON.stringify([["item_group", "in", itemGroups]]))}&limit_page_length=0`);
 const getCustomers = async (customerGroups: string[]): Promise<Customer[]> => get<Customer[]>(`resource/Customer?fields=${encodeURIComponent('["name", "customer_name", "customer_group"]')}&filters=${encodeURIComponent(JSON.stringify([["customer_group", "in", customerGroups]]))}&limit_page_length=0`);
-const createSalesOrder = async (payload: SalesOrderPayload): Promise<any> => post<any>('resource/Sales Order', payload);
+const createSalesOrder = async (payload: SalesOrderPayload): Promise<any> => post<any>('resource/Sales Order', payload, { 'Expect': '' });
 
 export const apiService = {
   getPosProfiles,

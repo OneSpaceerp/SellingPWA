@@ -1,9 +1,7 @@
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup } from '../test/test-utils';
 import { CartPage } from './CartPage';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { MantineProvider } from '@mantine/core';
-import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { type CartItem } from '../store/cartStore';
 
@@ -37,32 +35,23 @@ describe('CartPage', () => {
     cleanup();
   });
 
-  const renderComponent = () => {
-    return render(
-      <BrowserRouter>
-        <MantineProvider>
-          <CartPage />
-        </MantineProvider>
-      </BrowserRouter>
-    );
-  };
-
   it('should display an "empty cart" message if there are no items', () => {
     setupMocks([], null);
-    renderComponent();
+    render(<CartPage />);
     expect(screen.getByText(/your cart is empty/i)).toBeInTheDocument();
   });
 
   it('should render the items in the cart', () => {
     setupMocks(mockCartItems, 'CUST-0001');
-    renderComponent();
+    render(<CartPage />);
     expect(screen.getByText('Apple')).toBeInTheDocument();
-    expect(screen.getByText('USD 3.00')).toBeInTheDocument(); // 1.5 * 2
+    // Use a more specific query to target the grand total
+    expect(screen.getByRole('heading', { level: 2, name: /usd 3.00/i })).toBeInTheDocument();
   });
 
   it('should render the customer selection UI', () => {
     setupMocks(mockCartItems, null); // No customer selected
-    renderComponent();
+    render(<CartPage />);
     expect(screen.getByText('No customer selected')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /select customer/i })).toBeInTheDocument();
   });

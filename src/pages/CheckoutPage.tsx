@@ -97,6 +97,7 @@ export function CheckoutPage() {
           }
 
           // Step 1: Get the draft Payment Entry from the server
+          const today = new Date().toISOString().split('T')[0];
           const peDraftPayload: PaymentEntryPayload = {
             dt: 'Sales Order',
             dn: soResult.name,
@@ -106,7 +107,9 @@ export function CheckoutPage() {
             paid_to: paymentAccount,
             mode_of_payment: p.mode,
             company: posProfile.company,
-            posting_date: new Date().toISOString().split('T')[0],
+            posting_date: today,
+            reference_no: soResult.name,
+            reference_date: today,
           };
           const peDraft = await apiService.createPaymentEntry(peDraftPayload);
 

@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { authService } from '../services/authService';
 import { useSettingsStore } from '../store/settingsStore';
 import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider, Modal, Button, Table, Stack } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
-import { IconSearch } from '@tabler/icons-react';
+import { IconSearch, IconPrinter } from '@tabler/icons-react';
 import type { Order } from '../db/Order';
+import { useReactToPrint } from 'react-to-print';
+import { OrderPrintLayout } from '../components/OrderPrintLayout';
 import { useNavigate } from 'react-router-dom';
 
 export function OrdersPage() {
@@ -16,6 +17,12 @@ export function OrdersPage() {
   const currency = useSettingsStore((state) => state.currency);
   const user = authService.getLoggedInUser();
   const navigate = useNavigate();
+
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+  });
 
   const orders = useLiveQuery(async () => {
     if (!user) return [];
@@ -101,11 +108,11 @@ export function OrdersPage() {
           value={customerFilter}
           onChange={(event) => setCustomerFilter(event.currentTarget.value)}
         />
-        <DatePickerInput
+        <TextInput
+          type="date"
           placeholder="Filter by date"
-          value={dateFilter}
-          onChange={(value: Date | null) => setDateFilter(value)}
-          clearable
+          value={dateFilter ? dateFilter.toISOString().split('T')[0] : ''}
+          onChange={(event) => setDateFilter(event.currentTarget.value ? new Date(event.currentTarget.value) : null)}
         />
       </Group>
       {renderContent()}
@@ -171,6 +178,7 @@ export function OrdersPage() {
             </Stack>
 
             <Group justify="flex-end" mt="xl">
+              <Button leftSection={<IconPrinter size={16} />} onClick={handlePrint}>Print</Button>
               {selectedOrder.outstanding_amount > 0 && (
                 <Button color="green" onClick={handleCompletePayment}>Complete Payment</Button>
               )}
@@ -178,6 +186,10 @@ export function OrdersPage() {
           </>
         )}
       </Modal>
+
+      <div style={{ display: 'none' }}>
+        {selectedOrder && <OrderPrintLayout ref={printRef} order={selectedOrder} currency={currency} />}
+      </div>
     </>
   );
 }

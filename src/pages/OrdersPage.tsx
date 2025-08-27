@@ -4,26 +4,16 @@ import { db } from '../db/db';
 import { authService } from '../services/authService';
 import { useSettingsStore } from '../store/settingsStore';
 import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider, Modal, Button, Table, Stack } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
-import { IconSearch, IconPrinter } from '@tabler/icons-react';
+import { IconSearch } from '@tabler/icons-react';
 import type { Order } from '../db/Order';
-import { useReactToPrint } from 'react-to-print';
-import { OrderPrintLayout } from '../components/OrderPrintLayout';
 import { useNavigate } from 'react-router-dom';
 
 export function OrdersPage() {
   const [customerFilter, setCustomerFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const currency = useSettingsStore((state) => state.currency);
   const user = authService.getLoggedInUser();
   const navigate = useNavigate();
-
-  const printRef = useRef<HTMLDivElement>(null);
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-  } as any);
 
   const orders = useLiveQuery(async () => {
     if (!user) return [];
@@ -36,19 +26,8 @@ export function OrdersPage() {
       );
     }
 
-    if (dateFilter) {
-      const startOfDay = new Date(dateFilter);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(dateFilter);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      filteredOrders = filteredOrders.filter(order =>
-        order.created_at >= startOfDay && order.created_at <= endOfDay
-      );
-    }
-
     return filteredOrders.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
-  }, [customerFilter, dateFilter]);
+  }, [customerFilter]);
 
   const handleCompletePayment = () => {
     if (selectedOrder) {
@@ -109,12 +88,7 @@ export function OrdersPage() {
           value={customerFilter}
           onChange={(event) => setCustomerFilter(event.currentTarget.value)}
         />
-        <DatePickerInput
-          placeholder="Filter by date"
-          value={dateFilter}
-          onChange={(value: Date | null) => setDateFilter(value)}
-          clearable
-        />
+        <div>Date filter temporarily removed</div>
       </Group>
       {renderContent()}
 
@@ -179,7 +153,6 @@ export function OrdersPage() {
             </Stack>
 
             <Group justify="flex-end" mt="xl">
-              <Button leftSection={<IconPrinter size={16} />} onClick={handlePrint}>Print</Button>
               {selectedOrder.outstanding_amount > 0 && (
                 <Button color="green" onClick={handleCompletePayment}>Complete Payment</Button>
               )}
@@ -187,10 +160,6 @@ export function OrdersPage() {
           </>
         )}
       </Modal>
-
-      <div style={{ display: 'none' }}>
-        {selectedOrder && <OrderPrintLayout ref={printRef} order={selectedOrder} currency={currency} />}
-      </div>
     </>
   );
 }

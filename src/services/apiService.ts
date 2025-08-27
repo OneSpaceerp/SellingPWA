@@ -69,6 +69,8 @@ export interface PaymentEntryPayload {
 
 const createPaymentEntry = async (payload: PaymentEntryPayload): Promise<any> => post<any>('method/erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry', payload);
 
+const getModeOfPaymentDetails = async (name: string): Promise<any> => get<any>(`resource/Mode of Payment/${encodeURIComponent(name)}`);
+
 export const apiService = {
   getPosProfiles,
   getPosProfileDetails,
@@ -76,4 +78,5 @@ export const apiService = {
   getCustomers,
   createSalesOrder,
   createPaymentEntry,
+  getModeOfPaymentDetails,
 };

@@ -18,10 +18,6 @@ interface ModeOfPaymentAccount {
   default_account: string;
 }
 
-interface PosPaymentMethod {
-  mode_of_payment: string;
-  accounts: ModeOfPaymentAccount[];
-}
 
 export function CheckoutPage() {
   const { items, customer, grandTotal, clearCart, subTotal, discountAmount, additionalDiscountType, additionalDiscountValue, setAdditionalDiscount } = useCartStore();

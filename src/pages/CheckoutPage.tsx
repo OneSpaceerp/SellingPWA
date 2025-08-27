@@ -60,7 +60,7 @@ export function CheckoutPage() {
       futureDate.setDate(futureDate.getDate() + 2);
       const deliveryDate = futureDate.toISOString().split('T')[0];
 
-      const isPaidInFull = totalPaid >= grandTotal();
+      // The Sales Order should always be submitted.
       const soPayload: SalesOrderPayload = {
         customer: customer,
         set_warehouse: warehouse,
@@ -73,15 +73,15 @@ export function CheckoutPage() {
         additional_discount_percentage: additionalDiscountType === 'Percentage' ? additionalDiscountValue : 0,
         discount_amount: additionalDiscountType === 'Amount' ? additionalDiscountValue : 0,
         update_stock: 1,
-        docstatus: isPaidInFull ? 1 : 0,
-        company: posProfile?.company,
-        cost_center: posProfile?.cost_center,
+        docstatus: 1, // Always submit the Sales Order
+        company: posProfile.company,
+        cost_center: posProfile.cost_center,
         hub_manager: user,
       };
       const soResult = await apiService.createSalesOrder(soPayload);
       notifications.show({
-        title: 'Sales Order Created',
-        message: `Order ${soResult.name} created as ${isPaidInFull ? 'Submitted' : 'Draft'}.`,
+        title: 'Sales Order Submitted',
+        message: `Order ${soResult.name} has been successfully submitted.`,
         color: 'teal',
         icon: <IconCircleCheck />,
       });
@@ -95,7 +95,9 @@ export function CheckoutPage() {
           if (!paymentAccount) {
             throw new Error(`Could not find payment account for mode ${p.mode} and company ${posProfile.company} in Mode of Payment details.`);
           }
-          const pePayload: PaymentEntryPayload = {
+
+          // Step 1: Get the draft Payment Entry from the server
+          const peDraftPayload: PaymentEntryPayload = {
             dt: 'Sales Order',
             dn: soResult.name,
             party_type: 'Customer',
@@ -106,10 +108,14 @@ export function CheckoutPage() {
             company: posProfile.company,
             posting_date: new Date().toISOString().split('T')[0],
           };
-          await apiService.createPaymentEntry(pePayload);
+          const peDraft = await apiService.createPaymentEntry(peDraftPayload);
+
+          // Step 2: Save the draft document
+          await apiService.saveDoc(peDraft);
+
           notifications.show({
             title: 'Payment Recorded',
-            message: `Payment of ${p.amount} via ${p.mode} recorded.`,
+            message: `Payment of ${p.amount} via ${p.mode} has been successfully recorded.`,
             color: 'green',
           });
         } catch (peError) {

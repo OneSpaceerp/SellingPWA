@@ -23,7 +23,7 @@ export function OrdersPage() {
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
-  } as any);
+  });
 
   const orders = useLiveQuery(async () => {
     if (!user) return [];
@@ -112,7 +112,7 @@ export function OrdersPage() {
         <DatePickerInput
           placeholder="Filter by date"
           value={dateFilter}
-          onChange={(value: Date | null) => setDateFilter(value)}
+          onChange={setDateFilter}
           clearable
         />
       </Group>

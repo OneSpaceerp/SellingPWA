@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import type { Order } from './Order';
 
 // Define the data structures for our local database.
 export interface PosProfileData {
@@ -35,6 +36,7 @@ class AppDatabase extends Dexie {
   items!: Table<Item, string>;
   customers!: Table<Customer, string>;
   warehouses!: Table<Warehouse, string>;
+  orders!: Table<Order, number>;
 
   constructor() {
     super('pwa-sales-app-db');
@@ -43,6 +45,9 @@ class AppDatabase extends Dexie {
       items: 'name, item_group',
       customers: 'name, customer_group',
       warehouses: 'name',
+    });
+    this.version(2).stores({
+      orders: '++id, order_id, customer, created_at, created_by',
     });
   }
 }

@@ -3,6 +3,8 @@ import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { apiService, type SalesOrderPayload, type PaymentEntryPayload } from '../services/apiService';
 import { authService } from '../services/authService';
+import { db } from '../db/db';
+import type { Order } from '../db/Order';
 import { notifications } from '@mantine/notifications';
 import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Badge, NumberInput, ActionIcon, Radio, Stack, SegmentedControl } from '@mantine/core';
 import { IconAlertCircle, IconCircleCheck, IconTrash, IconPlus, IconBuildingWarehouse } from '@tabler/icons-react';
@@ -85,6 +87,33 @@ export function CheckoutPage() {
         color: 'teal',
         icon: <IconCircleCheck />,
       });
+
+      // Save the order to the local database
+      try {
+        const order: Order = {
+          order_id: soResult.name,
+          customer: customer,
+          items: items.map(item => ({
+            item_code: item.name,
+            item_name: item.item_name,
+            qty: item.quantity,
+            rate: item.standard_rate || 0,
+          })),
+          grand_total: grandTotal(),
+          paid_amount: totalPaid,
+          outstanding_amount: outstandingAmount,
+          created_at: new Date(),
+          created_by: user,
+        };
+        await db.orders.add(order);
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : 'An unknown error occurred.';
+        notifications.show({
+          title: 'Local Save Failed',
+          message: `Could not save the order locally. ${errorMessage}`,
+          color: 'red',
+        });
+      }
 
       for (const p of payments) {
         try {

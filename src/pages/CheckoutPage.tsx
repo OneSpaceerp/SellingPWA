@@ -113,8 +113,14 @@ export function CheckoutPage() {
           };
           const peDraft = await apiService.createPaymentEntry(peDraftPayload);
 
-          // The server method doesn't retain the reference_no, so we add it back manually.
+          // The server method doesn't retain the reference_no, and it auto-fills the
+          // full outstanding amount. We need to correct both of these.
           peDraft.reference_no = soResult.name;
+          peDraft.paid_amount = p.amount;
+          peDraft.base_paid_amount = p.amount;
+          if (peDraft.references && peDraft.references.length > 0) {
+            peDraft.references[0].allocated_amount = p.amount;
+          }
 
           // Step 2: Save the draft document
           const savedPaymentEntry = await apiService.saveDoc(peDraft);

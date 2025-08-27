@@ -71,6 +71,13 @@ const createPaymentEntry = async (payload: PaymentEntryPayload): Promise<any> =>
 
 const getModeOfPaymentDetails = async (name: string): Promise<any> => get<any>(`resource/Mode of Payment/${encodeURIComponent(name)}`);
 
+const saveDoc = async (doc: any): Promise<any> => {
+  const doctype = encodeURIComponent(doc.doctype);
+  // The 'doc' object already contains all necessary fields.
+  // We just need to POST it to the resource endpoint.
+  return post<any>(`resource/${doctype}`, doc);
+};
+
 export const apiService = {
   getPosProfiles,
   getPosProfileDetails,
@@ -79,4 +86,5 @@ export const apiService = {
   createSalesOrder,
   createPaymentEntry,
   getModeOfPaymentDetails,
+  saveDoc,
 };

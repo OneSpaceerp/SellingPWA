@@ -92,12 +92,12 @@ export function CheckoutPage() {
 
       for (const p of payments) {
         try {
-          const modeOfPayment = posProfile?.payments?.find((pm: PosPaymentMethod) => pm.mode_of_payment === p.mode);
-          const paymentAccountEntry = modeOfPayment?.accounts?.find((acc: ModeOfPaymentAccount) => acc.company === posProfile.company);
+          const modeOfPaymentDetails = await apiService.getModeOfPaymentDetails(p.mode);
+          const paymentAccountEntry = modeOfPaymentDetails?.accounts?.find((acc: ModeOfPaymentAccount) => acc.company === posProfile.company);
           const paymentAccount = paymentAccountEntry?.default_account;
 
           if (!paymentAccount) {
-            throw new Error(`Could not find payment account for mode ${p.mode} and company ${posProfile.company}`);
+            throw new Error(`Could not find payment account for mode ${p.mode} and company ${posProfile.company} in Mode of Payment details.`);
           }
           const pePayload: PaymentEntryPayload = {
             dt: 'Sales Order',

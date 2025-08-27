@@ -1,5 +1,3 @@
-import type { Item } from './db';
-
 export interface Order {
   id?: number; // Optional because it's auto-incrementing
   order_id: string; // From the server

@@ -113,6 +113,9 @@ export function CheckoutPage() {
           };
           const peDraft = await apiService.createPaymentEntry(peDraftPayload);
 
+          // The server method doesn't retain the reference_no, so we add it back manually.
+          peDraft.reference_no = soResult.name;
+
           // Step 2: Save the draft document
           await apiService.saveDoc(peDraft);
 

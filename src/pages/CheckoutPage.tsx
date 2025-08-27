@@ -13,9 +13,14 @@ interface PaymentEntry {
   amount: number;
 }
 
+interface ModeOfPaymentAccount {
+  company: string;
+  default_account: string;
+}
+
 interface PosPaymentMethod {
   mode_of_payment: string;
-  default_account: string;
+  accounts: ModeOfPaymentAccount[];
 }
 
 export function CheckoutPage() {
@@ -87,9 +92,12 @@ export function CheckoutPage() {
 
       for (const p of payments) {
         try {
-          const paymentAccount = posProfile?.payments?.find((pm: PosPaymentMethod) => pm.mode_of_payment === p.mode)?.default_account;
+          const modeOfPayment = posProfile?.payments?.find((pm: PosPaymentMethod) => pm.mode_of_payment === p.mode);
+          const paymentAccountEntry = modeOfPayment?.accounts?.find(acc => acc.company === posProfile.company);
+          const paymentAccount = paymentAccountEntry?.default_account;
+
           if (!paymentAccount) {
-            throw new Error(`Could not find payment account for mode ${p.mode}`);
+            throw new Error(`Could not find payment account for mode ${p.mode} and company ${posProfile.company}`);
           }
           const pePayload: PaymentEntryPayload = {
             dt: 'Sales Order',

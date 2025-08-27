@@ -99,6 +99,11 @@ const saveDoc = async (doc: any): Promise<any> => {
   return post<any>(`resource/${doctype}`, doc);
 };
 
+const submitDoc = async (doc: any): Promise<any> => {
+  // The method expects the document object itself as the payload.
+  return postMethod<any>('method/frappe.client.submit', doc);
+};
+
 export const apiService = {
   getPosProfiles,
   getPosProfileDetails,
@@ -108,4 +113,5 @@ export const apiService = {
   createPaymentEntry,
   getModeOfPaymentDetails,
   saveDoc,
+  submitDoc,
 };

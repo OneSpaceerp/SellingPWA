@@ -117,11 +117,14 @@ export function CheckoutPage() {
           peDraft.reference_no = soResult.name;
 
           // Step 2: Save the draft document
-          await apiService.saveDoc(peDraft);
+          const savedPaymentEntry = await apiService.saveDoc(peDraft);
+
+          // Step 3: Submit the document
+          await apiService.submitDoc(savedPaymentEntry);
 
           notifications.show({
-            title: 'Payment Recorded',
-            message: `Payment of ${p.amount} via ${p.mode} has been successfully recorded.`,
+            title: 'Payment Submitted',
+            message: `Payment of ${p.amount} via ${p.mode} has been successfully submitted.`,
             color: 'green',
           });
         } catch (peError) {

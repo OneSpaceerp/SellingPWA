@@ -1,15 +1,17 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { authService } from '../services/authService';
 import { useSettingsStore } from '../store/settingsStore';
 import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider, Modal, Button, Table, Stack } from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
 import { IconSearch } from '@tabler/icons-react';
 import type { Order } from '../db/Order';
 import { useNavigate } from 'react-router-dom';
 
 export function OrdersPage() {
   const [customerFilter, setCustomerFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const currency = useSettingsStore((state) => state.currency);
   const user = authService.getLoggedInUser();
@@ -26,8 +28,19 @@ export function OrdersPage() {
       );
     }
 
+    if (dateFilter) {
+      const startOfDay = new Date(dateFilter);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(dateFilter);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      filteredOrders = filteredOrders.filter(order =>
+        order.created_at >= startOfDay && order.created_at <= endOfDay
+      );
+    }
+
     return filteredOrders.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
-  }, [customerFilter]);
+  }, [customerFilter, dateFilter]);
 
   const handleCompletePayment = () => {
     if (selectedOrder) {
@@ -88,7 +101,12 @@ export function OrdersPage() {
           value={customerFilter}
           onChange={(event) => setCustomerFilter(event.currentTarget.value)}
         />
-        <div>Date filter temporarily removed</div>
+        <DatePickerInput
+          placeholder="Filter by date"
+          value={dateFilter}
+          onChange={(value: Date | null) => setDateFilter(value)}
+          clearable
+        />
       </Group>
       {renderContent()}
 

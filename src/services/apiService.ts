@@ -100,8 +100,8 @@ const saveDoc = async (doc: any): Promise<any> => {
 };
 
 const submitDoc = async (doc: any): Promise<any> => {
-  // The method expects the document object itself as the payload.
-  return postMethod<any>('method/frappe.client.submit', doc);
+  // The frappe.client.submit method expects the document to be wrapped in a 'doc' object.
+  return postMethod<any>('method/frappe.client.submit', { doc: doc });
 };
 
 export const apiService = {

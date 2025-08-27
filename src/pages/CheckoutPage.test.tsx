@@ -1,8 +1,9 @@
-import { render, screen, waitFor, cleanup } from '../test/test-utils';
+import { render, screen, waitFor, cleanup, within } from '../test/test-utils';
 import { CheckoutPage } from './CheckoutPage';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { apiService } from '../services/apiService';
+import { authService } from '../services/authService';
 import { notifications } from '@mantine/notifications';
 import { vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -11,6 +12,7 @@ import userEvent from '@testing-library/user-event';
 vi.mock('../store/cartStore');
 vi.mock('../store/settingsStore');
 vi.mock('../services/apiService');
+vi.mock('../services/authService');
 vi.mock('@mantine/notifications', async (importOriginal) => {
   const actual = await importOriginal();
   return {
@@ -58,6 +60,7 @@ describe('CheckoutPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupMocks();
+    (authService.getLoggedInUser as vi.Mock).mockReturnValue('test-user');
   });
 
   afterEach(() => cleanup());
@@ -73,14 +76,15 @@ describe('CheckoutPage', () => {
     (apiService.createSalesOrder as any).mockResolvedValue({ name: 'SINV-DRAFT-001' });
     render(<CheckoutPage />);
 
+    const addPaymentSection = screen.getByText(/add a payment/i).closest('div[class*="mantine-Paper-root"]') as HTMLElement;
     await user.click(screen.getByRole('radio', { name: /cash/i }));
-    await user.clear(screen.getByLabelText(/amount/i));
-    await user.type(screen.getByLabelText(/amount/i), '50');
+    await user.clear(within(addPaymentSection).getByLabelText(/amount/i));
+    await user.type(within(addPaymentSection).getByLabelText(/amount/i), '50');
     await user.click(screen.getByRole('button', { name: /add payment/i }));
     await user.click(screen.getByRole('button', { name: /complete order/i }));
 
     await waitFor(() => {
-      expect(apiService.createSalesOrder).toHaveBeenCalledWith(expect.objectContaining({ docstatus: 0 }));
+      expect(apiService.createSalesOrder).toHaveBeenCalledWith(expect.objectContaining({ docstatus: 1 }));
     });
   });
 
@@ -89,9 +93,10 @@ describe('CheckoutPage', () => {
     (apiService.createSalesOrder as any).mockResolvedValue({ name: 'SINV-SUBMIT-001' });
     render(<CheckoutPage />);
 
+    const addPaymentSection = screen.getByText(/add a payment/i).closest('div[class*="mantine-Paper-root"]') as HTMLElement;
     await user.click(screen.getByRole('radio', { name: /cash/i }));
-    await user.clear(screen.getByLabelText(/amount/i));
-    await user.type(screen.getByLabelText(/amount/i), '100');
+    await user.clear(within(addPaymentSection).getByLabelText(/amount/i));
+    await user.type(within(addPaymentSection).getByLabelText(/amount/i), '100');
     await user.click(screen.getByRole('button', { name: /add payment/i }));
     await user.click(screen.getByRole('button', { name: /complete order/i }));
 

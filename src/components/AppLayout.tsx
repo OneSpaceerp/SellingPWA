@@ -1,6 +1,6 @@
 import { AppShell, Group, Tabs, Title } from '@mantine/core';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { IconShoppingCart, IconSettings, IconListDetails } from '@tabler/icons-react';
+import { IconShoppingCart, IconSettings, IconListDetails, IconReceipt } from '@tabler/icons-react';
 
 export function AppLayout() {
   const navigate = useNavigate();
@@ -32,6 +32,9 @@ export function AppLayout() {
             </Tabs.Tab>
             <Tabs.Tab value="/cart" leftSection={<IconShoppingCart size="1.2rem" />}>
               Cart
+            </Tabs.Tab>
+            <Tabs.Tab value="/orders" leftSection={<IconReceipt size="1.2rem" />}>
+              Orders
             </Tabs.Tab>
             <Tabs.Tab value="/settings" leftSection={<IconSettings size="1.2rem" />}>
               Settings

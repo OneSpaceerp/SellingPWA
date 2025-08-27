@@ -54,8 +54,8 @@ export function CheckoutPage() {
 
   const handleCompletePayment = async () => {
     const user = authService.getLoggedInUser();
-    if (!customer || !warehouse || payments.length === 0 || !user) {
-      notifications.show({ color: 'red', title: 'Error', message: 'A customer, warehouse, payment, and logged-in user are required.' });
+    if (!customer || !posProfile || !warehouse || payments.length === 0 || !user) {
+      notifications.show({ color: 'red', title: 'Error', message: 'A customer, POS profile, warehouse, payment, and logged-in user are required.' });
       return;
     }
     setIsSubmitting(true);
@@ -93,7 +93,7 @@ export function CheckoutPage() {
       for (const p of payments) {
         try {
           const modeOfPayment = posProfile?.payments?.find((pm: PosPaymentMethod) => pm.mode_of_payment === p.mode);
-          const paymentAccountEntry = modeOfPayment?.accounts?.find(acc => acc.company === posProfile.company);
+          const paymentAccountEntry = modeOfPayment?.accounts?.find((acc: ModeOfPaymentAccount) => acc.company === posProfile.company);
           const paymentAccount = paymentAccountEntry?.default_account;
 
           if (!paymentAccount) {

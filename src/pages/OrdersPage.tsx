@@ -22,7 +22,7 @@ export function OrdersPage() {
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
-  });
+  } as any);
 
   const orders = useLiveQuery(async () => {
     if (!user) return [];

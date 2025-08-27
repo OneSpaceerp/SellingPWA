@@ -67,7 +67,26 @@ export interface PaymentEntryPayload {
   posting_date: string;
 }
 
-const createPaymentEntry = async (payload: PaymentEntryPayload): Promise<any> => post<any>('method/erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry', payload);
+const postMethod = async <T>(method: string, payload: any): Promise<T> => {
+  const erpNextUrl = localStorage.getItem('erpnext-url');
+  if (!erpNextUrl) throw new Error('ERPNext URL not set.');
+  const fullUrl = `${erpNextUrl}/api/${method}`;
+  const headers = { ...authService.getAuthHeaders(), 'Content-Type': 'application/json' };
+  const response = await fetch(fullUrl, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API request failed: ${errorText}`);
+  }
+  const data = await response.json();
+  // Method calls wrap the response in a 'message' object
+  return data.message as T;
+};
+
+const createPaymentEntry = async (payload: PaymentEntryPayload): Promise<any> => postMethod<any>('method/erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry', payload);
 
 const getModeOfPaymentDetails = async (name: string): Promise<any> => get<any>(`resource/Mode of Payment/${encodeURIComponent(name)}`);
 

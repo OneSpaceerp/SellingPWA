@@ -9,6 +9,7 @@ import { IconSearch, IconPrinter, IconRefresh } from '@tabler/icons-react';
 import type { Order } from '../db/Order';
 import { useReactToPrint } from 'react-to-print';
 import { OrderPrintLayout } from '../components/OrderPrintLayout';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { useNavigate } from 'react-router-dom';
 
 export function OrdersPage() {
@@ -64,19 +65,32 @@ export function OrdersPage() {
     if (!orders) return;
     setIsSyncing(true);
     try {
-      const orderIds = orders.map(o => o.order_id);
-      const remoteOrders = await apiService.getSalesOrders(orderIds);
+      const localOrders = await db.orders.where('created_by').equals(user!).toArray();
+      const orderIds = localOrders.map(o => o.order_id);
 
-      for (const remoteOrder of remoteOrders) {
-        const localOrder = await db.orders.where('order_id').equals(remoteOrder.name).first();
-        if (localOrder) {
-          let status = localOrder.status;
-          if (remoteOrder.docstatus === 1) {
-            status = 'Approved';
-          } else if (remoteOrder.docstatus === 2) {
-            status = 'Cancelled';
+      if (orderIds.length === 0) return;
+
+      const remoteOrders = await apiService.getSalesOrders(orderIds);
+      const remoteOrderIds = new Set(remoteOrders.map(o => o.name));
+
+      for (const localOrder of localOrders) {
+        if (!remoteOrderIds.has(localOrder.order_id)) {
+          // Deleted in ERPNext
+          await db.orders.delete(localOrder.id!);
+        } else {
+          // Exists in ERPNext, update status
+          const remoteOrder = remoteOrders.find(o => o.name === localOrder.order_id);
+          if (remoteOrder) {
+            let status = localOrder.status;
+            if (remoteOrder.docstatus === 1 && status !== 'Approved') {
+              status = 'Approved';
+            } else if (remoteOrder.docstatus === 2 && status !== 'Cancelled') {
+              status = 'Cancelled';
+            }
+            if (status !== localOrder.status) {
+              await db.orders.update(localOrder.id!, { status });
+            }
           }
-          await db.orders.update(localOrder.id!, { status });
         }
       }
     } catch (error) {
@@ -167,10 +181,11 @@ export function OrdersPage() {
         title={`Order: ${selectedOrder?.order_id}`}
         size="lg"
       >
-        {selectedOrder && (
-          <>
-            <Stack>
-              <Group justify="space-between">
+        <ErrorBoundary>
+          {selectedOrder && (
+            <>
+              <Stack>
+                <Group justify="space-between">
                 <Text>Customer:</Text>
                 <Text fw={500}>{selectedOrder.customer_name || selectedOrder.customer}</Text>
               </Group>
@@ -233,6 +248,7 @@ export function OrdersPage() {
             </Group>
           </>
         )}
+        </ErrorBoundary>
       </Modal>
 
       <div style={{ display: 'none' }}>

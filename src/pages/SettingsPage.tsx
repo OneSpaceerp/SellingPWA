@@ -1,9 +1,11 @@
 import { Title, Button, Box, Switch, useMantineColorScheme, Group } from '@mantine/core';
 import { authService } from '../services/authService';
 import { IconSun, IconMoon } from '@tabler/icons-react';
+import { useSettingsStore } from '../store/settingsStore';
 
 export function SettingsPage() {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
+  const loadSettings = useSettingsStore((state) => state.loadSettings);
 
   const handleLogout = () => {
     authService.logout();
@@ -25,6 +27,14 @@ export function SettingsPage() {
           />
           <IconMoon size={18} />
         </Group>
+      </Box>
+
+      <Box mt="xl">
+        <Title order={3}>Sync All Data</Title>
+        <p>Fetch latest Products, Customers and Settings from the server.</p>
+        <Button onClick={() => loadSettings(true)}>
+          Sync All Data
+        </Button>
       </Box>
 
       <Box mt="xl">

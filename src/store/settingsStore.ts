@@ -4,15 +4,15 @@ import { apiService, type PosProfileData } from '../services/apiService';
 interface SettingsState {
   posProfile: PosProfileData | null;
   currency: string;
-  loadSettings: () => Promise<void>;
+  loadSettings: (force?: boolean) => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   posProfile: null,
   currency: '$', // A sensible default until settings are loaded
 
-  loadSettings: async () => {
-    if (get().posProfile) {
+  loadSettings: async (force = false) => {
+    if (get().posProfile && !force) {
       return; // Prevent re-loading
     }
     try {
@@ -35,5 +35,3 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 }));
 
-// Immediately attempt to load the settings when the app starts.
-useSettingsStore.getState().loadSettings();

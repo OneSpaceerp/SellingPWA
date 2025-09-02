@@ -46,8 +46,8 @@ describe('PaymentPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Collect Payment for Order SO-001')).toBeInTheDocument();
       expect(screen.getByText('Test Customer')).toBeInTheDocument();
-      expect(screen.getByTestId('outstanding-amount')).toHaveTextContent('100.00');
     });
+    await expect(screen.findByTestId('outstanding-amount')).resolves.toHaveTextContent('100.00');
   });
 
   it('should allow adding and removing payments', async () => {
@@ -55,13 +55,13 @@ describe('PaymentPage', () => {
     render(<PaymentPage />);
     await waitFor(() => expect(screen.getByText(/add a payment/i)).toBeInTheDocument());
 
-    const addPaymentSection = screen.getByText(/add a payment/i).closest('div') as HTMLElement;
+    const addPaymentSection = screen.getByText(/add a payment/i).closest('div.mantine-Paper-root') as HTMLElement;
 
     await user.click(within(addPaymentSection).getByRole('radio', { name: /cash/i }));
     await user.type(within(addPaymentSection).getByLabelText(/amount/i), '50');
     await user.click(within(addPaymentSection).getByRole('button', { name: /add payment/i }));
 
-    const paymentsAddedSection = screen.getByText('Payments Added').closest('div') as HTMLElement;
+    const paymentsAddedSection = screen.getByText('Payments Added').closest('div.mantine-Paper-root') as HTMLElement;
     expect(within(paymentsAddedSection).getByText('Cash')).toBeInTheDocument();
     expect(within(paymentsAddedSection).getByText(/50.00/)).toBeInTheDocument();
 

@@ -212,7 +212,7 @@ export function OrdersPage() {
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {selectedOrder.items.map(item => (
+                {selectedOrder.items && selectedOrder.items.map(item => (
                   <Table.Tr key={item.item_code}>
                     <Table.Td>{item.item_name}</Table.Td>
                     <Table.Td>{item.qty}</Table.Td>

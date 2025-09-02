@@ -1,7 +1,8 @@
-import { render, screen, waitFor, cleanup } from '../test/test-utils';
+import { render, screen, waitFor, cleanup, within } from '../test/test-utils';
 import { PaymentPage } from './PaymentPage';
 import { apiService } from '../services/apiService';
 import { useSettingsStore } from '../store/settingsStore';
+import { authService } from '../services/authService';
 import { vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 
@@ -12,6 +13,7 @@ vi.mock('react-router-dom', async () => ({
 }));
 vi.mock('../services/apiService');
 vi.mock('../store/settingsStore');
+vi.mock('../services/authService');
 
 const mockOrder = {
   name: 'SO-001',
@@ -44,7 +46,7 @@ describe('PaymentPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Collect Payment for Order SO-001')).toBeInTheDocument();
       expect(screen.getByText('Test Customer')).toBeInTheDocument();
-      expect(screen.getByText(/outstanding/i)).toHaveTextContent('USD 100.00');
+      expect(screen.getByTestId('outstanding-amount')).toHaveTextContent('100.00');
     });
   });
 
@@ -53,15 +55,17 @@ describe('PaymentPage', () => {
     render(<PaymentPage />);
     await waitFor(() => expect(screen.getByText(/add a payment/i)).toBeInTheDocument());
 
-    await user.click(screen.getByRole('radio', { name: /cash/i }));
-    await user.type(screen.getByLabelText(/amount/i), '50');
-    await user.click(screen.getByRole('button', { name: /add payment/i }));
+    const addPaymentSection = screen.getByText(/add a payment/i).closest('div') as HTMLElement;
 
-    expect(screen.getByText('Payments Added')).toBeInTheDocument();
-    expect(screen.getByText('Cash')).toBeInTheDocument();
-    expect(screen.getByText(/50.00/)).toBeInTheDocument();
+    await user.click(within(addPaymentSection).getByRole('radio', { name: /cash/i }));
+    await user.type(within(addPaymentSection).getByLabelText(/amount/i), '50');
+    await user.click(within(addPaymentSection).getByRole('button', { name: /add payment/i }));
 
-    await user.click(screen.getByRole('button', { name: /remove cash payment/i }));
+    const paymentsAddedSection = screen.getByText('Payments Added').closest('div') as HTMLElement;
+    expect(within(paymentsAddedSection).getByText('Cash')).toBeInTheDocument();
+    expect(within(paymentsAddedSection).getByText(/50.00/)).toBeInTheDocument();
+
+    await user.click(within(paymentsAddedSection).getByRole('button', { name: /remove cash payment/i }));
     expect(screen.queryByText('Payments Added')).not.toBeInTheDocument();
   });
 
@@ -71,6 +75,7 @@ describe('PaymentPage', () => {
     (apiService.createPaymentEntry as any).mockResolvedValue({ name: 'PE-001' });
     (apiService.saveDoc as any).mockResolvedValue({ name: 'PE-001' });
     (apiService.submitDoc as any).mockResolvedValue({});
+    (authService.getLoggedInUser as any).mockReturnValue('test-user');
 
     render(<PaymentPage />);
     await waitFor(() => expect(screen.getByText(/add a payment/i)).toBeInTheDocument());

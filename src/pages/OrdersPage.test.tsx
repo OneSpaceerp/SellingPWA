@@ -1,7 +1,6 @@
 import { render, screen, waitFor, cleanup } from '../test/test-utils';
 import { OrdersPage } from './OrdersPage';
 import { db } from '../db/db';
-import { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
 import { vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -10,12 +9,12 @@ import { type Order } from '../db/Order';
 vi.mock('../db/db');
 vi.mock('../services/apiService');
 vi.mock('dexie-react-hooks', () => ({
-  useLiveQuery: (fn: any, deps: any[], defaultValue: any) => {
-    const [data, setData] = useState(defaultValue);
-    useEffect(() => {
-      fn().then(setData);
-    }, deps);
-    return data;
+  useLiveQuery: (fn: any) => {
+    const mockOrders: Order[] = [
+      { id: 1, order_id: 'SO-001', customer: 'CUST-001', customer_name: 'Test Customer 1', status: 'Pending Approval', items: [], grand_total: 100, paid_amount: 0, outstanding_amount: 100, created_at: new Date(), created_by: 'test-user' },
+      { id: 2, order_id: 'SO-002', customer: 'CUST-002', customer_name: 'Test Customer 2', status: 'Approved', items: [], grand_total: 200, paid_amount: 100, outstanding_amount: 100, created_at: new Date(), created_by: 'test-user' },
+    ];
+    return mockOrders;
   },
 }));
 

@@ -14,7 +14,7 @@ export const OrderPrintLayout = forwardRef<HTMLDivElement, OrderPrintLayoutProps
         <Title order={2}>Order: {order.order_id}</Title>
         <Group justify="space-between">
           <Text>Customer:</Text>
-          <Text fw={500}>{order.customer}</Text>
+          <Text fw={500}>{order.customer_name || order.customer}</Text>
         </Group>
         <Group justify="space-between">
           <Text>Date:</Text>
@@ -35,7 +35,7 @@ export const OrderPrintLayout = forwardRef<HTMLDivElement, OrderPrintLayoutProps
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {order.items.map(item => (
+          {order.items && order.items.map(item => (
             <Table.Tr key={item.item_code}>
               <Table.Td>{item.item_name}</Table.Td>
               <Table.Td>{item.qty}</Table.Td>

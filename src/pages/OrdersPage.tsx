@@ -102,11 +102,11 @@ export function OrdersPage() {
             </Group>
             <Group justify="space-between">
               <Text>Paid Amount:</Text>
-              <Text c="teal">{currency} {(order.grand_total - order.outstanding_amount).toFixed(2)}</Text>
+              <Text c="teal">{currency} {(order.grand_total - (order.outstanding_amount || 0)).toFixed(2)}</Text>
             </Group>
             <Group justify="space-between">
               <Text>Outstanding:</Text>
-              <Text c="orange">{currency} {order.outstanding_amount.toFixed(2)}</Text>
+              <Text c="orange">{currency} {(order.outstanding_amount || 0).toFixed(2)}</Text>
             </Group>
           </Card>
         ))}
@@ -190,17 +190,17 @@ export function OrdersPage() {
               </Group>
               <Group justify="space-between">
                 <Text>Paid Amount:</Text>
-                <Text c="teal">{currency} {(selectedOrder.grand_total - selectedOrder.outstanding_amount).toFixed(2)}</Text>
+                <Text c="teal">{currency} {(selectedOrder.grand_total - (selectedOrder.outstanding_amount || 0)).toFixed(2)}</Text>
               </Group>
               <Group justify="space-between">
                 <Text>Outstanding:</Text>
-                <Text c="orange">{currency} {selectedOrder.outstanding_amount.toFixed(2)}</Text>
+                <Text c="orange">{currency} {(selectedOrder.outstanding_amount || 0).toFixed(2)}</Text>
               </Group>
             </Stack>
 
             <Group justify="flex-end" mt="xl">
               <Button leftSection={<IconPrinter size={16} />} onClick={handlePrint}>Print</Button>
-              {selectedOrder.docstatus === 1 && selectedOrder.outstanding_amount > 0 && (
+              {selectedOrder.docstatus === 1 && (selectedOrder.outstanding_amount || 0) > 0 && (
                 <Button color="green" onClick={handleCompletePayment}>Collect Payment</Button>
               )}
             </Group>

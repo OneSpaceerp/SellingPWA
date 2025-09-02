@@ -25,7 +25,7 @@ function App() {
     if (isAuthenticated && selectedProfile) {
       loadSettings();
     }
-  }, [isAuthenticated, selectedProfile, loadSettings]);
+  }, [isAuthenticated, selectedProfile]);
 
   if (!erpNextUrl) return <SetupPage />;
   if (!isAuthenticated) return <LoginPage />;

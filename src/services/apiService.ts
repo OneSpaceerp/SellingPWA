@@ -4,8 +4,8 @@ export interface PosProfileData {
   name: string;
   company: string;
   currency: string;
-  item_groups: { group: string }[];
-  customer_groups: { group: string }[];
+  item_groups: { item_group: string }[];
+  customer_groups: { customer_group: string }[];
   [key: string]: any;
 }
 

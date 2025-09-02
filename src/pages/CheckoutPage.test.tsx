@@ -1,4 +1,4 @@
-import { render, screen, waitFor, cleanup, within } from '../test/test-utils';
+import { render, screen, waitFor, cleanup } from '../test/test-utils';
 import { CheckoutPage } from './CheckoutPage';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -71,37 +71,22 @@ describe('CheckoutPage', () => {
     expect(screen.getByTestId('grand-total')).toHaveTextContent('USD 100.00');
   });
 
-  it('submits a DRAFT invoice for partial payments', async () => {
+  it('creates a draft sales order', async () => {
     const user = userEvent.setup();
-    (apiService.createSalesOrder as any).mockResolvedValue({ name: 'SINV-DRAFT-001' });
+    (apiService.createSalesOrder as any).mockResolvedValue({ name: 'SO-DRAFT-001' });
     render(<CheckoutPage />);
 
-    const addPaymentSection = screen.getByText(/add a payment/i).closest('div[class*="mantine-Paper-root"]') as HTMLElement;
-    await user.click(screen.getByRole('radio', { name: /cash/i }));
-    await user.clear(within(addPaymentSection).getByLabelText(/amount/i));
-    await user.type(within(addPaymentSection).getByLabelText(/amount/i), '50');
-    await user.click(screen.getByRole('button', { name: /add payment/i }));
-    await user.click(screen.getByRole('button', { name: /complete order/i }));
+    await user.click(screen.getByRole('button', { name: /create sales order draft/i }));
 
     await waitFor(() => {
-      expect(apiService.createSalesOrder).toHaveBeenCalledWith(expect.objectContaining({ docstatus: 1 }));
+      expect(apiService.createSalesOrder).toHaveBeenCalledWith(expect.objectContaining({ docstatus: 0 }));
     });
-  });
 
-  it('submits a SUBMITTED invoice for full payments', async () => {
-    const user = userEvent.setup();
-    (apiService.createSalesOrder as any).mockResolvedValue({ name: 'SINV-SUBMIT-001' });
-    render(<CheckoutPage />);
+    expect(notifications.show).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Sales Order Draft Created',
+      message: 'Order SO-DRAFT-001 has been successfully saved as a draft.',
+    }));
 
-    const addPaymentSection = screen.getByText(/add a payment/i).closest('div[class*="mantine-Paper-root"]') as HTMLElement;
-    await user.click(screen.getByRole('radio', { name: /cash/i }));
-    await user.clear(within(addPaymentSection).getByLabelText(/amount/i));
-    await user.type(within(addPaymentSection).getByLabelText(/amount/i), '100');
-    await user.click(screen.getByRole('button', { name: /add payment/i }));
-    await user.click(screen.getByRole('button', { name: /complete order/i }));
-
-    await waitFor(() => {
-      expect(apiService.createSalesOrder).toHaveBeenCalledWith(expect.objectContaining({ docstatus: 1 }));
-    });
+    expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 });

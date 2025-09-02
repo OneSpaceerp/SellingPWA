@@ -10,7 +10,6 @@ import { SettingsPage } from './pages/SettingsPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { SelectCustomerPage } from './pages/SelectCustomerPage';
 import { OrdersPage } from './pages/OrdersPage';
-import { PaymentPage } from './pages/PaymentPage';
 import './App.css';
 
 function App() {
@@ -31,7 +30,6 @@ function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/select-customer" element={<SelectCustomerPage />} />
-        <Route path="/payment/:orderId" element={<PaymentPage />} />
       </Route>
     </Routes>
   );

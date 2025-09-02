@@ -31,6 +31,19 @@ const get = async <T>(endpoint: string): Promise<T> => {
   return data.data as T;
 };
 
+const getList = async <T>(doctype: string, filters: any, fields: string[]): Promise<T> => {
+  const erpNextUrl = localStorage.getItem('erpnext-url');
+  if (!erpNextUrl) throw new Error('ERPNext URL not set.');
+  const fullUrl = `${erpNextUrl}/api/resource/${doctype}?fields=${encodeURIComponent(JSON.stringify(fields))}&filters=${encodeURIComponent(JSON.stringify(filters))}`;
+  const response = await fetch(fullUrl, { headers: authService.getAuthHeaders() });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API request failed: ${errorText}`);
+  }
+  const data = await response.json();
+  return data.data as T;
+}
+
 const post = async <T>(endpoint: string, payload: any): Promise<T> => {
   const erpNextUrl = localStorage.getItem('erpnext-url');
   if (!erpNextUrl) throw new Error('ERPNext URL not set.');
@@ -54,6 +67,8 @@ const getPosProfileDetails = async (profileName: string): Promise<PosProfileData
 const getItems = async (itemGroups: string[]): Promise<Item[]> => get<Item[]>(`resource/Item?fields=${encodeURIComponent('["name", "item_name", "item_group", "stock_uom", "standard_rate"]')}&filters=${encodeURIComponent(JSON.stringify([["item_group", "in", itemGroups]]))}&limit_page_length=0`);
 const getCustomers = async (customerGroups: string[]): Promise<Customer[]> => get<Customer[]>(`resource/Customer?fields=${encodeURIComponent('["name", "customer_name", "customer_group"]')}&filters=${encodeURIComponent(JSON.stringify([["customer_group", "in", customerGroups]]))}&limit_page_length=0`);
 const createSalesOrder = async (payload: SalesOrderPayload): Promise<any> => post<any>('resource/Sales Order', payload);
+const getSalesOrders = async (order_ids: string[]): Promise<{name: string, docstatus: number}[]> => getList<{name: string, docstatus: number}[]>('Sales Order', [['name', 'in', order_ids]], ['name', 'docstatus']);
+const getSalesOrder = async (order_id: string): Promise<any> => get<any>(`resource/Sales Order/${encodeURIComponent(order_id)}`);
 
 export interface PaymentEntryPayload {
   dt: string;
@@ -109,6 +124,8 @@ export const apiService = {
   getPosProfileDetails,
   getItems,
   getCustomers,
+  getSalesOrders,
+  getSalesOrder,
   createSalesOrder,
   createPaymentEntry,
   getModeOfPaymentDetails,

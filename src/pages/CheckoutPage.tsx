@@ -63,6 +63,7 @@ export function CheckoutPage() {
           order_id: soResult.name,
           customer: customer.name,
           customer_name: customer.customer_name,
+          status: 'Pending Approval',
           items: items.map(item => ({
             item_code: item.name,
             item_name: item.item_name,

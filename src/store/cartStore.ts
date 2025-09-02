@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { type Item, type Customer } from '../db/db';
+import { type Item, type Customer } from '../services/apiService';
 
 export interface CartItem extends Item {
   quantity: number;

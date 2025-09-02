@@ -4,8 +4,8 @@ import { useSettingsStore } from '../store/settingsStore';
 import { apiService, type PaymentEntryPayload } from '../services/apiService';
 import { authService } from '../services/authService';
 import { notifications } from '@mantine/notifications';
-import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Badge, NumberInput, ActionIcon, Radio, Stack } from '@mantine/core';
-import { IconAlertCircle, IconCircleCheck, IconTrash, IconPlus } from '@tabler/icons-react';
+import { Title, Paper, Text, Group, Button, LoadingOverlay, NumberInput, ActionIcon, Radio, Stack, Alert } from '@mantine/core';
+import { IconCircleCheck, IconTrash, IconPlus } from '@tabler/icons-react';
 
 interface PaymentEntry {
   mode: string;

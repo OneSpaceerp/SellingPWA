@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { type Item } from '../db/db';
+import { type Item, type Customer } from '../db/db';
 
 export interface CartItem extends Item {
   quantity: number;
@@ -9,14 +9,14 @@ export type DiscountType = 'Percentage' | 'Amount';
 
 interface CartState {
   items: CartItem[];
-  customer: string | null;
+  customer: Customer | null;
   additionalDiscountType: DiscountType;
   additionalDiscountValue: number;
   addItem: (item: Item) => void;
   removeItem: (itemName: string) => void;
   updateQuantity: (itemName: string, quantity: number) => void;
   updateRate: (itemName: string, rate: number) => void;
-  setCustomer: (customerId: string | null) => void;
+  setCustomer: (customer: Customer | null) => void;
   setAdditionalDiscount: (type: DiscountType, value: number) => void;
   clearCart: () => void;
   totalItems: () => number;
@@ -72,8 +72,8 @@ export const useCartStore = create<CartState>((set, get) => ({
     }));
   },
 
-  setCustomer: (customerId) => {
-    set({ customer: customerId });
+  setCustomer: (customer) => {
+    set({ customer });
   },
 
   setAdditionalDiscount: (type, value) => {

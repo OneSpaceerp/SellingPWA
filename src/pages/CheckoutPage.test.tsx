@@ -7,6 +7,7 @@ import { authService } from '../services/authService';
 import { notifications } from '@mantine/notifications';
 import { vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { type Customer } from '../db/db';
 
 // Mock all dependencies
 vi.mock('../store/cartStore');
@@ -28,7 +29,7 @@ vi.mock('react-router-dom', async () => ({
 }));
 
 describe('CheckoutPage', () => {
-  const setupMocks = (customer: string | null = 'CUST-0001') => {
+  const setupMocks = (customer: Partial<Customer> | null = { name: 'CUST-0001', customer_name: 'Test Customer' }) => {
     (useCartStore as any).mockImplementation((selector: any) => {
       const state = {
         items: [{ name: 'ITEM001', quantity: 2, standard_rate: 50 }],
@@ -67,7 +68,7 @@ describe('CheckoutPage', () => {
 
   it('renders summary correctly', () => {
     render(<CheckoutPage />);
-    expect(screen.getByText('CUST-0001')).toBeInTheDocument();
+    expect(screen.getByText('Test Customer')).toBeInTheDocument();
     expect(screen.getByTestId('grand-total')).toHaveTextContent('USD 100.00');
   });
 

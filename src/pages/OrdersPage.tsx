@@ -2,9 +2,10 @@ import { useState, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { authService } from '../services/authService';
+import { apiService } from '../services/apiService';
 import { useSettingsStore } from '../store/settingsStore';
 import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider, Modal, Button, Table, Stack } from '@mantine/core';
-import { IconSearch, IconPrinter } from '@tabler/icons-react';
+import { IconSearch, IconPrinter, IconRefresh } from '@tabler/icons-react';
 import type { Order } from '../db/Order';
 import { useReactToPrint } from 'react-to-print';
 import { OrderPrintLayout } from '../components/OrderPrintLayout';
@@ -14,6 +15,7 @@ export function OrdersPage() {
   const [customerFilter, setCustomerFilter] = useState('');
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   const currency = useSettingsStore((state) => state.currency);
   const user = authService.getLoggedInUser();
   const navigate = useNavigate();
@@ -58,6 +60,45 @@ export function OrdersPage() {
     }
   };
 
+  const handleSync = async () => {
+    if (!orders) return;
+    setIsSyncing(true);
+    try {
+      const orderIds = orders.map(o => o.order_id);
+      const remoteOrders = await apiService.getSalesOrders(orderIds);
+
+      for (const remoteOrder of remoteOrders) {
+        const localOrder = await db.orders.where('order_id').equals(remoteOrder.name).first();
+        if (localOrder) {
+          let status = localOrder.status;
+          if (remoteOrder.docstatus === 1) {
+            status = 'Approved';
+          } else if (remoteOrder.docstatus === 2) {
+            status = 'Cancelled';
+          }
+          await db.orders.update(localOrder.id!, { status });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to sync orders", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Pending Approval':
+        return 'yellow';
+      case 'Approved':
+        return 'green';
+      case 'Cancelled':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  };
+
   const renderContent = () => {
     if (orders === undefined) {
       return <Center style={{ height: '50vh' }}><Loader data-testid="orders-loader" /></Center>;
@@ -71,8 +112,8 @@ export function OrdersPage() {
           <Card shadow="sm" padding="lg" radius="md" withBorder key={order.id} onClick={() => setSelectedOrder(order)} style={{ cursor: 'pointer' }}>
             <Group justify="space-between">
               <Text fw={500} size="lg">{order.order_id}</Text>
-              <Badge color={order.outstanding_amount > 0 ? 'orange' : 'green'}>
-                {order.outstanding_amount > 0 ? 'Partially Paid' : 'Paid'}
+              <Badge color={getStatusColor(order.status)}>
+                {order.status}
               </Badge>
             </Group>
             <Text size="sm" c="dimmed">{order.customer_name || order.customer}</Text>
@@ -114,6 +155,9 @@ export function OrdersPage() {
           value={dateFilter ? dateFilter.toISOString().split('T')[0] : ''}
           onChange={(event) => setDateFilter(event.currentTarget.value ? new Date(event.currentTarget.value) : null)}
         />
+        <Button onClick={handleSync} leftSection={<IconRefresh size={16} />} loading={isSyncing}>
+          Sync with ERPNext
+        </Button>
       </Group>
       {renderContent()}
 
@@ -129,6 +173,10 @@ export function OrdersPage() {
               <Group justify="space-between">
                 <Text>Customer:</Text>
                 <Text fw={500}>{selectedOrder.customer_name || selectedOrder.customer}</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text>Status:</Text>
+                <Badge color={getStatusColor(selectedOrder.status)}>{selectedOrder.status}</Badge>
               </Group>
               <Group justify="space-between">
                 <Text>Date:</Text>
@@ -179,8 +227,8 @@ export function OrdersPage() {
 
             <Group justify="flex-end" mt="xl">
               <Button leftSection={<IconPrinter size={16} />} onClick={handlePrint}>Print</Button>
-              {selectedOrder.outstanding_amount > 0 && (
-                <Button color="green" onClick={handleCompletePayment}>Complete Payment</Button>
+              {selectedOrder.status === 'Approved' && selectedOrder.outstanding_amount > 0 && (
+                <Button color="green" onClick={handleCompletePayment}>Collect Payment</Button>
               )}
             </Group>
           </>

@@ -5,7 +5,10 @@ import { useSettingsStore } from '../store/settingsStore';
 
 export function SettingsPage() {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
-  const loadSettings = useSettingsStore((state) => state.loadSettings);
+  const { loadSettings, isLoading } = useSettingsStore((state) => ({
+    loadSettings: state.loadSettings,
+    isLoading: state.isLoading,
+  }));
 
   const handleLogout = () => {
     authService.logout();
@@ -32,7 +35,7 @@ export function SettingsPage() {
       <Box mt="xl">
         <Title order={3}>Sync All Data</Title>
         <p>Fetch latest Products, Customers and Settings from the server.</p>
-        <Button onClick={() => loadSettings(true)}>
+        <Button onClick={() => loadSettings(true)} loading={isLoading}>
           Sync All Data
         </Button>
       </Box>

@@ -131,7 +131,7 @@ export function PaymentPage() {
         <Title order={3} mb="sm">Order Details</Title>
         <Group justify="space-between"><Text>Customer:</Text><Text fw={500}>{order.customer_name}</Text></Group>
         <Group justify="space-between"><Text>Grand Total:</Text><Text fw={700} size="xl">{currency} {order.grand_total.toFixed(2)}</Text></Group>
-        <Group justify="space-between"><Text c="orange">Outstanding:</Text><Text c="orange" fw={700} size="xl">{currency} {outstandingAmount.toFixed(2)}</Text></Group>
+        <Group justify="space-between"><Text c="orange">Outstanding:</Text><Text data-testid="outstanding-amount" c="orange" fw={700} size="xl">{currency} {outstandingAmount.toFixed(2)}</Text></Group>
       </Paper>
 
       <Paper withBorder p="md" mb="xl">

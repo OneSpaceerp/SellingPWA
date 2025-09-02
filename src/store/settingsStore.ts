@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { db, type PosProfileData } from '../db/db';
+import { apiService, type PosProfileData } from '../services/apiService';
 
 interface SettingsState {
   posProfile: PosProfileData | null;
@@ -20,9 +20,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       if (!profileName) {
         return;
       }
-      const profile = await db.posProfiles.get(profileName);
+      const profile = await apiService.getPosProfileDetails(profileName);
       if (!profile) {
-        console.error(`Failed to load settings: POS Profile "${profileName}" not found in local DB.`);
+        console.error(`Failed to load settings: POS Profile "${profileName}" not found.`);
         return;
       }
       set({

@@ -3,7 +3,7 @@ import { authService } from '../services/authService';
 import { apiService, type SalesOrder } from '../services/apiService';
 import { useSettingsStore } from '../store/settingsStore';
 import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider, Modal, Button, Table, Stack } from '@mantine/core';
-import { IconSearch, IconPrinter, IconRefresh } from '@tabler/icons-react';
+import { IconSearch, IconPrinter } from '@tabler/icons-react';
 import { useReactToPrint } from 'react-to-print';
 import { OrderPrintLayout } from '../components/OrderPrintLayout';
 import ErrorBoundary from '../components/ErrorBoundary';

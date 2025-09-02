@@ -1,32 +1,45 @@
-import { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type Customer } from '../db/db';
+import { useState, useEffect } from 'react';
+import { apiService, type Customer } from '../services/apiService';
 import { useCartStore } from '../store/cartStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { useNavigate } from 'react-router-dom';
 import { Title, TextInput, ScrollArea, Table, Loader, Center, Text, Paper } from '@mantine/core';
 
 export function SelectCustomerPage() {
   const [search, setSearch] = useState('');
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const setCustomer = useCartStore((state) => state.setCustomer);
+  const { posProfile } = useSettingsStore();
 
-  const customers = useLiveQuery(async () => {
-    const allCustomers = await db.customers.toArray();
-    if (!search) {
-      return allCustomers;
+  useEffect(() => {
+    if (posProfile) {
+      setIsLoading(true);
+      const customerGroups = posProfile.customer_groups.map(g => g.group);
+      apiService.getCustomers(customerGroups)
+        .then(data => {
+          setCustomers(data);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setIsLoading(false);
+        });
     }
-    return allCustomers.filter(customer =>
-      customer.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-      customer.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [search]);
+  }, [posProfile]);
 
   const handleSelectCustomer = (customer: Customer) => {
     setCustomer(customer);
     navigate(-1); // Go back to the previous page (the cart)
   };
 
-  const rows = customers?.map((customer) => (
+  const filteredCustomers = customers.filter(customer =>
+    customer.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
+    customer.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const rows = filteredCustomers.map((customer) => (
     <Table.Tr key={customer.name} onClick={() => handleSelectCustomer(customer)} style={{ cursor: 'pointer' }}>
       <Table.Td>{customer.customer_name}</Table.Td>
       <Table.Td>{customer.name}</Table.Td>
@@ -45,9 +58,9 @@ export function SelectCustomerPage() {
       />
       <Paper withBorder>
         <ScrollArea h="calc(100vh - 200px)">
-          {customers === undefined && <Center><Loader /></Center>}
-          {customers && customers.length === 0 && <Center p="md"><Text>No customers found.</Text></Center>}
-          {customers && customers.length > 0 && (
+          {isLoading && <Center><Loader /></Center>}
+          {!isLoading && filteredCustomers.length === 0 && <Center p="md"><Text>No customers found.</Text></Center>}
+          {!isLoading && filteredCustomers.length > 0 && (
             <Table striped highlightOnHover verticalSpacing="sm">
               <Table.Thead>
                 <Table.Tr>

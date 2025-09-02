@@ -1,28 +1,9 @@
-import { useState } from 'react';
-import { Title, Button, Box, Alert, Switch, useMantineColorScheme, Group } from '@mantine/core';
+import { Title, Button, Box, Switch, useMantineColorScheme, Group } from '@mantine/core';
 import { authService } from '../services/authService';
-import { syncService } from '../services/syncService';
-import { IconAlertCircle, IconSun, IconMoon } from '@tabler/icons-react';
+import { IconSun, IconMoon } from '@tabler/icons-react';
 
 export function SettingsPage() {
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncError, setSyncError] = useState('');
   const { colorScheme, setColorScheme } = useMantineColorScheme();
-
-  const handleSync = async () => {
-    setIsSyncing(true);
-    setSyncError('');
-    try {
-      await syncService.syncAllData();
-      alert('Data synchronization completed successfully!');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during sync.';
-      setSyncError(errorMessage);
-      console.error('Sync failed:', error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const handleLogout = () => {
     authService.logout();
@@ -44,19 +25,6 @@ export function SettingsPage() {
           />
           <IconMoon size={18} />
         </Group>
-      </Box>
-
-      <Box mt="xl">
-        <Title order={3}>Data Synchronization</Title>
-        <p>Pull the latest data from your ERPNext instance. This may take a few moments.</p>
-        <Button onClick={handleSync} loading={isSyncing}>
-          Sync All Data
-        </Button>
-        {syncError && (
-          <Alert color="red" title="Sync Error" icon={<IconAlertCircle />} mt="md">
-            {syncError}
-          </Alert>
-        )}
       </Box>
 
       <Box mt="xl">

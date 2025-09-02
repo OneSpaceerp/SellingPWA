@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { SetupPage } from './pages/SetupPage';
 import { LoginPage } from './pages/LoginPage';
@@ -11,12 +12,20 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { SelectCustomerPage } from './pages/SelectCustomerPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { PaymentPage } from './pages/PaymentPage';
+import { useSettingsStore } from './store/settingsStore';
 import './App.css';
 
 function App() {
   const erpNextUrl = localStorage.getItem('erpnext-url');
   const isAuthenticated = authService.isAuthenticated();
   const selectedProfile = localStorage.getItem('erpnext-pos-profile');
+  const loadSettings = useSettingsStore((state) => state.loadSettings);
+
+  useEffect(() => {
+    if (isAuthenticated && selectedProfile) {
+      loadSettings();
+    }
+  }, [isAuthenticated, selectedProfile, loadSettings]);
 
   if (!erpNextUrl) return <SetupPage />;
   if (!isAuthenticated) return <LoginPage />;

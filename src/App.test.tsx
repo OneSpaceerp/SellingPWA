@@ -14,6 +14,9 @@ import { apiService } from './services/apiService';
 vi.mock('./services/apiService', () => ({
   apiService: {
     getPosProfiles: vi.fn(),
+    getPosProfileDetails: vi.fn(),
+    getItems: vi.fn(),
+    getCustomers: vi.fn(),
   },
 }));
 
@@ -48,12 +51,22 @@ describe('App Routing', () => {
     expect(await screen.findByText(/select pos profile/i)).toBeInTheDocument();
   });
 
-  it('renders the main AppLayout when fully configured', () => {
+  it('renders the main AppLayout when fully configured', async () => {
     (authService.isAuthenticated as any).mockReturnValue(true);
     localStorage.setItem('erpnext-url', 'https://test.com');
     localStorage.setItem('erpnext-pos-profile', 'Test Profile');
+    (apiService.getPosProfileDetails as any).mockResolvedValue({
+      name: 'Test Profile',
+      company: 'Test Co',
+      currency: 'USD',
+      item_groups: [],
+      customer_groups: [],
+    });
+    (apiService.getItems as any).mockResolvedValue([]);
+    (apiService.getCustomers as any).mockResolvedValue([]);
+
     render(<App />);
     // Check for an element unique to the AppLayout
-    expect(screen.getByText('ERPNext Selling App')).toBeInTheDocument();
+    expect(await screen.findByText('ERPNext Selling App')).toBeInTheDocument();
   });
 });

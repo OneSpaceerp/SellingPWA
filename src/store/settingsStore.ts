@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { apiService, type PosProfileData } from '../services/apiService';
+import { useDataStore } from './dataStore';
 
 interface SettingsState {
   posProfile: PosProfileData | null;
@@ -30,6 +31,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         set({ isLoading: false });
         return;
       }
+
+      // Trigger data synchronization
+      await useDataStore.getState().syncData(profile.item_groups, profile.customer_groups);
+
       set({
         posProfile: profile,
         currency: profile.currency || '$',

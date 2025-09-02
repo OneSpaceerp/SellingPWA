@@ -42,7 +42,7 @@ export function CartPage() {
             <Text fw={500}>Customer</Text>
             {customer ? (
               <Badge size="lg" variant="light">
-                {typeof customer === 'object' && customer.customer_name ? customer.customer_name : customer}
+                {typeof customer === 'object' && customer !== null ? (customer.customer_name || customer.name) : customer}
               </Badge>
             ) : (
               <Text c="dimmed">No customer selected</Text>

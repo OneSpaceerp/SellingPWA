@@ -106,7 +106,7 @@ export function CheckoutPage() {
 
       <Paper withBorder p="md" mb="xl">
         <Title order={3} mb="sm">Order Details</Title>
-        <Group justify="space-between"><Text>Customer:</Text><Text fw={500}>{typeof customer === 'object' && customer.customer_name ? customer.customer_name : customer}</Text></Group>
+        <Group justify="space-between"><Text>Customer:</Text><Text fw={500}>{typeof customer === 'object' && customer !== null ? (customer.customer_name || customer.name) : customer}</Text></Group>
         <Group justify="space-between" mt="sm"><Text>Warehouse:</Text><Badge leftSection={<IconBuildingWarehouse size={14}/>} variant="light">{warehouse || 'Not Set'}</Badge></Group>
         <Divider my="sm" />
         <Group justify="space-between"><Text>Sub-total:</Text><Text>{currency} {subTotal().toFixed(2)}</Text></Group>

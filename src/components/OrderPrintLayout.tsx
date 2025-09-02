@@ -1,24 +1,26 @@
 import { forwardRef } from 'react';
-import type { Order } from '../db/Order';
+import type { SalesOrder } from '../services/apiService';
 import { Title, Text, Group, Table, Stack, Divider } from '@mantine/core';
 
 interface OrderPrintLayoutProps {
-  order: Order;
+  order: SalesOrder;
   currency: string;
 }
 
 export const OrderPrintLayout = forwardRef<HTMLDivElement, OrderPrintLayoutProps>(({ order, currency }, ref) => {
+  const paidAmount = order.grand_total - order.outstanding_amount;
+
   return (
     <div ref={ref} style={{ padding: '20px' }}>
       <Stack>
-        <Title order={2}>Order: {order.order_id}</Title>
+        <Title order={2}>Order: {order.name}</Title>
         <Group justify="space-between">
           <Text>Customer:</Text>
           <Text fw={500}>{order.customer_name || order.customer}</Text>
         </Group>
         <Group justify="space-between">
           <Text>Date:</Text>
-          <Text>{new Date(order.created_at).toLocaleString()}</Text>
+          <Text>{new Date(order.creation).toLocaleString()}</Text>
         </Group>
       </Stack>
 
@@ -55,7 +57,7 @@ export const OrderPrintLayout = forwardRef<HTMLDivElement, OrderPrintLayoutProps
         </Group>
         <Group justify="space-between">
           <Text>Paid Amount:</Text>
-          <Text c="teal">{currency} {order.paid_amount.toFixed(2)}</Text>
+          <Text c="teal">{currency} {paidAmount.toFixed(2)}</Text>
         </Group>
         <Group justify="space-between">
           <Text>Outstanding:</Text>

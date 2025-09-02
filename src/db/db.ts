@@ -36,7 +36,6 @@ class AppDatabase extends Dexie {
   items!: Table<Item, string>;
   customers!: Table<Customer, string>;
   warehouses!: Table<Warehouse, string>;
-  orders!: Table<Order, number>;
 
   constructor() {
     super('pwa-sales-app-db');
@@ -47,7 +46,7 @@ class AppDatabase extends Dexie {
       warehouses: 'name',
     });
     this.version(2).stores({
-      orders: '++id, order_id, customer, created_at, created_by',
+      orders: null, // Remove the orders table
     });
   }
 }

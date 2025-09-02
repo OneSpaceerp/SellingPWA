@@ -67,7 +67,28 @@ const getPosProfileDetails = async (profileName: string): Promise<PosProfileData
 const getItems = async (itemGroups: string[]): Promise<Item[]> => get<Item[]>(`resource/Item?fields=${encodeURIComponent('["name", "item_name", "item_group", "stock_uom", "standard_rate"]')}&filters=${encodeURIComponent(JSON.stringify([["item_group", "in", itemGroups]]))}&limit_page_length=0`);
 const getCustomers = async (customerGroups: string[]): Promise<Customer[]> => get<Customer[]>(`resource/Customer?fields=${encodeURIComponent('["name", "customer_name", "customer_group"]')}&filters=${encodeURIComponent(JSON.stringify([["customer_group", "in", customerGroups]]))}&limit_page_length=0`);
 const createSalesOrder = async (payload: SalesOrderPayload): Promise<any> => post<any>('resource/Sales Order', payload);
-const getSalesOrders = async (order_ids: string[]): Promise<{name: string, docstatus: number}[]> => getList<{name: string, docstatus: number}[]>('Sales Order', [['name', 'in', order_ids]], ['name', 'docstatus']);
+
+export interface SalesOrder {
+  name: string;
+  docstatus: number;
+  customer: string;
+  customer_name: string;
+  grand_total: number;
+  outstanding_amount: number;
+  creation: string;
+  items: { item_code: string; item_name: string; qty: number; rate: number }[];
+}
+
+const getSalesOrders = async (owner: string): Promise<SalesOrder[]> => {
+  const fields = [
+    'name', 'docstatus', 'customer', 'customer_name',
+    'grand_total', 'outstanding_amount', 'creation', 'items.item_code',
+    'items.item_name', 'items.qty', 'items.rate'
+  ];
+  const filters = [['owner', '=', owner]];
+  return getList<SalesOrder[]>('Sales Order', filters, fields);
+};
+
 const getSalesOrder = async (order_id: string): Promise<any> => get<any>(`resource/Sales Order/${encodeURIComponent(order_id)}`);
 
 export interface PaymentEntryPayload {

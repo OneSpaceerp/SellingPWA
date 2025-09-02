@@ -5,10 +5,8 @@ import { useSettingsStore } from '../store/settingsStore';
 
 export function SettingsPage() {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
-  const { loadSettings, isLoading } = useSettingsStore((state) => ({
-    loadSettings: state.loadSettings,
-    isLoading: state.isLoading,
-  }));
+  const loadSettings = useSettingsStore((state) => state.loadSettings);
+  const isLoading = useSettingsStore((state) => state.isLoading);
 
   const handleLogout = () => {
     authService.logout();

@@ -1,14 +1,11 @@
 import { useSettingsStore } from './settingsStore';
-import { db } from '../db/db';
+import { apiService, type PosProfileData } from '../services/apiService';
 import { act } from '@testing-library/react';
 import { vi } from 'vitest';
-import { type PosProfileData } from '../db/db';
 
-vi.mock('../db/db', () => ({
-  db: {
-    posProfiles: {
-      get: vi.fn(),
-    },
+vi.mock('../services/apiService', () => ({
+  apiService: {
+    getPosProfileDetails: vi.fn(),
   },
 }));
 
@@ -16,6 +13,8 @@ const mockProfile: PosProfileData = {
   name: 'Test Profile',
   company: 'Test Inc',
   currency: 'EGP',
+  item_groups: [],
+  customer_groups: [],
   payments: [{ mode_of_payment: 'Cash' }],
 };
 
@@ -28,16 +27,16 @@ describe('useSettingsStore', () => {
     });
   });
 
-  it('should load settings successfully from DB', async () => {
+  it('should load settings successfully from API', async () => {
     localStorage.setItem('erpnext-pos-profile', 'Test Profile');
-    (db.posProfiles.get as any).mockResolvedValue(mockProfile);
+    (apiService.getPosProfileDetails as vi.Mock).mockResolvedValue(mockProfile);
 
     await act(async () => {
       await useSettingsStore.getState().loadSettings();
     });
 
     const { posProfile, currency } = useSettingsStore.getState();
-    expect(db.posProfiles.get).toHaveBeenCalledWith('Test Profile');
+    expect(apiService.getPosProfileDetails).toHaveBeenCalledWith('Test Profile');
     expect(posProfile).toEqual(mockProfile);
     expect(currency).toBe('EGP');
   });
@@ -46,7 +45,7 @@ describe('useSettingsStore', () => {
     await act(async () => {
       await useSettingsStore.getState().loadSettings();
     });
-    expect(db.posProfiles.get).not.toHaveBeenCalled();
+    expect(apiService.getPosProfileDetails).not.toHaveBeenCalled();
   });
 
   it('should not re-fetch settings if already loaded', async () => {
@@ -56,6 +55,6 @@ describe('useSettingsStore', () => {
     await act(async () => {
       await useSettingsStore.getState().loadSettings();
     });
-    expect(db.posProfiles.get).not.toHaveBeenCalled();
+    expect(apiService.getPosProfileDetails).not.toHaveBeenCalled();
   });
 });

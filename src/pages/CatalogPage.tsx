@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type Item } from '../db/db';
+import { useState, useEffect } from 'react';
+import { apiService, type Item } from '../services/apiService';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { notifications } from '@mantine/notifications';
@@ -9,17 +8,26 @@ import { IconSearch, IconCircleCheck } from '@tabler/icons-react';
 
 export function CatalogPage() {
   const [search, setSearch] = useState('');
+  const [items, setItems] = useState<Item[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const addItemToCart = useCartStore((state) => state.addItem);
-  const currency = useSettingsStore((state) => state.currency);
+  const { currency, posProfile } = useSettingsStore();
 
-  const items = useLiveQuery(async () => {
-    const allItems = await db.items.toArray();
-    if (!search) return allItems;
-    return allItems.filter(item =>
-      item.item_name?.toLowerCase().includes(search.toLowerCase()) ||
-      item.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [search]);
+  useEffect(() => {
+    if (posProfile) {
+      setIsLoading(true);
+      const itemGroups = posProfile.item_groups.map(g => g.group);
+      apiService.getItems(itemGroups)
+        .then(data => {
+          setItems(data);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setIsLoading(false);
+        });
+    }
+  }, [posProfile]);
 
   const handleAddToCart = (item: Item) => {
     addItemToCart(item);
@@ -32,16 +40,21 @@ export function CatalogPage() {
     });
   };
 
+  const filteredItems = items.filter(item =>
+    item.item_name?.toLowerCase().includes(search.toLowerCase()) ||
+    item.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   const renderContent = () => {
-    if (items === undefined) {
+    if (isLoading) {
       return <Center style={{ height: '50vh' }}><Loader data-testid="catalog-loader" /></Center>;
     }
-    if (items.length === 0) {
+    if (filteredItems.length === 0) {
       return <Center style={{ height: '50vh' }}><Text>No products found.</Text></Center>;
     }
     return (
       <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing={{ base: 'md', sm: 'xl' }}>
-        {items.map((item) => (
+        {filteredItems.map((item) => (
           <Card shadow="sm" padding="lg" radius="md" withBorder key={item.name}>
             <Text fw={500} size="lg" truncate="end">{item.item_name}</Text>
             <Text size="sm" c="dimmed">{item.name}</Text>

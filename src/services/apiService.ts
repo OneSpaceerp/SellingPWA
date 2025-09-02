@@ -1,5 +1,27 @@
 import { authService } from './authService';
-import { type PosProfileData, type Item, type Customer } from '../db/db';
+
+export interface PosProfileData {
+  name: string;
+  company: string;
+  currency: string;
+  item_groups: { group: string }[];
+  customer_groups: { group: string }[];
+  [key: string]: any;
+}
+
+export interface Item {
+  name: string;
+  item_name: string;
+  item_group: string;
+  stock_uom: string;
+  standard_rate: number;
+}
+
+export interface Customer {
+  name: string;
+  customer_name: string;
+  customer_group: string;
+}
 
 export interface PosProfile {
   name: string;

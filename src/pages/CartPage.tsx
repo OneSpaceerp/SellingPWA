@@ -17,6 +17,8 @@ export function CartPage() {
 
   const currency = useSettingsStore((state) => state.currency);
 
+  console.log('Customer in CartPage:', customer);
+
   if (items.length === 0) {
     return (
       <Center style={{ height: '50vh' }}>
@@ -39,7 +41,9 @@ export function CartPage() {
           <div>
             <Text fw={500}>Customer</Text>
             {customer ? (
-              <Badge size="lg" variant="light">{customer.customer_name}</Badge>
+              <Badge size="lg" variant="light">
+                {typeof customer === 'object' && customer.customer_name ? customer.customer_name : customer}
+              </Badge>
             ) : (
               <Text c="dimmed">No customer selected</Text>
             )}

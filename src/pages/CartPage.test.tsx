@@ -4,6 +4,7 @@ import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { vi } from 'vitest';
 import { type CartItem } from '../store/cartStore';
+import { type Customer } from '../db/db';
 
 vi.mock('../store/cartStore');
 vi.mock('../store/settingsStore');
@@ -13,7 +14,7 @@ const mockCartItems: CartItem[] = [
 ];
 
 describe('CartPage', () => {
-  const setupMocks = (items: CartItem[], customer: string | null) => {
+  const setupMocks = (items: CartItem[], customer: Partial<Customer> | null) => {
     (useCartStore as any).mockImplementation((selector: any) => {
       const state = {
         items,
@@ -42,17 +43,26 @@ describe('CartPage', () => {
   });
 
   it('should render the items in the cart', () => {
-    setupMocks(mockCartItems, 'CUST-0001');
+    setupMocks(mockCartItems, { name: 'CUST-0001', customer_name: 'Test Customer' });
     render(<CartPage />);
     expect(screen.getByText('Apple')).toBeInTheDocument();
     // Use a more specific query to target the grand total
     expect(screen.getByRole('heading', { level: 2, name: /usd 3.00/i })).toBeInTheDocument();
   });
 
-  it('should render the customer selection UI', () => {
+  it('should render the customer selection UI when no customer is selected', () => {
     setupMocks(mockCartItems, null); // No customer selected
     render(<CartPage />);
     expect(screen.getByText('No customer selected')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /select customer/i })).toBeInTheDocument();
+  });
+
+  it('should display the customer name when a customer is selected', () => {
+    const customer = { name: 'CUST-0001', customer_name: 'Test Customer' };
+    setupMocks(mockCartItems, customer);
+    render(<CartPage />);
+    expect(screen.getByText('Test Customer')).toBeInTheDocument();
+    expect(screen.queryByText('CUST-0001')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /change customer/i })).toBeInTheDocument();
   });
 });

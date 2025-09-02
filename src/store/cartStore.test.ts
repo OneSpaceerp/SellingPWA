@@ -1,9 +1,10 @@
 import { useCartStore } from './cartStore';
 import { act } from '@testing-library/react';
-import { type Item } from '../db/db';
+import { type Item, type Customer } from '../db/db';
 
 const mockItem1: Item = { name: 'ITEM001', item_name: 'Test Item 1', standard_rate: 10, item_group: 'Test', stock_uom: 'Nos' };
 const mockItem2: Item = { name: 'ITEM002', item_name: 'Test Item 2', standard_rate: 25, item_group: 'Test', stock_uom: 'Nos' };
+const mockCustomer: Customer = { name: 'CUST-0001', customer_name: 'Test Customer', customer_group: 'Test Group' };
 
 describe('useCartStore', () => {
   beforeEach(() => {
@@ -62,9 +63,9 @@ describe('useCartStore', () => {
 
   it('should set and clear a customer', () => {
     act(() => {
-      useCartStore.getState().setCustomer('CUST-0001');
+      useCartStore.getState().setCustomer(mockCustomer);
     });
-    expect(useCartStore.getState().customer).toBe('CUST-0001');
+    expect(useCartStore.getState().customer).toEqual(mockCustomer);
 
     act(() => {
       useCartStore.getState().clearCart();

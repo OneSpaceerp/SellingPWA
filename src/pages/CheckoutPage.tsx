@@ -33,7 +33,7 @@ export function CheckoutPage() {
 
       // The Sales Order should be saved as a draft.
       const soPayload: SalesOrderPayload = {
-        customer: customer,
+        customer: customer.name,
         set_warehouse: warehouse,
         items: items.map(item => ({
           item_code: item.name,
@@ -61,7 +61,8 @@ export function CheckoutPage() {
       try {
         const order: Order = {
           order_id: soResult.name,
-          customer: customer,
+          customer: customer.name,
+          customer_name: customer.customer_name,
           items: items.map(item => ({
             item_code: item.name,
             item_name: item.item_name,
@@ -105,7 +106,7 @@ export function CheckoutPage() {
 
       <Paper withBorder p="md" mb="xl">
         <Title order={3} mb="sm">Order Details</Title>
-        <Group justify="space-between"><Text>Customer:</Text><Text fw={500}>{customer}</Text></Group>
+        <Group justify="space-between"><Text>Customer:</Text><Text fw={500}>{customer.customer_name}</Text></Group>
         <Group justify="space-between" mt="sm"><Text>Warehouse:</Text><Badge leftSection={<IconBuildingWarehouse size={14}/>} variant="light">{warehouse || 'Not Set'}</Badge></Group>
         <Divider my="sm" />
         <Group justify="space-between"><Text>Sub-total:</Text><Text>{currency} {subTotal().toFixed(2)}</Text></Group>

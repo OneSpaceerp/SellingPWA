@@ -39,7 +39,7 @@ export function CartPage() {
           <div>
             <Text fw={500}>Customer</Text>
             {customer ? (
-              <Badge size="lg" variant="light">{customer}</Badge>
+              <Badge size="lg" variant="light">{customer.customer_name}</Badge>
             ) : (
               <Text c="dimmed">No customer selected</Text>
             )}

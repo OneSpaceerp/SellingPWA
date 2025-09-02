@@ -22,7 +22,7 @@ export function SelectCustomerPage() {
   }, [search]);
 
   const handleSelectCustomer = (customer: Customer) => {
-    setCustomer(customer.name);
+    setCustomer(customer);
     navigate(-1); // Go back to the previous page (the cart)
   };
 

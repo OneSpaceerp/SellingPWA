@@ -75,7 +75,7 @@ export function OrdersPage() {
                 {order.outstanding_amount > 0 ? 'Partially Paid' : 'Paid'}
               </Badge>
             </Group>
-            <Text size="sm" c="dimmed">{order.customer}</Text>
+            <Text size="sm" c="dimmed">{order.customer_name || order.customer}</Text>
             <Text size="xs" c="dimmed" mt="xs">{new Date(order.created_at).toLocaleString()}</Text>
 
             <Divider my="sm" />
@@ -128,7 +128,7 @@ export function OrdersPage() {
             <Stack>
               <Group justify="space-between">
                 <Text>Customer:</Text>
-                <Text fw={500}>{selectedOrder.customer}</Text>
+                <Text fw={500}>{selectedOrder.customer_name || selectedOrder.customer}</Text>
               </Group>
               <Group justify="space-between">
                 <Text>Date:</Text>

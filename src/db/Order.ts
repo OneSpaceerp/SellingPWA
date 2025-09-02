@@ -2,6 +2,7 @@ export interface Order {
   id?: number; // Optional because it's auto-incrementing
   order_id: string; // From the server
   customer: string;
+  customer_name?: string;
   items: {
     item_code: string;
     item_name: string;

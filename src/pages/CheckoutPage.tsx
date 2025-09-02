@@ -1,25 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { apiService, type SalesOrderPayload, type PaymentEntryPayload } from '../services/apiService';
+import { apiService, type SalesOrderPayload } from '../services/apiService';
 import { authService } from '../services/authService';
 import { db } from '../db/db';
 import type { Order } from '../db/Order';
 import { notifications } from '@mantine/notifications';
-import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Badge, NumberInput, ActionIcon, Radio, Stack, SegmentedControl } from '@mantine/core';
-import { IconAlertCircle, IconCircleCheck, IconTrash, IconPlus, IconBuildingWarehouse } from '@tabler/icons-react';
+import { Title, Paper, Text, Group, Button, Divider, Alert, LoadingOverlay, Badge, NumberInput, SegmentedControl } from '@mantine/core';
+import { IconAlertCircle, IconCircleCheck, IconBuildingWarehouse } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
-
-interface PaymentEntry {
-  mode: string;
-  amount: number;
-}
-
-interface ModeOfPaymentAccount {
-  company: string;
-  default_account: string;
-}
-
 
 export function CheckoutPage() {
   const { items, customer, grandTotal, clearCart, subTotal, discountAmount, additionalDiscountType, additionalDiscountValue, setAdditionalDiscount } = useCartStore();
@@ -27,33 +16,13 @@ export function CheckoutPage() {
   const navigate = useNavigate();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [payments, setPayments] = useState<PaymentEntry[]>([]);
-  const [currentPaymentMode, setCurrentPaymentMode] = useState<string | null>(null);
-  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number | string>(0);
 
-  const paymentModes = posProfile?.payments?.map((p: any) => p.mode_of_payment) || [];
   const warehouse = posProfile?.warehouse || null;
 
-  const totalPaid = useMemo(() => payments.reduce((acc, p) => acc + p.amount, 0), [payments]);
-  const outstandingAmount = useMemo(() => grandTotal() - totalPaid, [grandTotal, totalPaid]);
-
-  const handleAddPayment = () => {
-    if (!currentPaymentMode || !currentPaymentAmount || +currentPaymentAmount <= 0) {
-      notifications.show({ color: 'orange', title: 'Cannot Add Payment', message: 'Please select a payment mode and enter a valid amount.' });
-      return;
-    }
-    setPayments([...payments, { mode: currentPaymentMode, amount: +currentPaymentAmount }]);
-    setCurrentPaymentAmount(0);
-  };
-
-  const handleRemovePayment = (index: number) => {
-    setPayments(payments.filter((_, i) => i !== index));
-  };
-
-  const handleCompletePayment = async () => {
+  const handleCreateSalesOrderDraft = async () => {
     const user = authService.getLoggedInUser();
-    if (!customer || !posProfile || !warehouse || payments.length === 0 || !user) {
-      notifications.show({ color: 'red', title: 'Error', message: 'A customer, POS profile, warehouse, payment, and logged-in user are required.' });
+    if (!customer || !posProfile || !warehouse || !user) {
+      notifications.show({ color: 'red', title: 'Error', message: 'A customer, POS profile, warehouse, and logged-in user are required.' });
       return;
     }
     setIsSubmitting(true);
@@ -62,7 +31,7 @@ export function CheckoutPage() {
       futureDate.setDate(futureDate.getDate() + 2);
       const deliveryDate = futureDate.toISOString().split('T')[0];
 
-      // The Sales Order should always be submitted.
+      // The Sales Order should be saved as a draft.
       const soPayload: SalesOrderPayload = {
         customer: customer,
         set_warehouse: warehouse,
@@ -75,15 +44,15 @@ export function CheckoutPage() {
         additional_discount_percentage: additionalDiscountType === 'Percentage' ? additionalDiscountValue : 0,
         discount_amount: additionalDiscountType === 'Amount' ? additionalDiscountValue : 0,
         update_stock: 1,
-        docstatus: 1, // Always submit the Sales Order
+        docstatus: 0, // Save as draft
         company: posProfile.company,
         cost_center: posProfile.cost_center,
         hub_manager: user,
       };
       const soResult = await apiService.createSalesOrder(soPayload);
       notifications.show({
-        title: 'Sales Order Submitted',
-        message: `Order ${soResult.name} has been successfully submitted.`,
+        title: 'Sales Order Draft Created',
+        message: `Order ${soResult.name} has been successfully saved as a draft.`,
         color: 'teal',
         icon: <IconCircleCheck />,
       });
@@ -100,8 +69,8 @@ export function CheckoutPage() {
             rate: item.standard_rate || 0,
           })),
           grand_total: grandTotal(),
-          paid_amount: totalPaid,
-          outstanding_amount: outstandingAmount,
+          paid_amount: 0,
+          outstanding_amount: grandTotal(),
           created_at: new Date(),
           created_by: user,
         };
@@ -113,63 +82,6 @@ export function CheckoutPage() {
           message: `Could not save the order locally. ${errorMessage}`,
           color: 'red',
         });
-      }
-
-      for (const p of payments) {
-        try {
-          const modeOfPaymentDetails = await apiService.getModeOfPaymentDetails(p.mode);
-          const paymentAccountEntry = modeOfPaymentDetails?.accounts?.find((acc: ModeOfPaymentAccount) => acc.company === posProfile.company);
-          const paymentAccount = paymentAccountEntry?.default_account;
-
-          if (!paymentAccount) {
-            throw new Error(`Could not find payment account for mode ${p.mode} and company ${posProfile.company} in Mode of Payment details.`);
-          }
-
-          // Step 1: Get the draft Payment Entry from the server
-          const today = new Date().toISOString().split('T')[0];
-          const peDraftPayload: PaymentEntryPayload = {
-            dt: 'Sales Order',
-            dn: soResult.name,
-            party_type: 'Customer',
-            party: customer,
-            paid_amount: p.amount,
-            paid_to: paymentAccount,
-            mode_of_payment: p.mode,
-            company: posProfile.company,
-            posting_date: today,
-            reference_no: soResult.name,
-            reference_date: today,
-          };
-          const peDraft = await apiService.createPaymentEntry(peDraftPayload);
-
-          // The server method doesn't retain the reference_no, and it auto-fills the
-          // full outstanding amount. We need to correct both of these.
-          peDraft.reference_no = soResult.name;
-          peDraft.paid_amount = p.amount;
-          peDraft.base_paid_amount = p.amount;
-          if (peDraft.references && peDraft.references.length > 0) {
-            peDraft.references[0].allocated_amount = p.amount;
-          }
-
-          // Step 2: Save the draft document
-          const savedPaymentEntry = await apiService.saveDoc(peDraft);
-
-          // Step 3: Submit the document
-          await apiService.submitDoc(savedPaymentEntry);
-
-          notifications.show({
-            title: 'Payment Submitted',
-            message: `Payment of ${p.amount} via ${p.mode} has been successfully submitted.`,
-            color: 'green',
-          });
-        } catch (peError) {
-          const errorMessage = peError instanceof Error ? peError.message : 'An unknown error occurred.';
-          notifications.show({
-            title: 'Payment Entry Failed',
-            message: `Could not record payment for ${p.amount} via ${p.mode}. ${errorMessage}`,
-            color: 'orange',
-          });
-        }
       }
 
       clearCart();
@@ -200,8 +112,6 @@ export function CheckoutPage() {
         <Group justify="space-between"><Text c="red">Discount:</Text><Text c="red">{currency} -{discountAmount().toFixed(2)}</Text></Group>
         <Divider my="sm" />
         <Group justify="space-between"><Text>Grand Total:</Text><Text fw={700} size="xl" data-testid="grand-total">{currency} {grandTotal().toFixed(2)}</Text></Group>
-        <Group justify="space-between"><Text c="blue">Total Paid:</Text><Text c="blue" fw={700} size="xl">{currency} {totalPaid.toFixed(2)}</Text></Group>
-        <Group justify="space-between"><Text c="orange">Outstanding:</Text><Text c="orange" fw={700} size="xl">{currency} {outstandingAmount.toFixed(2)}</Text></Group>
       </Paper>
 
       <Paper withBorder p="md" mb="xl">
@@ -220,34 +130,8 @@ export function CheckoutPage() {
         />
       </Paper>
 
-      <Paper withBorder p="md" mb="xl">
-        <Title order={3} mb="sm">Add a Payment</Title>
-        <Radio.Group label="Payment Mode" value={currentPaymentMode} onChange={setCurrentPaymentMode} withAsterisk>
-          <Group mt="xs">{paymentModes.map((mode: string) => <Radio key={mode} value={mode} label={mode} />)}</Group>
-        </Radio.Group>
-        <NumberInput label="Amount" value={currentPaymentAmount} onChange={setCurrentPaymentAmount} min={0} placeholder="Enter amount" mt="md" />
-        <Button onClick={handleAddPayment} leftSection={<IconPlus size={18} />} mt="md">Add Payment</Button>
-      </Paper>
-
-      {payments.length > 0 && (
-        <Paper withBorder p="md">
-          <Title order={4} mb="sm">Payments Added</Title>
-          <Stack gap="xs">
-            {payments.map((p, index) => (
-              <Group justify="space-between" key={index}>
-                <Text>{p.mode}</Text>
-                <Group>
-                  <Text fw={500}>{currency} {p.amount.toFixed(2)}</Text>
-                  <ActionIcon color="red" size="sm" variant="light" onClick={() => handleRemovePayment(index)} aria-label={`Remove ${p.mode} payment`}><IconTrash size={16} /></ActionIcon>
-                </Group>
-              </Group>
-            ))}
-          </Stack>
-        </Paper>
-      )}
-
-      <Button fullWidth size="lg" mt="xl" onClick={handleCompletePayment} disabled={payments.length === 0 || !warehouse || isSubmitting}>
-        Complete Order
+      <Button fullWidth size="lg" mt="xl" onClick={handleCreateSalesOrderDraft} disabled={!warehouse || isSubmitting}>
+        Create Sales Order Draft
       </Button>
     </div>
   );

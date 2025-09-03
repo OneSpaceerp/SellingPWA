@@ -13,6 +13,8 @@ export function OrdersPage() {
   const [customerFilter, setCustomerFilter] = useState('');
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<SalesOrder | null>(null);
+  const [detailedOrder, setDetailedOrder] = useState<SalesOrder | null>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const currency = useSettingsStore((state) => state.currency);
@@ -40,10 +42,27 @@ export function OrdersPage() {
     }
   }, [user]);
 
-  const handleCompletePayment = () => {
+  useEffect(() => {
     if (selectedOrder) {
+      setIsDetailLoading(true);
+      setDetailedOrder(null); // Clear previous details
+      apiService.getSalesOrder(selectedOrder.name)
+        .then(data => {
+          setDetailedOrder(data);
+          setIsDetailLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setIsDetailLoading(false);
+        });
+    }
+  }, [selectedOrder]);
+
+  const handleCompletePayment = () => {
+    if (detailedOrder) {
       setSelectedOrder(null);
-      navigate(`/payment/${selectedOrder.name}`);
+      setDetailedOrder(null);
+      navigate(`/payment/${detailedOrder.name}`);
     }
   };
 
@@ -135,25 +154,29 @@ export function OrdersPage() {
 
       <Modal
         opened={selectedOrder !== null}
-        onClose={() => setSelectedOrder(null)}
+        onClose={() => {
+          setSelectedOrder(null);
+          setDetailedOrder(null);
+        }}
         title={`Order: ${selectedOrder?.name}`}
         size="lg"
       >
         <ErrorBoundary>
-          {selectedOrder && (
+          {isDetailLoading && <Center><Loader /></Center>}
+          {!isDetailLoading && detailedOrder && (
             <>
               <Stack>
                 <Group justify="space-between">
                 <Text>Customer:</Text>
-                <Text fw={500}>{selectedOrder.customer_name || selectedOrder.customer}</Text>
+                <Text fw={500}>{detailedOrder.customer_name || detailedOrder.customer}</Text>
               </Group>
               <Group justify="space-between">
                 <Text>Status:</Text>
-                <Badge color={getStatusColor(selectedOrder.docstatus)}>{getStatusText(selectedOrder.docstatus)}</Badge>
+                <Badge color={getStatusColor(detailedOrder.docstatus)}>{getStatusText(detailedOrder.docstatus)}</Badge>
               </Group>
               <Group justify="space-between">
                 <Text>Date:</Text>
-                <Text>{new Date(selectedOrder.creation).toLocaleString()}</Text>
+                <Text>{new Date(detailedOrder.creation).toLocaleString()}</Text>
               </Group>
             </Stack>
 
@@ -170,7 +193,7 @@ export function OrdersPage() {
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {selectedOrder.items && selectedOrder.items.map(item => (
+                {detailedOrder.items && detailedOrder.items.map(item => (
                   <Table.Tr key={item.item_code}>
                     <Table.Td>{item.item_name}</Table.Td>
                     <Table.Td>{item.qty}</Table.Td>
@@ -186,21 +209,21 @@ export function OrdersPage() {
             <Stack>
               <Group justify="space-between">
                 <Text>Grand Total:</Text>
-                <Text fw={700}>{currency} {selectedOrder.grand_total.toFixed(2)}</Text>
+                <Text fw={700}>{currency} {detailedOrder.grand_total.toFixed(2)}</Text>
               </Group>
               <Group justify="space-between">
                 <Text>Paid Amount:</Text>
-                <Text c="teal">{currency} {(selectedOrder.grand_total - (selectedOrder.outstanding_amount || 0)).toFixed(2)}</Text>
+                <Text c="teal">{currency} {(detailedOrder.grand_total - (detailedOrder.outstanding_amount || 0)).toFixed(2)}</Text>
               </Group>
               <Group justify="space-between">
                 <Text>Outstanding:</Text>
-                <Text c="orange">{currency} {(selectedOrder.outstanding_amount || 0).toFixed(2)}</Text>
+                <Text c="orange">{currency} {(detailedOrder.outstanding_amount || 0).toFixed(2)}</Text>
               </Group>
             </Stack>
 
             <Group justify="flex-end" mt="xl">
               <Button leftSection={<IconPrinter size={16} />} onClick={handlePrint}>Print</Button>
-              {selectedOrder.docstatus === 1 && (selectedOrder.outstanding_amount || 0) > 0 && (
+              {detailedOrder.docstatus === 1 && (detailedOrder.outstanding_amount || 0) > 0 && (
                 <Button color="green" onClick={handleCompletePayment}>Collect Payment</Button>
               )}
             </Group>
@@ -210,7 +233,7 @@ export function OrdersPage() {
       </Modal>
 
       <div style={{ display: 'none' }}>
-        {selectedOrder && <OrderPrintLayout ref={printRef} order={selectedOrder} currency={currency} />}
+        {detailedOrder && <OrderPrintLayout ref={printRef} order={detailedOrder} currency={currency} />}
       </div>
     </>
   );

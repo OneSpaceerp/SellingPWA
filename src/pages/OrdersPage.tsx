@@ -165,6 +165,7 @@ export function OrdersPage() {
           {isDetailLoading && <Center><Loader /></Center>}
           {!isDetailLoading && detailedOrder && (
             <>
+              {console.log('--- DEBUG: detailedOrder ---', detailedOrder)}
               <Stack>
                 <Group justify="space-between">
                 <Text>Customer:</Text>

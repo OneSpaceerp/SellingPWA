@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { MantineProvider, localStorageColorSchemeManager } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import App from './App.tsx';
+import './i18n';
 
 // Import Mantine's core styles
 import '@mantine/core/styles.css';

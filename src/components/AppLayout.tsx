@@ -27,17 +27,29 @@ export function AppLayout() {
       <AppShell.Footer p="md">
         <Tabs value={activeTab} onChange={(value) => navigate(value || '/')}>
           <Tabs.List grow>
-            <Tabs.Tab value="/" leftSection={<IconListDetails size="1.2rem" />}>
-              Catalog
+            <Tabs.Tab value="/">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <IconListDetails size="1.2rem" />
+                Catalog
+              </div>
             </Tabs.Tab>
-            <Tabs.Tab value="/cart" leftSection={<IconShoppingCart size="1.2rem" />}>
-              Cart
+            <Tabs.Tab value="/cart">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <IconShoppingCart size="1.2rem" />
+                Cart
+              </div>
             </Tabs.Tab>
-            <Tabs.Tab value="/orders" leftSection={<IconReceipt size="1.2rem" />}>
-              Orders
+            <Tabs.Tab value="/orders">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <IconReceipt size="1.2rem" />
+                Orders
+              </div>
             </Tabs.Tab>
-            <Tabs.Tab value="/settings" leftSection={<IconSettings size="1.2rem" />}>
-              Settings
+            <Tabs.Tab value="/settings">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <IconSettings size="1.2rem" />
+                Settings
+              </div>
             </Tabs.Tab>
           </Tabs.List>
         </Tabs>

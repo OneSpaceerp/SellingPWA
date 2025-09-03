@@ -16,7 +16,7 @@ export function SelectCustomerPage() {
   useEffect(() => {
     if (posProfile) {
       setIsLoading(true);
-      const customerGroups = posProfile.customer_groups.map(g => g.group);
+      const customerGroups = posProfile.customer_groups.map(g => g.customer_group);
       apiService.getCustomers(customerGroups)
         .then(data => {
           setCustomers(data);

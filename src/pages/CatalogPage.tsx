@@ -16,7 +16,7 @@ export function CatalogPage() {
   useEffect(() => {
     if (posProfile) {
       setIsLoading(true);
-      const itemGroups = posProfile.item_groups.map(g => g.group);
+      const itemGroups = posProfile.item_groups.map(g => g.item_group);
       apiService.getItems(itemGroups)
         .then(data => {
           setItems(data);

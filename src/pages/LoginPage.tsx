@@ -4,8 +4,8 @@ import { Title, TextInput, Button, Paper, Group, PasswordInput, Alert } from '@m
 import { IconAlertCircle } from '@tabler/icons-react';
 
 export function LoginPage() {
-  const [apiKey, setApiKey] = useState('');
-  const [apiSecret, setApiSecret] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -13,12 +13,12 @@ export function LoginPage() {
     event.preventDefault();
     setError('');
     setLoading(true);
-    const result = await authService.login(apiKey, apiSecret);
+    const result = await authService.login(email, password);
     setLoading(false);
     if (result.success) {
       window.location.reload();
     } else {
-      setError('Login failed. Please check your API Key and Secret.');
+      setError('Login failed. Please check your Email and Password.');
     }
   };
 
@@ -28,20 +28,20 @@ export function LoginPage() {
         <Title order={2} mb="xl" ta="center">Login</Title>
         <form onSubmit={handleSubmit}>
           <TextInput
-            label="API Key"
-            placeholder="Enter your API Key"
+            label="Email"
+            placeholder="Enter your email"
             required
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
           />
           <PasswordInput
-            label="API Secret"
-            placeholder="Enter your API Secret"
+            label="Password"
+            placeholder="Enter your password"
             required
             mt="md"
-            value={apiSecret}
-            onChange={(e) => setApiSecret(e.target.value)}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
           />
           {error && (

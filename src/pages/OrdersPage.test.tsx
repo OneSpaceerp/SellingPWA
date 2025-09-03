@@ -20,9 +20,18 @@ const mockOrders: SalesOrder[] = [
   { name: 'SO-002', docstatus: 1, customer: 'CUST-002', customer_name: 'Test Customer 2', grand_total: 200, outstanding_amount: 100, creation: new Date().toISOString(), items: [] },
 ];
 
+const mockDetailedOrder: SalesOrder = {
+  ...mockOrders[1],
+  items: [
+    { item_code: 'ITEM-001', item_name: 'Test Item 1', qty: 1, rate: 100 },
+    { item_code: 'ITEM-002', item_name: 'Test Item 2', qty: 1, rate: 100 },
+  ],
+};
+
 describe('OrdersPage', () => {
   beforeEach(() => {
     (apiService.getSalesOrders as vi.Mock).mockResolvedValue(mockOrders);
+    (apiService.getSalesOrder as vi.Mock).mockResolvedValue(mockDetailedOrder);
     (authService.getLoggedInUser as vi.Mock).mockReturnValue('test-user');
   });
 

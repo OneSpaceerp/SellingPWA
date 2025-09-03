@@ -1,4 +1,4 @@
-const login = async (apiKey: string, apiSecret: string): Promise<{ success: boolean; user?: string }> => {
+const login = async (usr: string, pwd: string): Promise<{ success: boolean; user?: string }> => {
   const erpNextUrl = localStorage.getItem('erpnext-url');
   if (!erpNextUrl) {
     console.error("Login attempt failed: ERPNext URL is not set.");
@@ -6,18 +6,19 @@ const login = async (apiKey: string, apiSecret: string): Promise<{ success: bool
   }
 
   try {
-    const response = await fetch(`${erpNextUrl}/api/method/frappe.auth.get_logged_user`, {
+    const response = await fetch(`${erpNextUrl}/api/method/login`, {
+      method: 'POST',
       headers: {
-        'Authorization': `token ${apiKey}:${apiSecret}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
+      body: `usr=${encodeURIComponent(usr)}&pwd=${encodeURIComponent(pwd)}`,
+      credentials: 'include',
     });
 
     if (response.ok) {
       const data = await response.json();
-      const token = `${apiKey}:${apiSecret}`;
-      sessionStorage.setItem('erpnext-token', token);
-      sessionStorage.setItem('erpnext-user', data.message);
-      return { success: true, user: data.message };
+      sessionStorage.setItem('erpnext-user', data.full_name);
+      return { success: true, user: data.full_name };
     } else {
       console.error('Login failed:', response.status, await response.text());
       return { success: false };
@@ -29,13 +30,12 @@ const login = async (apiKey: string, apiSecret: string): Promise<{ success: bool
 };
 
 const logout = () => {
-  sessionStorage.removeItem('erpnext-token');
   sessionStorage.removeItem('erpnext-user');
   localStorage.removeItem('erpnext-pos-profile');
 };
 
 const isAuthenticated = (): boolean => {
-  return sessionStorage.getItem('erpnext-token') !== null;
+  return sessionStorage.getItem('erpnext-user') !== null;
 };
 
 const getLoggedInUser = (): string | null => {
@@ -43,8 +43,7 @@ const getLoggedInUser = (): string | null => {
 };
 
 const getAuthHeaders = (): HeadersInit => {
-  const token = sessionStorage.getItem('erpnext-token');
-  return token ? { 'Authorization': `token ${token}` } : {};
+  return {};
 };
 
 export const authService = {

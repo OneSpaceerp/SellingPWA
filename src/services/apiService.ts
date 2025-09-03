@@ -44,7 +44,10 @@ const get = async <T>(endpoint: string): Promise<T> => {
   const erpNextUrl = localStorage.getItem('erpnext-url');
   if (!erpNextUrl) throw new Error('ERPNext URL not set.');
   const fullUrl = `${erpNextUrl}/api/${endpoint}`;
-  const response = await fetch(fullUrl, { headers: authService.getAuthHeaders() });
+  const response = await fetch(fullUrl, {
+    headers: authService.getAuthHeaders(),
+    credentials: 'include',
+  });
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`API request failed: ${errorText}`);
@@ -57,7 +60,10 @@ const getList = async <T>(doctype: string, filters: any, fields: string[]): Prom
   const erpNextUrl = localStorage.getItem('erpnext-url');
   if (!erpNextUrl) throw new Error('ERPNext URL not set.');
   const fullUrl = `${erpNextUrl}/api/resource/${doctype}?fields=${encodeURIComponent(JSON.stringify(fields))}&filters=${encodeURIComponent(JSON.stringify(filters))}`;
-  const response = await fetch(fullUrl, { headers: authService.getAuthHeaders() });
+  const response = await fetch(fullUrl, {
+    headers: authService.getAuthHeaders(),
+    credentials: 'include',
+  });
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`API request failed: ${errorText}`);
@@ -75,6 +81,7 @@ const post = async <T>(endpoint: string, payload: any): Promise<T> => {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
+    credentials: 'include',
   });
   if (!response.ok) {
     const errorText = await response.text();
@@ -136,6 +143,7 @@ const postMethod = async <T>(method: string, payload: any): Promise<T> => {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
+    credentials: 'include',
   });
   if (!response.ok) {
     const errorText = await response.text();

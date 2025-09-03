@@ -196,9 +196,9 @@ export function OrdersPage() {
                 {detailedOrder.items && detailedOrder.items.map(item => (
                   <Table.Tr key={item.item_code}>
                     <Table.Td>{item.item_name}</Table.Td>
-                    <Table.Td>{item.qty}</Table.Td>
-                    <Table.Td>{currency} {item.rate.toFixed(2)}</Table.Td>
-                    <Table.Td>{currency} {(item.qty * item.rate).toFixed(2)}</Table.Td>
+                    <Table.Td>{item.qty || 0}</Table.Td>
+                    <Table.Td>{currency} {(item.rate || 0).toFixed(2)}</Table.Td>
+                    <Table.Td>{currency} {((item.qty || 0) * (item.rate || 0)).toFixed(2)}</Table.Td>
                   </Table.Tr>
                 ))}
               </Table.Tbody>

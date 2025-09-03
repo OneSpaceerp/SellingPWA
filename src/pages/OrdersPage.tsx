@@ -46,15 +46,13 @@ export function OrdersPage() {
     if (selectedOrder) {
       setIsDetailLoading(true);
       setDetailedOrder(null); // Clear previous details
-      console.log('--- DEBUG: Fetching order ---', selectedOrder.name);
       apiService.getSalesOrder(selectedOrder.name)
         .then(data => {
-          console.log('--- DEBUG: Fetch success, data: ---', data);
           setDetailedOrder(data);
           setIsDetailLoading(false);
         })
         .catch(err => {
-          console.error('--- DEBUG: Fetch failed, error: ---', err);
+          console.error(err);
           setIsDetailLoading(false);
         });
     }
@@ -167,7 +165,6 @@ export function OrdersPage() {
           {isDetailLoading && <Center><Loader /></Center>}
           {!isDetailLoading && detailedOrder && (
             <>
-              {console.log('--- DEBUG: detailedOrder ---', detailedOrder)}
               <Stack>
                 <Group justify="space-between">
                 <Text>Customer:</Text>

@@ -8,7 +8,7 @@ interface OrderPrintLayoutProps {
 }
 
 export const OrderPrintLayout = forwardRef<HTMLDivElement, OrderPrintLayoutProps>(({ order, currency }, ref) => {
-  const paidAmount = order.grand_total - order.outstanding_amount;
+  const paidAmount = (order.grand_total || 0) - (order.outstanding_amount || 0);
 
   return (
     <div ref={ref} style={{ padding: '20px' }}>
@@ -40,9 +40,9 @@ export const OrderPrintLayout = forwardRef<HTMLDivElement, OrderPrintLayoutProps
           {order.items && order.items.map(item => (
             <Table.Tr key={item.item_code}>
               <Table.Td>{item.item_name}</Table.Td>
-              <Table.Td>{item.qty}</Table.Td>
-              <Table.Td>{currency} {item.rate.toFixed(2)}</Table.Td>
-              <Table.Td>{currency} {(item.qty * item.rate).toFixed(2)}</Table.Td>
+              <Table.Td>{item.qty || 0}</Table.Td>
+              <Table.Td>{currency} {(item.rate || 0).toFixed(2)}</Table.Td>
+              <Table.Td>{currency} {((item.qty || 0) * (item.rate || 0)).toFixed(2)}</Table.Td>
             </Table.Tr>
           ))}
         </Table.Tbody>
@@ -53,7 +53,7 @@ export const OrderPrintLayout = forwardRef<HTMLDivElement, OrderPrintLayoutProps
       <Stack>
         <Group justify="space-between">
           <Text>Grand Total:</Text>
-          <Text fw={700}>{currency} {order.grand_total.toFixed(2)}</Text>
+          <Text fw={700}>{currency} {(order.grand_total || 0).toFixed(2)}</Text>
         </Group>
         <Group justify="space-between">
           <Text>Paid Amount:</Text>
@@ -61,7 +61,7 @@ export const OrderPrintLayout = forwardRef<HTMLDivElement, OrderPrintLayoutProps
         </Group>
         <Group justify="space-between">
           <Text>Outstanding:</Text>
-          <Text c="orange">{currency} {order.outstanding_amount.toFixed(2)}</Text>
+          <Text c="orange">{currency} {(order.outstanding_amount || 0).toFixed(2)}</Text>
         </Group>
       </Stack>
     </div>

@@ -1,12 +1,6 @@
 const login = async (usr: string, pwd: string): Promise<{ success: boolean; user?: string }> => {
-  const erpNextUrl = localStorage.getItem('erpnext-url');
-  if (!erpNextUrl) {
-    console.error("Login attempt failed: ERPNext URL is not set.");
-    return { success: false };
-  }
-
   try {
-    const response = await fetch(`${erpNextUrl}/api/method/login`, {
+    const response = await fetch(`/api/method/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -17,8 +11,8 @@ const login = async (usr: string, pwd: string): Promise<{ success: boolean; user
 
     if (response.ok) {
       const data = await response.json();
-      sessionStorage.setItem('erpnext-user', data.full_name);
-      return { success: true, user: data.full_name };
+      sessionStorage.setItem('erpnext-user', usr);
+      return { success: true, user: usr };
     } else {
       console.error('Login failed:', response.status, await response.text());
       return { success: false };

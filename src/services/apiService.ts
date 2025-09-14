@@ -41,9 +41,7 @@ export interface SalesOrderPayload {
 }
 
 const get = async <T>(endpoint: string): Promise<T> => {
-  const erpNextUrl = localStorage.getItem('erpnext-url');
-  if (!erpNextUrl) throw new Error('ERPNext URL not set.');
-  const fullUrl = `${erpNextUrl}/api/${endpoint}`;
+  const fullUrl = `/api/${endpoint}`;
   const response = await fetch(fullUrl, {
     headers: authService.getAuthHeaders(),
     credentials: 'include',
@@ -57,9 +55,7 @@ const get = async <T>(endpoint: string): Promise<T> => {
 };
 
 const getList = async <T>(doctype: string, filters: any, fields: string[]): Promise<T> => {
-  const erpNextUrl = localStorage.getItem('erpnext-url');
-  if (!erpNextUrl) throw new Error('ERPNext URL not set.');
-  const fullUrl = `${erpNextUrl}/api/resource/${doctype}?fields=${encodeURIComponent(JSON.stringify(fields))}&filters=${encodeURIComponent(JSON.stringify(filters))}`;
+  const fullUrl = `/api/resource/${doctype}?fields=${encodeURIComponent(JSON.stringify(fields))}&filters=${encodeURIComponent(JSON.stringify(filters))}`;
   const response = await fetch(fullUrl, {
     headers: authService.getAuthHeaders(),
     credentials: 'include',
@@ -73,9 +69,7 @@ const getList = async <T>(doctype: string, filters: any, fields: string[]): Prom
 }
 
 const post = async <T>(endpoint: string, payload: any): Promise<T> => {
-  const erpNextUrl = localStorage.getItem('erpnext-url');
-  if (!erpNextUrl) throw new Error('ERPNext URL not set.');
-  const fullUrl = `${erpNextUrl}/api/${endpoint}`;
+  const fullUrl = `/api/${endpoint}`;
   const headers = { ...authService.getAuthHeaders(), 'Content-Type': 'application/json' };
   const response = await fetch(fullUrl, {
     method: 'POST',
@@ -135,9 +129,7 @@ export interface PaymentEntryPayload {
 }
 
 const postMethod = async <T>(method: string, payload: any): Promise<T> => {
-  const erpNextUrl = localStorage.getItem('erpnext-url');
-  if (!erpNextUrl) throw new Error('ERPNext URL not set.');
-  const fullUrl = `${erpNextUrl}/api/${method}`;
+  const fullUrl = `/api/${method}`;
   const headers = { ...authService.getAuthHeaders(), 'Content-Type': 'application/json' };
   const response = await fetch(fullUrl, {
     method: 'POST',

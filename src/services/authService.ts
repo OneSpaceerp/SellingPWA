@@ -10,7 +10,7 @@ const login = async (usr: string, pwd: string): Promise<{ success: boolean; user
     });
 
     if (response.ok) {
-      const data = await response.json();
+      await response.json();
       sessionStorage.setItem('erpnext-user', usr);
       return { success: true, user: usr };
     } else {

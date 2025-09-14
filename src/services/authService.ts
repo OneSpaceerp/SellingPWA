@@ -10,9 +10,9 @@ const login = async (usr: string, pwd: string): Promise<{ success: boolean; user
     });
 
     if (response.ok) {
-      await response.json();
-      sessionStorage.setItem('erpnext-user', usr);
-      return { success: true, user: usr };
+      const data = await response.json();
+      sessionStorage.setItem('erpnext-user', data.user_id);
+      return { success: true, user: data.user_id };
     } else {
       console.error('Login failed:', response.status, await response.text());
       return { success: false };

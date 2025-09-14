@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiService, type Item } from '../services/apiService';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -10,8 +11,15 @@ export function CatalogPage() {
   const [search, setSearch] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const addItemToCart = useCartStore((state) => state.addItem);
+  const { addItem: addItemToCart, customer } = useCartStore();
   const { currency, posProfile } = useSettingsStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!customer) {
+      navigate('/select-customer');
+    }
+  }, [customer, navigate]);
 
   useEffect(() => {
     if (posProfile) {

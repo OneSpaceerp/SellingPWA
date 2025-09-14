@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { PosProfileSelectionPage } from './pages/PosProfileSelectionPage';
 import { authService } from './services/authService';
 import { AppLayout } from './components/AppLayout';
+import { DashboardPage } from './pages/DashboardPage';
 import { CatalogPage } from './pages/CatalogPage';
 import { CartPage } from './pages/CartPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -34,7 +35,8 @@ function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<CatalogPage />} />
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/catalog" element={<CatalogPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/settings" element={<SettingsPage />} />

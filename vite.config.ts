@@ -41,4 +41,12 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://lcs.nsd-eg.com',
+        changeOrigin: true,
+      },
+    },
+  },
 });

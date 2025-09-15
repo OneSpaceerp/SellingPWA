@@ -44,7 +44,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://lcs.nsd-eg.com',
+        target: 'https://beananza.nsd-eg.com',
         changeOrigin: true,
       },
     },

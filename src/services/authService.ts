@@ -1,4 +1,4 @@
-const login = async (usr: string, pwd: string): Promise<{ success: boolean; user?: string }> => {
+const login = async (usr: string, pwd: string): Promise<{ success: boolean; user?: string; error?: string }> => {
   try {
     const response = await fetch(`/api/method/login`, {
       method: 'POST',
@@ -13,12 +13,13 @@ const login = async (usr: string, pwd: string): Promise<{ success: boolean; user
       sessionStorage.setItem('erpnext-user', usr);
       return { success: true, user: usr };
     } else {
-      console.error('Login failed:', response.status, await response.text());
-      return { success: false };
+      const errorText = await response.text();
+      console.error('Login failed:', response.status, errorText);
+      return { success: false, error: errorText };
     }
   } catch (error) {
     console.error('An error occurred during the login API call:', error);
-    return { success: false };
+    return { success: false, error: 'An unknown error occurred while trying to log in.' };
   }
 };
 

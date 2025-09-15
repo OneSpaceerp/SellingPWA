@@ -18,7 +18,7 @@ export function LoginPage() {
     if (result.success) {
       window.location.reload();
     } else {
-      setError('Login failed. Please check your Email and Password.');
+      setError(result.error || 'Login failed. Please check your Email and Password.');
     }
   };
 

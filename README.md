@@ -37,6 +37,22 @@ export default tseslint.config([
     },
   },
 ])
+
+## Configuration
+
+To connect the application to a backend, you need to create a `.env` file in the root of the project. You can copy the `.env.example` file to create your own `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+Then, edit the `.env` file to specify the URL of your backend API:
+
+```
+VITE_API_URL=https://your-backend-url.com
+```
+
+If `VITE_API_URL` is not set, the application will use a relative path for API requests, which is suitable for development when using the Vite proxy. For production deployments where the frontend and backend are on different domains, you must set this variable.
 ```
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:

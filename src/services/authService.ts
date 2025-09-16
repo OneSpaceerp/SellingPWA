@@ -1,6 +1,7 @@
 const login = async (usr: string, pwd: string): Promise<{ success: boolean; user?: string; error?: string }> => {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '';
   try {
-    const response = await fetch(`/api/method/login`, {
+    const response = await fetch(`${API_BASE_URL}/api/method/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

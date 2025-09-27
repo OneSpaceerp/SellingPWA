@@ -5,6 +5,9 @@ import App from './App';
 vi.mock('./services/authService', () => ({
   authService: {
     isAuthenticated: vi.fn(),
+    getLoggedInUser: vi.fn(() => 'test-user'),
+    login: vi.fn(),
+    logout: vi.fn(),
     getAuthHeaders: vi.fn(() => ({})),
   },
 }));
@@ -17,6 +20,7 @@ vi.mock('./services/apiService', () => ({
     getPosProfileDetails: vi.fn(),
     getItems: vi.fn(),
     getCustomers: vi.fn(),
+    getSalesOrders: vi.fn(() => Promise.resolve([])),
   },
 }));
 

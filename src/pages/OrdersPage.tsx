@@ -60,8 +60,6 @@ export function OrdersPage() {
 
   const handleCompletePayment = () => {
     if (detailedOrder) {
-      setSelectedOrder(null);
-      setDetailedOrder(null);
       navigate(`/payment/${detailedOrder.name}`);
     }
   };

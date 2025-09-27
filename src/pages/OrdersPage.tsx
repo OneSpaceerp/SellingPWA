@@ -60,7 +60,11 @@ export function OrdersPage() {
 
   const handleCompletePayment = () => {
     if (detailedOrder) {
-      navigate(`/payment/${detailedOrder.name}`);
+      const orderName = detailedOrder.name;
+      setSelectedOrder(null);
+      setDetailedOrder(null);
+      // Add a delay to allow the modal to close before navigating
+      setTimeout(() => navigate(`/payment/${orderName}`), 300);
     }
   };
 
@@ -116,14 +120,6 @@ export function OrdersPage() {
             <Group justify="space-between" mt="md">
               <Text>Grand Total:</Text>
               <Text fw={700}>{currency} {order.grand_total.toFixed(2)}</Text>
-            </Group>
-            <Group justify="space-between">
-              <Text>Paid Amount:</Text>
-              <Text c="teal">{currency} {(order.grand_total - (order.outstanding_amount || 0)).toFixed(2)}</Text>
-            </Group>
-            <Group justify="space-between">
-              <Text>Outstanding:</Text>
-              <Text c="orange">{currency} {(order.outstanding_amount || 0).toFixed(2)}</Text>
             </Group>
           </Card>
         ))}
@@ -208,14 +204,6 @@ export function OrdersPage() {
               <Group justify="space-between">
                 <Text>Grand Total:</Text>
                 <Text fw={700}>{currency} {detailedOrder.grand_total.toFixed(2)}</Text>
-              </Group>
-              <Group justify="space-between">
-                <Text>Paid Amount:</Text>
-                <Text c="teal">{currency} {(detailedOrder.grand_total - (detailedOrder.outstanding_amount || 0)).toFixed(2)}</Text>
-              </Group>
-              <Group justify="space-between">
-                <Text>Outstanding:</Text>
-                <Text c="orange">{currency} {(detailedOrder.outstanding_amount || 0).toFixed(2)}</Text>
               </Group>
             </Stack>
 

@@ -101,7 +101,7 @@ export interface SalesOrder {
   grand_total: number;
   outstanding_amount?: number;
   creation: string;
-  items: { item_code: string; item_name: string; qty: number; rate: number }[];
+  items?: { item_code: string; item_name: string; qty: number; rate: number }[];
 }
 
 const getSalesOrders = async (owner: string): Promise<SalesOrder[]> => {

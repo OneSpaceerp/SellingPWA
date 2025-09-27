@@ -107,7 +107,7 @@ export interface SalesOrder {
 const getSalesOrders = async (owner: string): Promise<SalesOrder[]> => {
   const fields = [
     'name', 'docstatus', 'customer', 'customer_name',
-    'grand_total', 'creation', 'outstanding_amount'
+    'grand_total', 'creation'
   ];
   const filters = [['owner', '=', owner]];
   return getList<SalesOrder[]>('Sales Order', filters, fields);

@@ -119,14 +119,6 @@ export function OrdersPage() {
               <Text>Grand Total:</Text>
               <Text fw={700}>{currency} {order.grand_total.toFixed(2)}</Text>
             </Group>
-            <Group justify="space-between">
-              <Text>Paid Amount:</Text>
-              <Text c="teal">{currency} {(order.grand_total - (order.outstanding_amount || 0)).toFixed(2)}</Text>
-            </Group>
-            <Group justify="space-between">
-              <Text>Outstanding:</Text>
-              <Text c="orange">{currency} {(order.outstanding_amount || 0).toFixed(2)}</Text>
-            </Group>
           </Card>
         ))}
       </SimpleGrid>

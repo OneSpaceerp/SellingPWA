@@ -94,7 +94,6 @@ export function PaymentPage() {
           reference_date: today,
         };
         const peDraft = await apiService.createPaymentEntry(peDraftPayload);
-        peDraft.reference_no = order.name;
         peDraft.paid_amount = p.amount;
         peDraft.base_paid_amount = p.amount;
         if (peDraft.references && peDraft.references.length > 0) {

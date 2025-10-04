@@ -40,7 +40,7 @@ export interface SalesOrderPayload {
   [key: string]: any;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || '';
 
 const get = async <T>(endpoint: string): Promise<T> => {
   const fullUrl = `${API_BASE_URL}/api/${endpoint}`;
@@ -107,7 +107,7 @@ export interface SalesOrder {
 const getSalesOrders = async (owner: string): Promise<SalesOrder[]> => {
   const fields = [
     'name', 'docstatus', 'customer', 'customer_name',
-    'grand_total', 'creation'
+    'grand_total', 'outstanding_amount', 'creation'
   ];
   const filters = [['owner', '=', owner]];
   return getList<SalesOrder[]>('Sales Order', filters, fields);

@@ -3,6 +3,7 @@ import { authService } from '../services/authService';
 import { apiService, type SalesOrder } from '../services/apiService';
 import { useSettingsStore } from '../store/settingsStore';
 import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider, Modal, Button, Table, Stack } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { IconSearch, IconPrinter, IconCreditCard } from '@tabler/icons-react';
 import { useReactToPrint } from 'react-to-print';
 import { OrderPrintLayout } from '../components/OrderPrintLayout';
@@ -52,8 +53,16 @@ export function OrdersPage() {
           setIsDetailLoading(false);
         })
         .catch(err => {
-          console.error(err);
+          console.error('Failed to fetch order details:', err);
           setIsDetailLoading(false);
+          // Show error notification
+          notifications.show({
+            color: 'red',
+            title: 'Failed to load order details',
+            message: `Could not load details for order ${selectedOrder.name}. Please try again.`,
+          });
+          // Close the modal to prevent shadow screen
+          setSelectedOrder(null);
         });
     }
   }, [selectedOrder]);

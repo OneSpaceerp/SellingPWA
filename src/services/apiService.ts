@@ -41,15 +41,20 @@ export interface SalesOrderPayload {
 }
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || '';
+console.log('API_BASE_URL configured as:', API_BASE_URL || '(empty - using proxy)');
 
 const get = async <T>(endpoint: string): Promise<T> => {
   const fullUrl = `${API_BASE_URL}/api/${endpoint}`;
+  console.log('Making GET request to:', fullUrl);
+  console.log('Headers:', authService.getAuthHeaders());
   const response = await fetch(fullUrl, {
     headers: authService.getAuthHeaders(),
     credentials: 'include',
   });
+  console.log('Response status:', response.status);
   if (!response.ok) {
     const errorText = await response.text();
+    console.error('API request failed:', response.status, errorText);
     throw new Error(`API request failed: ${errorText}`);
   }
   const data = await response.json();
@@ -115,7 +120,22 @@ const getSalesOrders = async (owner: string): Promise<SalesOrder[]> => {
 
 const getSalesOrder = async (order_id: string): Promise<any> => {
   console.log('Fetching order details for:', order_id);
-  return get<any>(`resource/Sales Order/${encodeURIComponent(order_id)}`);
+  console.log('API_BASE_URL:', API_BASE_URL);
+  
+  // Try different endpoint formats
+  const endpoint = `resource/Sales Order/${encodeURIComponent(order_id)}`;
+  console.log('API endpoint:', endpoint);
+  console.log('Full URL will be:', `${API_BASE_URL}/api/${endpoint}`);
+  
+  try {
+    return await get<any>(endpoint);
+  } catch (error) {
+    console.error('First attempt failed, trying alternative format...');
+    // Try without encoding the order ID
+    const altEndpoint = `resource/Sales Order/${order_id}`;
+    console.log('Alternative endpoint:', altEndpoint);
+    return get<any>(altEndpoint);
+  }
 };
 
 export interface PaymentEntryPayload {

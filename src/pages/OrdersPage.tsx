@@ -3,7 +3,7 @@ import { authService } from '../services/authService';
 import { apiService, type SalesOrder } from '../services/apiService';
 import { useSettingsStore } from '../store/settingsStore';
 import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider, Modal, Button, Table, Stack } from '@mantine/core';
-import { IconSearch, IconPrinter } from '@tabler/icons-react';
+import { IconSearch, IconPrinter, IconCreditCard } from '@tabler/icons-react';
 import { useReactToPrint } from 'react-to-print';
 import { OrderPrintLayout } from '../components/OrderPrintLayout';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -108,9 +108,16 @@ export function OrdersPage() {
           <Card shadow="sm" padding="lg" radius="md" withBorder key={order.name} onClick={() => setSelectedOrder(order)} style={{ cursor: 'pointer' }}>
             <Group justify="space-between">
               <Text fw={500} size="lg">{order.name}</Text>
-              <Badge color={getStatusColor(order.docstatus)}>
-                {getStatusText(order.docstatus)}
-              </Badge>
+              <Group gap="xs">
+                {order.docstatus === 1 && (order.outstanding_amount || 0) > 0 && (
+                  <Badge color="blue" leftSection={<IconCreditCard size={12} />}>
+                    Payment Due
+                  </Badge>
+                )}
+                <Badge color={getStatusColor(order.docstatus)}>
+                  {getStatusText(order.docstatus)}
+                </Badge>
+              </Group>
             </Group>
             <Text size="sm" c="dimmed">{order.customer_name || order.customer}</Text>
             <Text size="xs" c="dimmed" mt="xs">{new Date(order.creation).toLocaleString()}</Text>
@@ -121,6 +128,12 @@ export function OrdersPage() {
               <Text>Grand Total:</Text>
               <Text fw={700}>{currency} {order.grand_total.toFixed(2)}</Text>
             </Group>
+            {order.docstatus === 1 && (order.outstanding_amount || 0) > 0 && (
+              <Group justify="space-between" mt="xs">
+                <Text size="sm" c="orange">Outstanding:</Text>
+                <Text size="sm" c="orange" fw={500}>{currency} {(order.outstanding_amount || 0).toFixed(2)}</Text>
+              </Group>
+            )}
           </Card>
         ))}
       </SimpleGrid>

@@ -109,9 +109,9 @@ export function OrdersPage() {
             <Group justify="space-between">
               <Text fw={500} size="lg">{order.name}</Text>
               <Group gap="xs">
-                {order.docstatus === 1 && (order.outstanding_amount || 0) > 0 && (
+                {order.docstatus === 1 && (
                   <Badge color="blue" leftSection={<IconCreditCard size={12} />}>
-                    Payment Due
+                    Payment Ready
                   </Badge>
                 )}
                 <Badge color={getStatusColor(order.docstatus)}>
@@ -128,12 +128,6 @@ export function OrdersPage() {
               <Text>Grand Total:</Text>
               <Text fw={700}>{currency} {order.grand_total.toFixed(2)}</Text>
             </Group>
-            {order.docstatus === 1 && (order.outstanding_amount || 0) > 0 && (
-              <Group justify="space-between" mt="xs">
-                <Text size="sm" c="orange">Outstanding:</Text>
-                <Text size="sm" c="orange" fw={500}>{currency} {(order.outstanding_amount || 0).toFixed(2)}</Text>
-              </Group>
-            )}
           </Card>
         ))}
       </SimpleGrid>
@@ -218,6 +212,12 @@ export function OrdersPage() {
                 <Text>Grand Total:</Text>
                 <Text fw={700}>{currency} {detailedOrder.grand_total.toFixed(2)}</Text>
               </Group>
+              {detailedOrder.outstanding_amount !== undefined && (
+                <Group justify="space-between">
+                  <Text c="orange">Outstanding Amount:</Text>
+                  <Text c="orange" fw={700}>{currency} {(detailedOrder.outstanding_amount || 0).toFixed(2)}</Text>
+                </Group>
+              )}
             </Stack>
 
             <Group justify="flex-end" mt="xl">

@@ -38,6 +38,28 @@ const getLoggedInUser = (): string | null => {
 };
 
 const getAuthHeaders = (): HeadersInit => {
+  const user = getLoggedInUser();
+  if (!user) {
+    console.log('No logged in user found');
+    return {};
+  }
+  
+  console.log('Getting auth headers for user:', user);
+  
+  // For ERPNext, we can use API key authentication or session-based auth
+  // Since we're using credentials: 'include', the session should be maintained
+  // But let's also try to get any stored API key
+  const apiKey = localStorage.getItem('erpnext-api-key');
+  
+  if (apiKey) {
+    console.log('Using API key authentication');
+    return {
+      'Authorization': `token ${apiKey}`,
+    };
+  }
+  
+  // If no API key, rely on session cookies (credentials: 'include')
+  console.log('Using session-based authentication (cookies)');
   return {};
 };
 

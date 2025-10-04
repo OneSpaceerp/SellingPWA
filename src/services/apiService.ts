@@ -113,7 +113,10 @@ const getSalesOrders = async (owner: string): Promise<SalesOrder[]> => {
   return getList<SalesOrder[]>('Sales Order', filters, fields);
 };
 
-const getSalesOrder = async (order_id: string): Promise<any> => get<any>(`resource/Sales Order/${encodeURIComponent(order_id)}`);
+const getSalesOrder = async (order_id: string): Promise<any> => {
+  console.log('Fetching order details for:', order_id);
+  return get<any>(`resource/Sales Order/${encodeURIComponent(order_id)}`);
+};
 
 export interface PaymentEntryPayload {
   dt: string;

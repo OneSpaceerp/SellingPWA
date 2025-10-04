@@ -58,6 +58,8 @@ const get = async <T>(endpoint: string): Promise<T> => {
     throw new Error(`API request failed: ${errorText}`);
   }
   const data = await response.json();
+  console.log('Response data:', data);
+  console.log('Extracted data.data:', data.data);
   return data.data as T;
 };
 

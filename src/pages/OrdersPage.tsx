@@ -190,8 +190,27 @@ export function OrdersPage() {
         }}
         title={`Order: ${selectedOrder?.name}`}
         size="lg"
+        styles={{
+          content: {
+            backgroundColor: 'white',
+            color: 'black',
+            zIndex: 1000,
+          },
+          header: {
+            backgroundColor: 'white',
+            color: 'black',
+          },
+          body: {
+            backgroundColor: 'white',
+            color: 'black',
+            padding: '20px',
+          }
+        }}
       >
         <ErrorBoundary>
+          <div style={{ backgroundColor: 'red', color: 'white', padding: '20px', fontSize: '20px', fontWeight: 'bold' }}>
+            🚨 MODAL CONTENT IS RENDERING! 🚨
+          </div>
           {isDetailLoading && <Center><Loader /></Center>}
           {!isDetailLoading && detailedOrder && (
             <>

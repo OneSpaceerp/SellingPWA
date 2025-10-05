@@ -29,6 +29,17 @@ export function OrdersPage() {
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
+    documentTitle: `Order-${selectedOrder?.name}`,
+    onBeforeGetContent: () => {
+      console.log('Preparing to print...');
+      return Promise.resolve();
+    },
+    onAfterPrint: () => {
+      console.log('Print completed');
+    },
+    onPrintError: (error) => {
+      console.error('Print error:', error);
+    }
   } as any);
 
   useEffect(() => {
@@ -290,6 +301,35 @@ export function OrdersPage() {
     return 'gray';
   };
 
+  const getOrderStatusBadges = (order: any) => {
+    const badges = [];
+    
+    // Document status badge
+    if (order.docstatus === 0) {
+      badges.push({ text: 'PENDING APPROVAL', color: 'yellow' });
+    } else if (order.docstatus === 1) {
+      badges.push({ text: 'APPROVED', color: 'green' });
+    } else if (order.docstatus === 2) {
+      badges.push({ text: 'CANCELLED', color: 'red' });
+    }
+    
+    // Payment status badge
+    if (order.docstatus === 1) { // Only show payment status for approved orders
+      const advancePaid = order.advance_paid || 0;
+      const grandTotal = order.grand_total || 0;
+      
+      if (advancePaid >= grandTotal) {
+        badges.push({ text: 'FULLY PAID', color: 'green' });
+      } else if (advancePaid > 0) {
+        badges.push({ text: 'PARTIALLY PAID', color: 'blue' });
+      } else {
+        badges.push({ text: 'PAYMENT READY', color: 'blue' });
+      }
+    }
+    
+    return badges;
+  };
+
   const filteredOrders = orders
     .filter(order => {
       if (!customerFilter) return true;
@@ -317,14 +357,18 @@ export function OrdersPage() {
             <Group justify="space-between">
               <Text fw={500} size="lg">{order.name}</Text>
               <Group gap="xs">
-                {order.docstatus === 1 && (
-                  <Badge color="blue" leftSection={<IconCreditCard size={12} />}>
-                    Payment Ready
-                  </Badge>
-                )}
-              <Badge color={getStatusColor(order.docstatus)}>
-                {getStatusText(order.docstatus)}
+                {getOrderStatusBadges(order).map((badge, index) => (
+                  <Badge 
+                    key={index}
+                    color={badge.color === 'yellow' ? 'yellow' : 
+                           badge.color === 'green' ? 'green' : 
+                           badge.color === 'blue' ? 'blue' :
+                           badge.color === 'red' ? 'red' : 'gray'}
+                    leftSection={badge.text.includes('PAID') ? <IconCreditCard size={12} /> : undefined}
+                  >
+                    {badge.text}
               </Badge>
+                ))}
               </Group>
             </Group>
             <Text size="sm" c="dimmed">{order.customer_name || order.customer}</Text>
@@ -585,7 +629,9 @@ export function OrdersPage() {
       )}
 
       <div style={{ display: 'none' }}>
-        {detailedOrder && <OrderPrintLayout ref={printRef} order={detailedOrder} currency={currency} />}
+        <div ref={printRef}>
+          {detailedOrder && <OrderPrintLayout order={detailedOrder} currency={currency} />}
+        </div>
       </div>
     </>
   );

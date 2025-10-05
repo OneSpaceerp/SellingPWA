@@ -52,11 +52,11 @@ const get = async <T>(endpoint: string): Promise<T> => {
   console.log('Current user from sessionStorage:', user);
   console.log('Is authenticated:', authService.isAuthenticated());
   
-  const headers = authService.getAuthHeaders();
+  const headers = await authService.getAuthHeaders();
   console.log('Headers:', headers);
   
   const response = await fetch(fullUrl, {
-    headers,
+    headers: headers as HeadersInit,
     credentials: 'include',
   });
   console.log('Response status:', response.status);
@@ -73,8 +73,9 @@ const get = async <T>(endpoint: string): Promise<T> => {
 
 const getList = async <T>(doctype: string, filters: any, fields: string[]): Promise<T> => {
   const fullUrl = `${API_BASE_URL}/api/resource/${doctype}?fields=${encodeURIComponent(JSON.stringify(fields))}&filters=${encodeURIComponent(JSON.stringify(filters))}`;
+  const headers = await authService.getAuthHeaders();
   const response = await fetch(fullUrl, {
-    headers: authService.getAuthHeaders(),
+    headers: headers as HeadersInit,
     credentials: 'include',
   });
   if (!response.ok) {
@@ -87,10 +88,11 @@ const getList = async <T>(doctype: string, filters: any, fields: string[]): Prom
 
 const post = async <T>(endpoint: string, payload: any): Promise<T> => {
   const fullUrl = `${API_BASE_URL}/api/${endpoint}`;
-  const headers = { ...authService.getAuthHeaders(), 'Content-Type': 'application/json' };
+  const authHeaders = await authService.getAuthHeaders();
+  const headers = { ...authHeaders, 'Content-Type': 'application/json' };
   const response = await fetch(fullUrl, {
     method: 'POST',
-    headers,
+    headers: headers as HeadersInit,
     body: JSON.stringify(payload),
     credentials: 'include',
   });
@@ -172,10 +174,11 @@ export interface PaymentEntryPayload {
 
 const postMethod = async <T>(method: string, payload: any): Promise<T> => {
   const fullUrl = `${API_BASE_URL}/api/${method}`;
-  const headers = { ...authService.getAuthHeaders(), 'Content-Type': 'application/json' };
+  const authHeaders = await authService.getAuthHeaders();
+  const headers = { ...authHeaders, 'Content-Type': 'application/json' };
   const response = await fetch(fullUrl, {
     method: 'POST',
-    headers,
+    headers: headers as HeadersInit,
     body: JSON.stringify(payload),
     credentials: 'include',
   });

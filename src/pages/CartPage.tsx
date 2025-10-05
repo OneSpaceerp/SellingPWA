@@ -1,6 +1,6 @@
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { Title, Button, Group, Text, Paper, SimpleGrid, NumberInput, ActionIcon, Center, Badge, Card } from '@mantine/core';
+import { Title, Button, Group, Text, SimpleGrid, NumberInput, ActionIcon, Badge, Card } from '@mantine/core';
 import { IconTrash, IconUserPlus, IconUserEdit, IconShoppingCart, IconCreditCard } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -302,7 +302,7 @@ export function CartPage() {
           <div>
             <Text size="lg" fw={500} c="rgba(255,255,255,0.8)">Grand Total</Text>
             <Title order={1} c="white" style={{ fontSize: '2.5rem', fontWeight: '700' }}>
-              {currency} {grandTotal.toFixed(2)}
+              {currency} {grandTotal().toFixed(2)}
             </Title>
           </div>
           <Button

@@ -132,8 +132,15 @@ const getSalesOrder = async (order_id: string): Promise<any> => {
   console.log('Fetching order details for:', order_id);
   console.log('API_BASE_URL:', API_BASE_URL);
   
-  // Try different endpoint formats
-  const endpoint = `resource/Sales Order/${encodeURIComponent(order_id)}`;
+  // Include outstanding_amount in the fields to fetch
+  const fields = [
+    'name', 'docstatus', 'customer', 'customer_name', 'grand_total', 
+    'outstanding_amount', 'creation', 'items'
+  ];
+  const fieldsParam = encodeURIComponent(JSON.stringify(fields));
+  
+  // Try different endpoint formats with fields parameter
+  const endpoint = `resource/Sales Order/${encodeURIComponent(order_id)}?fields=${fieldsParam}`;
   console.log('API endpoint:', endpoint);
   console.log('Full URL will be:', `${API_BASE_URL}/api/${endpoint}`);
   
@@ -142,7 +149,7 @@ const getSalesOrder = async (order_id: string): Promise<any> => {
   } catch (error) {
     console.error('First attempt failed, trying alternative format...');
     // Try without encoding the order ID
-    const altEndpoint = `resource/Sales Order/${order_id}`;
+    const altEndpoint = `resource/Sales Order/${order_id}?fields=${fieldsParam}`;
     console.log('Alternative endpoint:', altEndpoint);
     return get<any>(altEndpoint);
   }

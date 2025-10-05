@@ -51,6 +51,17 @@ export function OrdersPage() {
       apiService.getSalesOrder(selectedOrder.name)
         .then(data => {
           console.log('OrdersPage: Successfully fetched order details:', data);
+          console.log('OrdersPage: Order data structure:', {
+            name: data?.name,
+            customer: data?.customer,
+            customer_name: data?.customer_name,
+            docstatus: data?.docstatus,
+            grand_total: data?.grand_total,
+            outstanding_amount: data?.outstanding_amount,
+            items: data?.items,
+            hasItems: !!data?.items,
+            itemsLength: data?.items?.length
+          });
           setDetailedOrder(data);
           setIsDetailLoading(false);
         })
@@ -184,6 +195,9 @@ export function OrdersPage() {
           {isDetailLoading && <Center><Loader /></Center>}
           {!isDetailLoading && detailedOrder && (
             <>
+              <Text c="green" fw={700} size="lg">✅ Order Details Loaded Successfully!</Text>
+              <Text c="dimmed" size="sm">Order: {detailedOrder.name}</Text>
+              <Divider my="sm" />
               <Stack>
                 <Group justify="space-between">
                 <Text>Customer:</Text>
@@ -248,7 +262,8 @@ export function OrdersPage() {
         )}
         {!isDetailLoading && !detailedOrder && (
           <Center style={{ height: '200px' }}>
-            <Text c="dimmed">No order details available</Text>
+            <Text c="red" fw={700} size="lg">❌ No order details available</Text>
+            <Text c="dimmed" size="sm">This should not happen if the API call succeeded</Text>
           </Center>
         )}
         </ErrorBoundary>

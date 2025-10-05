@@ -37,7 +37,7 @@ export function OrdersPage() {
     onAfterPrint: () => {
       console.log('Print completed');
     },
-    onPrintError: (error) => {
+    onPrintError: (error: any) => {
       console.error('Print error:', error);
     }
   } as any);
@@ -294,12 +294,6 @@ export function OrdersPage() {
     }
   };
 
-  const getStatusColor = (status: number) => {
-    if (status === 0) return 'yellow';
-    if (status === 1) return 'green';
-    if (status === 2) return 'red';
-    return 'gray';
-  };
 
   const getOrderStatusBadges = (order: any) => {
     const badges = [];

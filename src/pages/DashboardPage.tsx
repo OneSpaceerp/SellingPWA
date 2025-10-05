@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Title, Card, Text, Group, SimpleGrid, Loader, Center, Badge, Progress, RingProgress } from '@mantine/core';
+import { Title, Card, Text, Group, SimpleGrid, Loader, Center, Badge } from '@mantine/core';
 import { apiService, type SalesOrder } from '../services/apiService';
 import { authService } from '../services/authService';
 import { IconTrendingUp, IconShoppingCart, IconUsers, IconCurrencyDollar } from '@tabler/icons-react';
@@ -70,7 +70,7 @@ export function DashboardPage() {
     }
     return (
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-        {orders.map((order, index) => (
+        {orders.map((order, _) => (
           <Card 
             key={order.name} 
             style={{ 

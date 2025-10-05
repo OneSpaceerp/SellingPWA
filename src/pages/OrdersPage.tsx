@@ -182,140 +182,132 @@ export function OrdersPage() {
       </Group>
       {renderContent()}
 
-      <Modal
-        opened={selectedOrder !== null}
-        onClose={() => {
-          setSelectedOrder(null);
-          setDetailedOrder(null);
-        }}
-        title={`Order: ${selectedOrder?.name}`}
-        size="lg"
-        overlayProps={{
-          backgroundOpacity: 0.55,
-          blur: 3,
-        }}
-        styles={{
-          content: {
-            backgroundColor: 'white !important',
-            color: 'black !important',
-            zIndex: 9999,
-            position: 'relative',
-            display: 'block',
-            visibility: 'visible',
-            opacity: 1,
-          },
-          header: {
-            backgroundColor: 'white !important',
-            color: 'black !important',
-            borderBottom: '1px solid #ccc',
-          },
-          body: {
-            backgroundColor: 'white !important',
-            color: 'black !important',
+      {/* Temporary HTML Modal to test if Mantine Modal is the issue */}
+      {selectedOrder && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            backgroundColor: 'white',
             padding: '20px',
-            minHeight: '200px',
-          }
-        }}
-      >
-        <ErrorBoundary>
-          <div style={{ 
-            backgroundColor: 'red', 
-            color: 'white', 
-            padding: '20px', 
-            fontSize: '20px', 
-            fontWeight: 'bold',
+            borderRadius: '8px',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto',
+            color: 'black',
             position: 'relative',
-            zIndex: 10000,
-            width: '100%',
-            height: '100px',
-            display: 'block',
-            visibility: 'visible',
-            opacity: 1,
+            zIndex: 1001,
           }}>
-            🚨 MODAL CONTENT IS RENDERING! 🚨
-            <br />
-            Order: {selectedOrder?.name}
-            <br />
-            Loading: {isDetailLoading ? 'YES' : 'NO'}
-            <br />
-            Has Data: {detailedOrder ? 'YES' : 'NO'}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, color: 'black' }}>Order: {selectedOrder.name}</h2>
+              <button 
+                onClick={() => {
+                  setSelectedOrder(null);
+                  setDetailedOrder(null);
+                }}
+                style={{ padding: '8px 16px', backgroundColor: '#ccc', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Close
+              </button>
+            </div>
+            
+            <div style={{ backgroundColor: 'red', color: 'white', padding: '10px', marginBottom: '20px', fontWeight: 'bold' }}>
+              🚨 HTML MODAL IS WORKING! 🚨
+              <br />
+              Order: {selectedOrder.name}
+              <br />
+              Loading: {isDetailLoading ? 'YES' : 'NO'}
+              <br />
+              Has Data: {detailedOrder ? 'YES' : 'NO'}
+            </div>
+
+            {isDetailLoading && (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                Loading order details...
+              </div>
+            )}
+
+            {!isDetailLoading && detailedOrder && (
+              <div>
+                <div style={{ backgroundColor: 'green', color: 'white', padding: '10px', marginBottom: '20px', fontWeight: 'bold' }}>
+                  ✅ Order Details Loaded Successfully!
+                </div>
+                
+                <div style={{ marginBottom: '20px' }}>
+                  <strong>Customer:</strong> {detailedOrder.customer_name || detailedOrder.customer}<br />
+                  <strong>Status:</strong> {getStatusText(detailedOrder.docstatus)}<br />
+                  <strong>Date:</strong> {new Date(detailedOrder.creation).toLocaleString()}<br />
+                  <strong>Grand Total:</strong> {currency} {detailedOrder.grand_total.toFixed(2)}<br />
+                  {detailedOrder.outstanding_amount !== undefined && (
+                    <>
+                      <strong>Outstanding Amount:</strong> {currency} {(detailedOrder.outstanding_amount || 0).toFixed(2)}<br />
+                    </>
+                  )}
+                </div>
+
+                {detailedOrder.items && detailedOrder.items.length > 0 && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h3>Items:</h3>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f5f5f5' }}>
+                          <th style={{ border: '1px solid #ccc', padding: '8px' }}>Item</th>
+                          <th style={{ border: '1px solid #ccc', padding: '8px' }}>Qty</th>
+                          <th style={{ border: '1px solid #ccc', padding: '8px' }}>Rate</th>
+                          <th style={{ border: '1px solid #ccc', padding: '8px' }}>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detailedOrder.items.map(item => (
+                          <tr key={item.item_code}>
+                            <td style={{ border: '1px solid #ccc', padding: '8px' }}>{item.item_name}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '8px' }}>{item.qty || 0}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '8px' }}>{currency} {(item.rate || 0).toFixed(2)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '8px' }}>{currency} {((item.qty || 0) * (item.rate || 0)).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button 
+                    onClick={handlePrint}
+                    style={{ padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    Print
+                  </button>
+                  {detailedOrder.docstatus === 1 && (detailedOrder.outstanding_amount || 0) > 0 && (
+                    <button 
+                      onClick={handleCompletePayment}
+                      style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                      Collect Payment
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!isDetailLoading && !detailedOrder && (
+              <div style={{ textAlign: 'center', padding: '40px', color: 'red' }}>
+                ❌ No order details available
+              </div>
+            )}
           </div>
-          {isDetailLoading && <Center><Loader /></Center>}
-          {!isDetailLoading && detailedOrder && (
-            <>
-              <Text c="green" fw={700} size="lg">✅ Order Details Loaded Successfully!</Text>
-              <Text c="dimmed" size="sm">Order: {detailedOrder.name}</Text>
-              <Divider my="sm" />
-              <Stack>
-                <Group justify="space-between">
-                <Text>Customer:</Text>
-                <Text fw={500}>{detailedOrder.customer_name || detailedOrder.customer}</Text>
-              </Group>
-              <Group justify="space-between">
-                <Text>Status:</Text>
-                <Badge color={getStatusColor(detailedOrder.docstatus)}>{getStatusText(detailedOrder.docstatus)}</Badge>
-              </Group>
-              <Group justify="space-between">
-                <Text>Date:</Text>
-                <Text>{new Date(detailedOrder.creation).toLocaleString()}</Text>
-              </Group>
-            </Stack>
-
-            <Divider my="sm" />
-
-            <Title order={4} mb="sm">Items</Title>
-            <Table striped withTableBorder withColumnBorders>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Item</Table.Th>
-                  <Table.Th>Qty</Table.Th>
-                  <Table.Th>Rate</Table.Th>
-                  <Table.Th>Total</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {detailedOrder.items && detailedOrder.items.map(item => (
-                  <Table.Tr key={item.item_code}>
-                    <Table.Td>{item.item_name}</Table.Td>
-                    <Table.Td>{item.qty || 0}</Table.Td>
-                    <Table.Td>{currency} {(item.rate || 0).toFixed(2)}</Table.Td>
-                    <Table.Td>{currency} {((item.qty || 0) * (item.rate || 0)).toFixed(2)}</Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-
-            <Divider my="sm" />
-
-            <Stack>
-              <Group justify="space-between">
-                <Text>Grand Total:</Text>
-                <Text fw={700}>{currency} {detailedOrder.grand_total.toFixed(2)}</Text>
-              </Group>
-              {detailedOrder.outstanding_amount !== undefined && (
-                <Group justify="space-between">
-                  <Text c="orange">Outstanding Amount:</Text>
-                  <Text c="orange" fw={700}>{currency} {(detailedOrder.outstanding_amount || 0).toFixed(2)}</Text>
-                </Group>
-              )}
-            </Stack>
-
-            <Group justify="flex-end" mt="xl">
-              <Button leftSection={<IconPrinter size={16} />} onClick={handlePrint}>Print</Button>
-              {detailedOrder.docstatus === 1 && (detailedOrder.outstanding_amount || 0) > 0 && (
-                <Button color="green" onClick={handleCompletePayment}>Collect Payment</Button>
-              )}
-            </Group>
-          </>
-        )}
-        {!isDetailLoading && !detailedOrder && (
-          <Center style={{ height: '200px' }}>
-            <Text c="red" fw={700} size="lg">❌ No order details available</Text>
-            <Text c="dimmed" size="sm">This should not happen if the API call succeeded</Text>
-          </Center>
-        )}
-        </ErrorBoundary>
-      </Modal>
+        </div>
+      )}
 
       <div style={{ display: 'none' }}>
         {detailedOrder && <OrderPrintLayout ref={printRef} order={detailedOrder} currency={currency} />}

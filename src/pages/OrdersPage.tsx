@@ -2,12 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { apiService, type SalesOrder } from '../services/apiService';
 import { useSettingsStore } from '../store/settingsStore';
-import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider, Modal, Button, Table, Stack } from '@mantine/core';
+import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconSearch, IconPrinter, IconCreditCard } from '@tabler/icons-react';
+import { IconSearch, IconCreditCard } from '@tabler/icons-react';
 import { useReactToPrint } from 'react-to-print';
 import { OrderPrintLayout } from '../components/OrderPrintLayout';
-import ErrorBoundary from '../components/ErrorBoundary';
 import { useNavigate } from 'react-router-dom';
 
 export function OrdersPage() {

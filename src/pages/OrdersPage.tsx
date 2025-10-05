@@ -89,6 +89,23 @@ export function OrdersPage() {
                 color: #333;
                 line-height: 1.6;
               }
+              .back-button {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+                z-index: 1000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+              }
+              .back-button:hover {
+                background: #0056b3;
+              }
               .print-container {
                 max-width: 800px;
                 margin: 0 auto;
@@ -199,6 +216,7 @@ export function OrdersPage() {
                 font-weight: bold;
               }
               @media print {
+                .back-button { display: none !important; }
                 body { margin: 0; padding: 0; }
                 .print-container { box-shadow: none; border-radius: 0; }
                 .header { background: #667eea !important; -webkit-print-color-adjust: exact; }
@@ -222,6 +240,7 @@ export function OrdersPage() {
             </style>
           </head>
           <body>
+            <button class="back-button" onclick="window.close()">← Back</button>
             <div class="print-container">
               <div class="header">
                 <h1>Sales Order</h1>
@@ -346,20 +365,12 @@ export function OrdersPage() {
       console.log('Grand Total:', grandTotal);
       console.log('Outstanding:', outstanding);
       
-      // Create a new window for PDF generation
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      // Create a hidden iframe for PDF generation
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
       
-      if (!printWindow) {
-        console.error('Could not open print window - popup blocked');
-        notifications.show({
-          title: 'PDF Export Error',
-          message: 'Please allow popups for this site to enable PDF export',
-          color: 'red',
-        });
-        return;
-      }
-      
-      // Create the PDF content HTML
+      // Create the PDF content HTML with back button
       const pdfContent = `
         <!DOCTYPE html>
         <html>
@@ -376,6 +387,23 @@ export function OrdersPage() {
                 background: white;
                 color: #333;
                 line-height: 1.6;
+              }
+              .back-button {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+                z-index: 1000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+              }
+              .back-button:hover {
+                background: #0056b3;
               }
               .print-container {
                 max-width: 800px;
@@ -487,6 +515,7 @@ export function OrdersPage() {
                 font-weight: bold;
               }
               @media print {
+                .back-button { display: none !important; }
                 body { margin: 0; padding: 0; }
                 .print-container { box-shadow: none; border-radius: 0; }
                 .header { background: #667eea !important; -webkit-print-color-adjust: exact; }
@@ -510,6 +539,7 @@ export function OrdersPage() {
             </style>
           </head>
           <body>
+            <button class="back-button" onclick="window.close()">← Back</button>
             <div class="print-container">
               <div class="header">
                 <h1>Sales Order</h1>
@@ -586,24 +616,27 @@ export function OrdersPage() {
                 </div>
               </div>
             </div>
+            
+            <script>
+              // Auto-trigger print dialog after page loads
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                }, 1000);
+              };
+            </script>
           </body>
         </html>
       `;
       
-      printWindow.document.write(pdfContent);
-      printWindow.document.close();
+      // Write content to iframe
+      iframe.contentDocument.write(pdfContent);
+      iframe.contentDocument.close();
       
-      // Wait for content to load, then trigger PDF save
-      printWindow.onload = () => {
-        console.log('PDF content loaded, opening print dialog...');
-        setTimeout(() => {
-          printWindow.print();
-          // Close window after a delay to allow PDF generation
-          setTimeout(() => {
-            printWindow.close();
-          }, 2000);
-        }, 500);
-      };
+      // Clean up iframe after a delay
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 10000);
       
       notifications.show({
         title: 'PDF Export',
@@ -1264,7 +1297,7 @@ export function OrdersPage() {
                   ← Back
                 </button>
                 <h3 style={{ margin: 0, color: '#495057' }}>Print Preview - {detailedOrder.name}</h3>
-              </div>
+      </div>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <select 
                   value={printOrientation}

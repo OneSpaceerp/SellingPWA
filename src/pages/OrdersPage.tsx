@@ -69,6 +69,13 @@ export function OrdersPage() {
     }
   }, [selectedOrder]);
 
+  // Debug modal state changes
+  useEffect(() => {
+    if (selectedOrder) {
+      console.log('OrdersPage: Modal state - selectedOrder:', selectedOrder.name, 'isDetailLoading:', isDetailLoading, 'detailedOrder:', detailedOrder ? 'loaded' : 'not loaded');
+    }
+  }, [selectedOrder, isDetailLoading, detailedOrder]);
+
   const handleCompletePayment = () => {
     if (detailedOrder) {
       const orderName = detailedOrder.name;
@@ -174,7 +181,6 @@ export function OrdersPage() {
         size="lg"
       >
         <ErrorBoundary>
-          {console.log('OrdersPage: Modal rendering - isDetailLoading:', isDetailLoading, 'detailedOrder:', detailedOrder)}
           {isDetailLoading && <Center><Loader /></Center>}
           {!isDetailLoading && detailedOrder && (
             <>

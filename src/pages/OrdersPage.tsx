@@ -144,32 +144,33 @@ export function OrdersPage() {
       console.log('Payment method:', paymentMethod);
       console.log('Is cash payment:', paymentMethod === 'Cash');
       
-      // Try creating payment entry directly instead of using ERPNext method
-      const paymentEntryDoc = {
-        doctype: 'Payment Entry',
-        payment_type: 'Receive',
-        party_type: 'Customer',
-        party: detailedOrder.customer,
-        paid_amount: parseFloat(paymentAmount),
-        received_amount: parseFloat(paymentAmount),
-        paid_to: paymentMethod === 'Cash' ? 'Cash' : 'Bank',
-        paid_to_account: paymentMethod === 'Cash' ? 'Cash' : 'Bank',
-        mode_of_payment: paymentMethod,
-        company: 'Your Company',
-        posting_date: new Date().toISOString().split('T')[0],
-        reference_no: paymentMethod !== 'Cash' ? `PAY-${Date.now()}` : undefined,
-        reference_date: paymentMethod !== 'Cash' ? new Date().toISOString().split('T')[0] : undefined,
-        references: [{
-          reference_doctype: 'Sales Order',
-          reference_name: detailedOrder.name,
-          allocated_amount: parseFloat(paymentAmount)
-        }]
-      };
+      // Get company default accounts
+      const defaultAccounts = await apiService.getDefaultAccounts('Your Company');
+      console.log('Default accounts:', defaultAccounts);
 
-      console.log('Creating payment entry document:', paymentEntryDoc);
+      // Use ERPNext method to create payment entry with proper structure
+      const paymentEntry = await apiService.createPaymentEntry(paymentPayload);
+      console.log('Payment entry created:', paymentEntry);
 
-      // Save the payment entry directly
-      const savedPayment = await apiService.saveDoc(paymentEntryDoc);
+      // Modify the payment entry for cash payments to avoid validation errors
+      if (paymentMethod === 'Cash') {
+        // Remove reference fields for cash payments
+        delete paymentEntry.reference_no;
+        delete paymentEntry.reference_date;
+        
+        // Set proper cash account from company defaults
+        paymentEntry.paid_to = defaultAccounts.cash;
+        paymentEntry.paid_to_account = defaultAccounts.cash;
+        
+        console.log('Modified payment entry for cash:', paymentEntry);
+      } else {
+        // Set proper bank account for non-cash payments
+        paymentEntry.paid_to = defaultAccounts.bank;
+        paymentEntry.paid_to_account = defaultAccounts.bank;
+      }
+
+      // Save the payment entry
+      const savedPayment = await apiService.saveDoc(paymentEntry);
       console.log('Payment entry saved:', savedPayment);
 
       // Submit the payment entry

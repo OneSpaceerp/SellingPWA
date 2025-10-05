@@ -102,7 +102,9 @@ export function OrdersPage() {
 
   const handleCompletePayment = () => {
     if (detailedOrder) {
-      setPaymentAmount(detailedOrder.outstanding_amount?.toString() || detailedOrder.grand_total.toString());
+      // Use outstanding amount if available, otherwise use grand total
+      const amountToPay = detailedOrder.outstanding_amount || detailedOrder.grand_total;
+      setPaymentAmount(amountToPay.toString());
       setShowPaymentForm(true);
     }
   };
@@ -379,7 +381,7 @@ export function OrdersPage() {
                     >
                       Print
                     </button>
-                    {detailedOrder.docstatus === 1 && (detailedOrder.outstanding_amount || 0) > 0 && (
+                    {detailedOrder.docstatus === 1 && (
                       <button 
                         onClick={handleCompletePayment}
                         style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}

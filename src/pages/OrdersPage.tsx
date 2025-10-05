@@ -48,6 +48,16 @@ export function OrdersPage() {
     }
     
     try {
+      // Calculate values to ensure they're properly computed
+      const advancePaid = detailedOrder.advance_paid || 0;
+      const grandTotal = detailedOrder.grand_total || 0;
+      const outstanding = grandTotal - advancePaid;
+      
+      console.log('Print Calculations:');
+      console.log('Advance Paid:', advancePaid);
+      console.log('Grand Total:', grandTotal);
+      console.log('Outstanding:', outstanding);
+      
       // Create a new window for printing
       const printWindow = window.open('', '_blank', 'width=800,height=600');
       
@@ -230,11 +240,11 @@ export function OrdersPage() {
                   </div>
                   <div class="info-item">
                     <strong>Grand Total:</strong><br>
-                    ${currency} ${detailedOrder.grand_total.toFixed(2)}
+                    ${currency} ${grandTotal.toFixed(2)}
                   </div>
                   <div class="info-item">
                     <strong>Advance Paid:</strong><br>
-                    ${currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                    ${currency} ${advancePaid.toFixed(2)}
                   </div>
                 </div>
                 
@@ -275,15 +285,15 @@ export function OrdersPage() {
                 <div class="totals-grid">
                   <div class="total-item">
                     <strong>Grand Total</strong><br>
-                    ${currency} ${detailedOrder.grand_total.toFixed(2)}
+                    ${currency} ${grandTotal.toFixed(2)}
                   </div>
                   <div class="total-item">
                     <strong>Advance Paid</strong><br>
-                    ${currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                    ${currency} ${advancePaid.toFixed(2)}
                   </div>
-                  <div class="total-item ${(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 ? 'outstanding' : 'final'}">
+                  <div class="total-item ${outstanding > 0 ? 'outstanding' : 'final'}">
                     <strong>Outstanding</strong><br>
-                    ${currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}
+                    ${currency} ${outstanding.toFixed(2)}
                   </div>
                 </div>
               </div>

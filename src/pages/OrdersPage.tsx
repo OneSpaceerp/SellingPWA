@@ -21,6 +21,7 @@ export function OrdersPage() {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [modeOfPayments, setModeOfPayments] = useState<any[]>([]);
+  const [companyName, setCompanyName] = useState<string>('');
   const currency = useSettingsStore((state) => state.currency);
   const user = authService.getLoggedInUser();
 
@@ -46,14 +47,21 @@ export function OrdersPage() {
   }, [user]);
 
   useEffect(() => {
-    // Load mode of payments when component mounts
-    apiService.getModeOfPayments()
-      .then(data => {
-        setModeOfPayments(data);
-      })
-      .catch(err => {
-        console.error('Failed to load mode of payments:', err);
-      });
+    // Load mode of payments and company name when component mounts
+    Promise.all([
+      apiService.getModeOfPayments(),
+      apiService.getPosProfileDetails('POS')
+    ])
+    .then(([paymentsData, posProfileData]) => {
+      setModeOfPayments(paymentsData);
+      setCompanyName(posProfileData.company || 'Your Company');
+      console.log('Company name from POS profile:', posProfileData.company);
+    })
+    .catch(err => {
+      console.error('Failed to load initial data:', err);
+      // Fallback to default company name
+      setCompanyName('Your Company');
+    });
   }, []);
 
   useEffect(() => {
@@ -131,7 +139,7 @@ export function OrdersPage() {
         paid_amount: parseFloat(paymentAmount),
         paid_to: paymentMethod === 'Cash' ? 'Cash' : 'Bank',
         mode_of_payment: paymentMethod,
-        company: 'Your Company', // This should come from settings
+        company: companyName, // Use actual company name from POS profile
         posting_date: new Date().toISOString().split('T')[0],
         // Only include reference fields for non-cash payments
         ...(paymentMethod !== 'Cash' && {
@@ -145,8 +153,8 @@ export function OrdersPage() {
       console.log('Is cash payment:', paymentMethod === 'Cash');
       
       // Get company default accounts
-      const defaultAccounts = await apiService.getDefaultAccounts('Your Company');
-      console.log('Default accounts:', defaultAccounts);
+      const defaultAccounts = await apiService.getDefaultAccounts(companyName);
+      console.log('Default accounts for company:', companyName, defaultAccounts);
 
       // Use ERPNext method to create payment entry with proper structure
       const paymentEntry = await apiService.createPaymentEntry(paymentPayload);

@@ -115,6 +115,7 @@ export interface SalesOrder {
   customer_name: string;
   grand_total: number;
   outstanding_amount?: number;
+  advance_paid?: number;
   creation: string;
   items?: { item_code: string; item_name: string; qty: number; rate: number }[];
 }

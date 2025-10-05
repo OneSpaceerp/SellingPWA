@@ -928,12 +928,30 @@ export function OrdersPage() {
               alignItems: 'center',
               backgroundColor: '#f8f9fa'
             }}>
-              <h3 style={{ margin: 0, color: '#495057' }}>Print Preview - {detailedOrder.name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <button 
+                  onClick={() => setShowPrintPreview(false)}
+                  style={{ 
+                    padding: '8px 12px', 
+                    backgroundColor: '#6c757d', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  ← Back
+                </button>
+                <h3 style={{ margin: 0, color: '#495057' }}>Print Preview - {detailedOrder.name}</h3>
+              </div>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <select 
                   value={printOrientation}
                   onChange={(e) => setPrintOrientation(e.target.value as 'portrait' | 'landscape')}
                   style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                  title="Print Orientation"
                 >
                   <option value="portrait">Portrait</option>
                   <option value="landscape">Landscape</option>
@@ -942,6 +960,7 @@ export function OrdersPage() {
                   value={printScale}
                   onChange={(e) => setPrintScale(parseFloat(e.target.value))}
                   style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                  title="Print Scale"
                 >
                   <option value={0.5}>50%</option>
                   <option value={0.75}>75%</option>
@@ -951,9 +970,9 @@ export function OrdersPage() {
                 </select>
                 <button 
                   onClick={() => setShowPrintPreview(false)}
-                  style={{ padding: '8px 16px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                 >
-                  Close
+                  ✕ Close
                 </button>
               </div>
             </div>
@@ -988,6 +1007,22 @@ export function OrdersPage() {
                 </div>
                 
                 <div style={{ padding: '30px', background: '#f8f9fa', borderBottom: '1px solid #e9ecef' }}>
+                  {/* Debug Info */}
+                  <div style={{ 
+                    background: '#fff3cd', 
+                    border: '1px solid #ffeaa7', 
+                    borderRadius: '4px', 
+                    padding: '10px', 
+                    marginBottom: '20px',
+                    fontSize: '12px',
+                    color: '#856404'
+                  }}>
+                    <strong>Debug Info:</strong><br />
+                    Advance Paid: {detailedOrder.advance_paid}<br />
+                    Grand Total: {detailedOrder.grand_total}<br />
+                    Outstanding: {detailedOrder.grand_total - (detailedOrder.advance_paid || 0)}
+                  </div>
+                  
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -1099,6 +1134,22 @@ export function OrdersPage() {
                 </div>
                 
                 <div style={{ padding: '30px', background: '#f8f9fa', borderTop: '1px solid #e9ecef' }}>
+                  {/* Debug Info for Totals */}
+                  <div style={{ 
+                    background: '#d1ecf1', 
+                    border: '1px solid #bee5eb', 
+                    borderRadius: '4px', 
+                    padding: '10px', 
+                    marginBottom: '20px',
+                    fontSize: '12px',
+                    color: '#0c5460'
+                  }}>
+                    <strong>Totals Debug:</strong><br />
+                    Advance Paid Raw: {JSON.stringify(detailedOrder.advance_paid)}<br />
+                    Grand Total Raw: {JSON.stringify(detailedOrder.grand_total)}<br />
+                    Calculation: {detailedOrder.grand_total} - {(detailedOrder.advance_paid || 0)} = {detailedOrder.grand_total - (detailedOrder.advance_paid || 0)}
+                  </div>
+                  
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',

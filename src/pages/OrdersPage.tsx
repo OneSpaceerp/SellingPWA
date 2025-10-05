@@ -190,26 +190,55 @@ export function OrdersPage() {
         }}
         title={`Order: ${selectedOrder?.name}`}
         size="lg"
+        overlayProps={{
+          backgroundOpacity: 0.55,
+          blur: 3,
+        }}
         styles={{
           content: {
-            backgroundColor: 'white',
-            color: 'black',
-            zIndex: 1000,
+            backgroundColor: 'white !important',
+            color: 'black !important',
+            zIndex: 9999,
+            position: 'relative',
+            display: 'block',
+            visibility: 'visible',
+            opacity: 1,
           },
           header: {
-            backgroundColor: 'white',
-            color: 'black',
+            backgroundColor: 'white !important',
+            color: 'black !important',
+            borderBottom: '1px solid #ccc',
           },
           body: {
-            backgroundColor: 'white',
-            color: 'black',
+            backgroundColor: 'white !important',
+            color: 'black !important',
             padding: '20px',
+            minHeight: '200px',
           }
         }}
       >
         <ErrorBoundary>
-          <div style={{ backgroundColor: 'red', color: 'white', padding: '20px', fontSize: '20px', fontWeight: 'bold' }}>
+          <div style={{ 
+            backgroundColor: 'red', 
+            color: 'white', 
+            padding: '20px', 
+            fontSize: '20px', 
+            fontWeight: 'bold',
+            position: 'relative',
+            zIndex: 10000,
+            width: '100%',
+            height: '100px',
+            display: 'block',
+            visibility: 'visible',
+            opacity: 1,
+          }}>
             🚨 MODAL CONTENT IS RENDERING! 🚨
+            <br />
+            Order: {selectedOrder?.name}
+            <br />
+            Loading: {isDetailLoading ? 'YES' : 'NO'}
+            <br />
+            Has Data: {detailedOrder ? 'YES' : 'NO'}
           </div>
           {isDetailLoading && <Center><Loader /></Center>}
           {!isDetailLoading && detailedOrder && (

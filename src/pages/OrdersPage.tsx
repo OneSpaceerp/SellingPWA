@@ -156,34 +156,57 @@ export function OrdersPage() {
       const defaultAccounts = await apiService.getDefaultAccounts(companyName);
       console.log('Default accounts for company:', companyName, defaultAccounts);
 
-      // Use ERPNext method to create payment entry with proper structure
-      const paymentEntry = await apiService.createPaymentEntry(paymentPayload);
-      console.log('Payment entry created:', paymentEntry);
+      // Create payment entry directly with proper allocation to Sales Order
+      const paymentEntryDoc = {
+        doctype: 'Payment Entry',
+        payment_type: 'Receive',
+        party_type: 'Customer',
+        party: detailedOrder.customer,
+        paid_amount: parseFloat(paymentAmount),
+        received_amount: parseFloat(paymentAmount),
+        paid_to: paymentMethod === 'Cash' ? defaultAccounts.cash : defaultAccounts.bank,
+        paid_to_account: paymentMethod === 'Cash' ? defaultAccounts.cash : defaultAccounts.bank,
+        mode_of_payment: paymentMethod,
+        company: companyName,
+        posting_date: new Date().toISOString().split('T')[0],
+        reference_no: paymentMethod !== 'Cash' ? `PAY-${Date.now()}` : undefined,
+        reference_date: paymentMethod !== 'Cash' ? new Date().toISOString().split('T')[0] : undefined,
+        // Critical: Allocate payment to the specific Sales Order
+        references: [{
+          reference_doctype: 'Sales Order',
+          reference_name: detailedOrder.name,
+          allocated_amount: parseFloat(paymentAmount),
+          outstanding_amount: parseFloat(paymentAmount) // This ensures proper allocation
+        }]
+      };
 
-      // Modify the payment entry for cash payments to avoid validation errors
-      if (paymentMethod === 'Cash') {
-        // Remove reference fields for cash payments
-        delete paymentEntry.reference_no;
-        delete paymentEntry.reference_date;
-        
-        // Set proper cash account from company defaults
-        paymentEntry.paid_to = defaultAccounts.cash;
-        paymentEntry.paid_to_account = defaultAccounts.cash;
-        
-        console.log('Modified payment entry for cash:', paymentEntry);
-      } else {
-        // Set proper bank account for non-cash payments
-        paymentEntry.paid_to = defaultAccounts.bank;
-        paymentEntry.paid_to_account = defaultAccounts.bank;
-      }
+      console.log('Creating payment entry with allocation:', paymentEntryDoc);
 
       // Save the payment entry
-      const savedPayment = await apiService.saveDoc(paymentEntry);
+      const savedPayment = await apiService.saveDoc(paymentEntryDoc);
       console.log('Payment entry saved:', savedPayment);
 
       // Submit the payment entry
       const submittedPayment = await apiService.submitDoc(savedPayment);
       console.log('Payment entry submitted:', submittedPayment);
+
+      // Update the Sales Order to reflect the payment
+      console.log('Updating Sales Order status...');
+      try {
+        // Get the updated Sales Order to check outstanding amount
+        const updatedOrder = await apiService.getSalesOrder(detailedOrder.name);
+        console.log('Updated order outstanding amount:', updatedOrder.outstanding_amount);
+        
+        // If outstanding amount is 0, update the order status
+        if (updatedOrder.outstanding_amount === 0) {
+          console.log('Order is fully paid, updating status...');
+          // You might want to add a custom field or update the order status here
+          // This depends on your ERPNext configuration
+        }
+      } catch (updateError) {
+        console.warn('Could not update order status:', updateError);
+        // Don't fail the payment if status update fails
+      }
 
       notifications.show({
         title: 'Success',
@@ -195,6 +218,12 @@ export function OrdersPage() {
       setShowPaymentForm(false);
       setPaymentAmount('');
       setPaymentMethod('');
+      
+      // Refresh the current order details to show updated status
+      console.log('Refreshing order details...');
+      const refreshedOrder = await apiService.getSalesOrder(detailedOrder.name);
+      setDetailedOrder(refreshedOrder);
+      console.log('Refreshed order outstanding amount:', refreshedOrder.outstanding_amount);
       
       // Refresh the orders list
       if (user) {
@@ -240,6 +269,19 @@ export function OrdersPage() {
     return 'Unknown';
   };
 
+  const getPaymentStatus = (order: any) => {
+    const outstanding = order.outstanding_amount || order.grand_total;
+    const paid = order.grand_total - outstanding;
+    
+    if (outstanding === 0) {
+      return '✅ Fully Paid';
+    } else if (paid > 0) {
+      return `💰 Partially Paid (${currency} ${paid.toFixed(2)} paid)`;
+    } else {
+      return '❌ Not Paid';
+    }
+  };
+
   const getStatusColor = (status: number) => {
     if (status === 0) return 'yellow';
     if (status === 1) return 'green';
@@ -279,9 +321,9 @@ export function OrdersPage() {
                     Payment Ready
                   </Badge>
                 )}
-                <Badge color={getStatusColor(order.docstatus)}>
-                  {getStatusText(order.docstatus)}
-                </Badge>
+              <Badge color={getStatusColor(order.docstatus)}>
+                {getStatusText(order.docstatus)}
+              </Badge>
               </Group>
             </Group>
             <Text size="sm" c="dimmed">{order.customer_name || order.customer}</Text>
@@ -348,8 +390,8 @@ export function OrdersPage() {
               <h2 style={{ margin: 0, color: 'black' }}>Order: {selectedOrder.name}</h2>
               <button 
                 onClick={() => {
-                  setSelectedOrder(null);
-                  setDetailedOrder(null);
+          setSelectedOrder(null);
+          setDetailedOrder(null);
                   setShowPaymentForm(false);
                   setPaymentAmount('');
                   setPaymentMethod('');
@@ -376,7 +418,7 @@ export function OrdersPage() {
               </div>
             )}
 
-            {!isDetailLoading && detailedOrder && (
+          {!isDetailLoading && detailedOrder && (
               <div>
                 <div style={{ backgroundColor: 'green', color: 'white', padding: '10px', marginBottom: '20px', fontWeight: 'bold' }}>
                   ✅ Order Details Loaded Successfully!
@@ -385,6 +427,7 @@ export function OrdersPage() {
                 <div style={{ marginBottom: '20px' }}>
                   <strong>Customer:</strong> {detailedOrder.customer_name || detailedOrder.customer}<br />
                   <strong>Status:</strong> {getStatusText(detailedOrder.docstatus)}<br />
+                  <strong>Payment Status:</strong> {getPaymentStatus(detailedOrder)}<br />
                   <strong>Date:</strong> {new Date(detailedOrder.creation).toLocaleString()}<br />
                   <strong>Grand Total:</strong> {currency} {detailedOrder.grand_total.toFixed(2)}<br />
                   {detailedOrder.outstanding_amount !== undefined && (

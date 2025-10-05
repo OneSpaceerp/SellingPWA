@@ -45,15 +45,17 @@ export function OrdersPage() {
 
   useEffect(() => {
     if (selectedOrder) {
+      console.log('OrdersPage: Starting to fetch details for order:', selectedOrder.name);
       setIsDetailLoading(true);
       setDetailedOrder(null); // Clear previous details
       apiService.getSalesOrder(selectedOrder.name)
         .then(data => {
+          console.log('OrdersPage: Successfully fetched order details:', data);
           setDetailedOrder(data);
           setIsDetailLoading(false);
         })
         .catch(err => {
-          console.error('Failed to fetch order details:', err);
+          console.error('OrdersPage: Failed to fetch order details:', err);
           setIsDetailLoading(false);
           // Show error notification
           notifications.show({
@@ -172,6 +174,7 @@ export function OrdersPage() {
         size="lg"
       >
         <ErrorBoundary>
+          {console.log('OrdersPage: Modal rendering - isDetailLoading:', isDetailLoading, 'detailedOrder:', detailedOrder)}
           {isDetailLoading && <Center><Loader /></Center>}
           {!isDetailLoading && detailedOrder && (
             <>
@@ -236,6 +239,11 @@ export function OrdersPage() {
               )}
             </Group>
           </>
+        )}
+        {!isDetailLoading && !detailedOrder && (
+          <Center style={{ height: '200px' }}>
+            <Text c="dimmed">No order details available</Text>
+          </Center>
         )}
         </ErrorBoundary>
       </Modal>

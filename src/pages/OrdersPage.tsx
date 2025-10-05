@@ -1063,16 +1063,6 @@ export function OrdersPage() {
               </button>
             </div>
             
-            <div style={{ backgroundColor: 'red', color: 'white', padding: '10px', marginBottom: '20px', fontWeight: 'bold' }}>
-              🚨 HTML MODAL IS WORKING! 🚨
-              <br />
-              Order: {selectedOrder.name}
-              <br />
-              Loading: {isDetailLoading ? 'YES' : 'NO'}
-              <br />
-              Has Data: {detailedOrder ? 'YES' : 'NO'}
-            </div>
-
             {isDetailLoading && (
               <div style={{ textAlign: 'center', padding: '40px' }}>
                 Loading order details...
@@ -1081,9 +1071,6 @@ export function OrdersPage() {
 
           {!isDetailLoading && detailedOrder && (
               <div>
-                <div style={{ backgroundColor: 'green', color: 'white', padding: '10px', marginBottom: '20px', fontWeight: 'bold' }}>
-                  ✅ Order Details Loaded Successfully!
-                </div>
                 
                 <div style={{ marginBottom: '20px' }}>
                   <strong>Customer:</strong> {detailedOrder.customer_name || detailedOrder.customer}<br />

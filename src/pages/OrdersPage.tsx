@@ -17,6 +17,11 @@ export function OrdersPage() {
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [modeOfPayments, setModeOfPayments] = useState<any[]>([]);
   const currency = useSettingsStore((state) => state.currency);
   const user = authService.getLoggedInUser();
   const navigate = useNavigate();
@@ -41,6 +46,17 @@ export function OrdersPage() {
         });
     }
   }, [user]);
+
+  useEffect(() => {
+    // Load mode of payments when component mounts
+    apiService.getModeOfPayments()
+      .then(data => {
+        setModeOfPayments(data);
+      })
+      .catch(err => {
+        console.error('Failed to load mode of payments:', err);
+      });
+  }, []);
 
   useEffect(() => {
     if (selectedOrder) {
@@ -88,12 +104,86 @@ export function OrdersPage() {
 
   const handleCompletePayment = () => {
     if (detailedOrder) {
-      const orderName = detailedOrder.name;
-      setSelectedOrder(null);
-      setDetailedOrder(null);
-      // Add a delay to allow the modal to close before navigating
-      setTimeout(() => navigate(`/payment/${orderName}`), 300);
+      setPaymentAmount(detailedOrder.outstanding_amount?.toString() || detailedOrder.grand_total.toString());
+      setShowPaymentForm(true);
     }
+  };
+
+  const handlePaymentSubmit = async () => {
+    if (!detailedOrder || !paymentAmount || !paymentMethod) {
+      notifications.show({
+        title: 'Error',
+        message: 'Please fill in all payment details',
+        color: 'red',
+      });
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    
+    try {
+      // Create payment entry
+      const paymentPayload = {
+        dt: 'Sales Order',
+        dn: detailedOrder.name,
+        party_type: 'Customer',
+        party: detailedOrder.customer,
+        paid_amount: parseFloat(paymentAmount),
+        paid_to: 'Cash',
+        mode_of_payment: paymentMethod,
+        company: 'Your Company', // This should come from settings
+        posting_date: new Date().toISOString().split('T')[0],
+        reference_no: `PAY-${Date.now()}`,
+        reference_date: new Date().toISOString().split('T')[0],
+      };
+
+      console.log('Creating payment entry:', paymentPayload);
+      
+      // Create the payment entry
+      const paymentEntry = await apiService.createPaymentEntry(paymentPayload);
+      console.log('Payment entry created:', paymentEntry);
+
+      // Save the payment entry
+      const savedPayment = await apiService.saveDoc(paymentEntry);
+      console.log('Payment entry saved:', savedPayment);
+
+      // Submit the payment entry
+      const submittedPayment = await apiService.submitDoc(savedPayment);
+      console.log('Payment entry submitted:', submittedPayment);
+
+      notifications.show({
+        title: 'Success',
+        message: `Payment of ${currency} ${paymentAmount} collected successfully!`,
+        color: 'green',
+      });
+
+      // Close the payment form and refresh orders
+      setShowPaymentForm(false);
+      setPaymentAmount('');
+      setPaymentMethod('');
+      
+      // Refresh the orders list
+      if (user) {
+        const updatedOrders = await apiService.getSalesOrders(user);
+        setOrders(updatedOrders);
+      }
+
+    } catch (error) {
+      console.error('Payment processing failed:', error);
+      notifications.show({
+        title: 'Payment Failed',
+        message: 'Failed to process payment. Please try again.',
+        color: 'red',
+      });
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const handleCancelPayment = () => {
+    setShowPaymentForm(false);
+    setPaymentAmount('');
+    setPaymentMethod('');
   };
 
   const getStatusText = (status: number) => {
@@ -213,6 +303,9 @@ export function OrdersPage() {
                 onClick={() => {
                   setSelectedOrder(null);
                   setDetailedOrder(null);
+                  setShowPaymentForm(false);
+                  setPaymentAmount('');
+                  setPaymentMethod('');
                 }}
                 style={{ padding: '8px 16px', backgroundColor: '#ccc', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
               >
@@ -280,22 +373,112 @@ export function OrdersPage() {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                  <button 
-                    onClick={handlePrint}
-                    style={{ padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                  >
-                    Print
-                  </button>
-                  {detailedOrder.docstatus === 1 && (detailedOrder.outstanding_amount || 0) > 0 && (
+                {!showPaymentForm ? (
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                     <button 
-                      onClick={handleCompletePayment}
-                      style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      onClick={handlePrint}
+                      style={{ padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                     >
-                      Collect Payment
+                      Print
                     </button>
-                  )}
-                </div>
+                    {detailedOrder.docstatus === 1 && (detailedOrder.outstanding_amount || 0) > 0 && (
+                      <button 
+                        onClick={handleCompletePayment}
+                        style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        Collect Payment
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #dee2e6' }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: 'black' }}>💳 Collect Payment</h3>
+                    
+                    <div style={{ marginBottom: '15px' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: 'black' }}>
+                        Payment Amount ({currency})
+                      </label>
+                      <input
+                        type="number"
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        style={{ 
+                          width: '100%', 
+                          padding: '8px', 
+                          border: '1px solid #ccc', 
+                          borderRadius: '4px',
+                          fontSize: '16px'
+                        }}
+                        placeholder="Enter payment amount"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '15px' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: 'black' }}>
+                        Payment Method
+                      </label>
+                      <select
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        style={{ 
+                          width: '100%', 
+                          padding: '8px', 
+                          border: '1px solid #ccc', 
+                          borderRadius: '4px',
+                          fontSize: '16px'
+                        }}
+                      >
+                        <option value="">Select payment method</option>
+                        {modeOfPayments.map(method => (
+                          <option key={method.name} value={method.name}>
+                            {method.mode_of_payment || method.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#e9ecef', borderRadius: '4px' }}>
+                      <strong>Order Total:</strong> {currency} {detailedOrder.grand_total.toFixed(2)}<br />
+                      <strong>Outstanding:</strong> {currency} {(detailedOrder.outstanding_amount || detailedOrder.grand_total).toFixed(2)}<br />
+                      <strong>Payment Amount:</strong> {currency} {paymentAmount || '0.00'}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={handleCancelPayment}
+                        disabled={isProcessingPayment}
+                        style={{ 
+                          padding: '8px 16px', 
+                          backgroundColor: '#6c757d', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
+                          opacity: isProcessingPayment ? 0.6 : 1
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={handlePaymentSubmit}
+                        disabled={isProcessingPayment || !paymentAmount || !paymentMethod}
+                        style={{ 
+                          padding: '8px 16px', 
+                          backgroundColor: isProcessingPayment ? '#6c757d' : '#28a745', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
+                          opacity: isProcessingPayment ? 0.6 : 1
+                        }}
+                      >
+                        {isProcessingPayment ? 'Processing...' : 'Process Payment'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

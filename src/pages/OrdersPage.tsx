@@ -1,12 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { apiService, type SalesOrder } from '../services/apiService';
 import { useSettingsStore } from '../store/settingsStore';
 import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconSearch, IconCreditCard } from '@tabler/icons-react';
-import { useReactToPrint } from 'react-to-print';
-import { OrderPrintLayout } from '../components/OrderPrintLayout';
 
 export function OrdersPage() {
   const [customerFilter, setCustomerFilter] = useState('');
@@ -25,34 +23,104 @@ export function OrdersPage() {
   const currency = useSettingsStore((state) => state.currency);
   const user = authService.getLoggedInUser();
 
-  const printRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    content: () => {
-      console.log('Getting print content...');
-      console.log('Print ref current:', printRef.current);
-      console.log('Print ref innerHTML:', printRef.current?.innerHTML);
-      return printRef.current;
-    },
-    documentTitle: `Order-${selectedOrder?.name}`,
-    onBeforeGetContent: () => {
-      console.log('Preparing to print...');
-      console.log('Print ref current:', printRef.current);
-      if (!printRef.current) {
-        console.error('Print ref is null!');
-        return Promise.reject('Print ref is null');
-      }
-      return Promise.resolve();
-    },
-    onAfterPrint: () => {
-      console.log('Print completed');
-    },
-    onPrintError: (error: any) => {
-      console.error('Print error:', error);
-    },
-    removeAfterPrint: false,
-    suppressErrors: false
-  } as any);
+  const handlePrint = () => {
+    console.log('Starting print process...');
+    
+    if (!detailedOrder) {
+      console.error('No order data available for printing');
+      return;
+    }
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    if (!printWindow) {
+      console.error('Could not open print window');
+      return;
+    }
+    
+    // Create the print content HTML
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Order ${detailedOrder.name}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .order-info { margin-bottom: 20px; }
+            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            .items-table th { background-color: #f2f2f2; }
+            .totals { text-align: right; margin-top: 20px; }
+            .status { display: inline-block; padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; }
+            .status.approved { background-color: #28a745; }
+            .status.fully-paid { background-color: #28a745; }
+            .status.partially-paid { background-color: #007bff; }
+            .status.not-paid { background-color: #dc3545; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Sales Order</h1>
+            <h2>${detailedOrder.name}</h2>
+          </div>
+          
+          <div class="order-info">
+            <p><strong>Customer:</strong> ${detailedOrder.customer_name || detailedOrder.customer}</p>
+            <p><strong>Date:</strong> ${new Date(detailedOrder.creation).toLocaleString()}</p>
+            <p><strong>Status:</strong> 
+              <span class="status approved">Approved</span>
+              <span class="status ${getPaymentStatus(detailedOrder).includes('Fully Paid') ? 'fully-paid' : 
+                                   getPaymentStatus(detailedOrder).includes('Partially Paid') ? 'partially-paid' : 'not-paid'}">
+                ${getPaymentStatus(detailedOrder)}
+              </span>
+            </p>
+            <p><strong>Grand Total:</strong> ${currency} ${detailedOrder.grand_total.toFixed(2)}</p>
+            <p><strong>Advance Paid:</strong> ${currency} {(detailedOrder.advance_paid || 0).toFixed(2)}</p>
+          </div>
+          
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Rate</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${detailedOrder.items ? detailedOrder.items.map(item => `
+                <tr>
+                  <td>${item.item_name}</td>
+                  <td>${item.qty || 0}</td>
+                  <td>${currency} ${(item.rate || 0).toFixed(2)}</td>
+                  <td>${currency} ${((item.qty || 0) * (item.rate || 0)).toFixed(2)}</td>
+                </tr>
+              `).join('') : ''}
+            </tbody>
+          </table>
+          
+          <div class="totals">
+            <p><strong>Grand Total: ${currency} ${detailedOrder.grand_total.toFixed(2)}</strong></p>
+            <p><strong>Advance Paid: ${currency} {(detailedOrder.advance_paid || 0).toFixed(2)}</strong></p>
+            <p><strong>Outstanding: ${currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}</strong></p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Wait for content to load, then print
+    printWindow.onload = () => {
+      console.log('Print content loaded, opening print dialog...');
+      printWindow.print();
+      printWindow.close();
+    };
+  };
 
   useEffect(() => {
     if (user) {
@@ -634,18 +702,6 @@ export function OrdersPage() {
         </div>
       )}
 
-      <div style={{ 
-        position: 'absolute', 
-        left: '-9999px', 
-        top: '-9999px',
-        visibility: 'hidden',
-        width: '210mm',
-        height: '297mm'
-      }}>
-        <div ref={printRef}>
-          {detailedOrder && <OrderPrintLayout order={detailedOrder} currency={currency} />}
-        </div>
-      </div>
     </>
   );
 }

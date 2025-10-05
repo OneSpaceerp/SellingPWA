@@ -165,8 +165,8 @@ export interface PaymentEntryPayload {
   mode_of_payment: string;
   company: string;
   posting_date: string;
-  reference_no: string;
-  reference_date: string;
+  reference_no?: string;
+  reference_date?: string;
 }
 
 const postMethod = async <T>(method: string, payload: any): Promise<T> => {

@@ -49,7 +49,7 @@ const getCookieValue = (name: string): string | null => {
   return null;
 };
 
-const getAuthHeaders = (): HeadersInit => {
+const getAuthHeaders = async (): Promise<HeadersInit> => {
   const user = getLoggedInUser();
   if (!user) {
     console.log('No logged in user found');
@@ -77,16 +77,48 @@ const getAuthHeaders = (): HeadersInit => {
   };
   
   // ERPNext requires X-Frappe-CSRF-Token for session-based API calls
-  const csrfToken = getCookieValue('_frappe_csrf_token') || getCookieValue('csrf_token');
+  // Try multiple possible CSRF token cookie names
+  const csrfToken = getCookieValue('frappe_csrf_token') || 
+                    getCookieValue('_frappe_csrf_token') || 
+                    getCookieValue('csrf_token') ||
+                    getCookieValue('frappe_csrf');
+  
   if (csrfToken) {
     console.log('Found CSRF token, adding X-Frappe-CSRF-Token header');
     headers['X-Frappe-CSRF-Token'] = csrfToken;
   } else {
     console.log('No CSRF token found in cookies');
+    // Try to get CSRF token from a GET request first
+    console.log('Attempting to fetch CSRF token...');
+    try {
+      const csrfResponse = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/method/frappe.auth.get_logged_user`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      
+      if (csrfResponse.ok) {
+        // Check if the response set any CSRF token cookies
+        const setCookieHeader = csrfResponse.headers.get('set-cookie');
+        if (setCookieHeader) {
+          console.log('Set-Cookie header:', setCookieHeader);
+          // Extract CSRF token from the set-cookie header
+          const csrfMatch = setCookieHeader.match(/frappe_csrf_token=([^;]+)/);
+          if (csrfMatch) {
+            const newCsrfToken = csrfMatch[1];
+            console.log('Found CSRF token from response:', newCsrfToken);
+            headers['X-Frappe-CSRF-Token'] = newCsrfToken;
+          }
+        }
+      }
+    } catch (csrfError) {
+      console.warn('Failed to fetch CSRF token:', csrfError);
+    }
   }
   
   // Also try to get the session ID from cookies
-  const sessionId = getCookieValue('sid') || getCookieValue('session_id');
+  const sessionId = getCookieValue('sid') || 
+                   getCookieValue('session_id') || 
+                   getCookieValue('frappe_session');
   if (sessionId) {
     console.log('Found session ID, adding X-Frappe-Session-ID header');
     headers['X-Frappe-Session-ID'] = sessionId;

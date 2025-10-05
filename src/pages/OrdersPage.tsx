@@ -1762,6 +1762,7 @@ export function OrdersPage() {
                 ❌ No order details available
               </div>
             )}
+            </div>
           </div>
         </div>
       )}

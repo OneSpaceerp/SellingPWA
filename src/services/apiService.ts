@@ -184,6 +184,10 @@ const createPaymentEntry = async (payload: PaymentEntryPayload): Promise<any> =>
 
 const getModeOfPaymentDetails = async (name: string): Promise<any> => get<any>(`resource/Mode of Payment/${encodeURIComponent(name)}`);
 
+const getModeOfPayments = async (): Promise<any[]> => get<any[]>(`resource/Mode of Payment?fields=${encodeURIComponent('["name", "mode_of_payment"]')}&limit_page_length=0`);
+
+const getCompanyDetails = async (company: string): Promise<any> => get<any>(`resource/Company/${encodeURIComponent(company)}`);
+
 const saveDoc = async (doc: any): Promise<any> => {
   const doctype = encodeURIComponent(doc.doctype);
   // The 'doc' object already contains all necessary fields.
@@ -206,6 +210,8 @@ export const apiService = {
   createSalesOrder,
   createPaymentEntry,
   getModeOfPaymentDetails,
+  getModeOfPayments,
+  getCompanyDetails,
   saveDoc,
   submitDoc,
 };

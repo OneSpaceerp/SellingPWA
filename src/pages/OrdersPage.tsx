@@ -1760,7 +1760,7 @@ export function OrdersPage() {
             {!isDetailLoading && !detailedOrder && (
               <div style={{ textAlign: 'center', padding: '40px', color: 'red' }}>
                 ❌ No order details available
-              </div>
+      </div>
             )}
             </div>
           </div>

@@ -37,6 +37,18 @@ const getLoggedInUser = (): string | null => {
   return sessionStorage.getItem('erpnext-user');
 };
 
+// Helper function to get a cookie value by name
+const getCookieValue = (name: string): string | null => {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for(let i=0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+};
+
 const getAuthHeaders = (): HeadersInit => {
   const user = getLoggedInUser();
   if (!user) {
@@ -46,21 +58,42 @@ const getAuthHeaders = (): HeadersInit => {
   
   console.log('Getting auth headers for user:', user);
   
-  // For ERPNext, we can use API key authentication or session-based auth
-  // Since we're using credentials: 'include', the session should be maintained
-  // But let's also try to get any stored API key
+  // Try to get API key from localStorage first
   const apiKey = localStorage.getItem('erpnext-api-key');
-  
   if (apiKey) {
     console.log('Using API key authentication');
     return {
       'Authorization': `token ${apiKey}`,
+      'Content-Type': 'application/json',
     };
   }
   
-  // If no API key, rely on session cookies (credentials: 'include')
-  console.log('Using session-based authentication (cookies)');
-  return {};
+  // For session-based authentication, ERPNext requires specific headers
+  console.log('Using session-based authentication (cookies + CSRF token)');
+  console.log('Available cookies:', document.cookie);
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  // ERPNext requires X-Frappe-CSRF-Token for session-based API calls
+  const csrfToken = getCookieValue('_frappe_csrf_token') || getCookieValue('csrf_token');
+  if (csrfToken) {
+    console.log('Found CSRF token, adding X-Frappe-CSRF-Token header');
+    headers['X-Frappe-CSRF-Token'] = csrfToken;
+  } else {
+    console.log('No CSRF token found in cookies');
+  }
+  
+  // Also try to get the session ID from cookies
+  const sessionId = getCookieValue('sid') || getCookieValue('session_id');
+  if (sessionId) {
+    console.log('Found session ID, adding X-Frappe-Session-ID header');
+    headers['X-Frappe-Session-ID'] = sessionId;
+  }
+  
+  console.log('Final headers:', headers);
+  return headers;
 };
 
 export const authService = {

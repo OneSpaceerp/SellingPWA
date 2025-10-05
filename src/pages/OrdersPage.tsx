@@ -961,18 +961,73 @@ export function OrdersPage() {
 
   const renderContent = () => {
     if (isLoading) {
-      return <Center style={{ height: '50vh' }}><Loader data-testid="orders-loader" /></Center>;
+      return (
+        <Center style={{ height: '50vh' }}>
+          <div style={{ textAlign: 'center' }}>
+            <Loader size="lg" />
+            <Text mt="md" c="dimmed">Loading your orders...</Text>
+          </div>
+        </Center>
+      );
     }
     if (filteredOrders.length === 0) {
-      return <Center style={{ height: '50vh' }}><Text>No orders found.</Text></Center>;
+      return (
+        <Center style={{ height: '50vh' }}>
+          <div style={{ textAlign: 'center' }}>
+            <Text size="xl" c="dimmed" mb="md">📋</Text>
+            <Text size="lg" fw={500} mb="xs">No orders found</Text>
+            <Text size="sm" c="dimmed">Try adjusting your filters or create a new order</Text>
+          </div>
+        </Center>
+      );
     }
     return (
-      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing={{ base: 'md', sm: 'xl' }}>
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing={{ base: 'md', sm: 'lg' }}>
         {filteredOrders.map((order: SalesOrder) => (
-          <Card shadow="sm" padding="lg" radius="md" withBorder key={order.name} onClick={() => setSelectedOrder(order)} style={{ cursor: 'pointer' }}>
-            <Group justify="space-between">
-              <Text fw={500} size="lg">{order.name}</Text>
-              <Group gap="xs">
+          <Card 
+            key={order.name} 
+            onClick={() => setSelectedOrder(order)} 
+            style={{ 
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: '1px solid #e9ecef',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              position: 'relative',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            }}
+          >
+            {/* Header with gradient background */}
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              margin: '-16px -16px 16px -16px',
+              padding: '16px',
+              color: 'white',
+              position: 'relative',
+            }}>
+              <Group justify="space-between" mb="xs">
+                <Text fw={600} size="lg" c="white">{order.name}</Text>
+                <div style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  borderRadius: '20px',
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  fontWeight: '500'
+                }}>
+                  {new Date(order.creation).toLocaleDateString()}
+                </div>
+              </Group>
+              
+              {/* Status badges */}
+              <Group gap="xs" mb="xs">
                 {getOrderStatusBadges(order).map((badge, index) => (
                   <Badge 
                     key={index}
@@ -981,21 +1036,89 @@ export function OrdersPage() {
                            badge.color === 'blue' ? 'blue' :
                            badge.color === 'red' ? 'red' : 'gray'}
                     leftSection={badge.text.includes('PAID') ? <IconCreditCard size={12} /> : undefined}
+                    style={{
+                      background: badge.color === 'yellow' ? '#ffc107' : 
+                                 badge.color === 'green' ? '#28a745' : 
+                                 badge.color === 'blue' ? '#007bff' :
+                                 badge.color === 'red' ? '#dc3545' : '#6c757d',
+                      color: 'white',
+                      fontWeight: '600',
+                      fontSize: '11px',
+                      borderRadius: '12px',
+                      padding: '4px 8px'
+                    }}
                   >
                     {badge.text}
               </Badge>
                 ))}
-              </Group>
             </Group>
-            <Text size="sm" c="dimmed">{order.customer_name || order.customer}</Text>
-            <Text size="xs" c="dimmed" mt="xs">{new Date(order.creation).toLocaleString()}</Text>
+            </div>
 
-            <Divider my="sm" />
+            {/* Customer info */}
+            <div style={{ marginBottom: '16px' }}>
+              <Text size="sm" c="dimmed" mb="xs" style={{ fontWeight: '500' }}>Customer</Text>
+              <Text size="md" fw={500} style={{ color: '#495057' }}>
+                {order.customer_name || order.customer}
+              </Text>
+            </div>
 
-            <Group justify="space-between" mt="md">
-              <Text>Grand Total:</Text>
-              <Text fw={700}>{currency} {order.grand_total.toFixed(2)}</Text>
+            {/* Payment info */}
+            <div style={{ marginBottom: '16px' }}>
+              <Text size="sm" c="dimmed" mb="xs" style={{ fontWeight: '500' }}>Payment Status</Text>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: order.advance_paid && order.advance_paid > 0 ? 
+                    (order.advance_paid >= order.grand_total ? '#28a745' : '#ffc107') : '#dc3545'
+                }}></div>
+                <Text size="sm" fw={500}>
+                  {order.advance_paid && order.advance_paid > 0 ? 
+                    (order.advance_paid >= order.grand_total ? 'Fully Paid' : 'Partially Paid') : 
+                    'Not Paid'}
+                </Text>
+              </div>
+            </div>
+
+            {/* Amount section */}
+            <div style={{
+              background: '#f8f9fa',
+              borderRadius: '8px',
+              padding: '12px',
+              border: '1px solid #e9ecef'
+            }}>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed" style={{ fontWeight: '500' }}>Grand Total</Text>
+                <Text size="lg" fw={700} style={{ 
+                  color: '#495057',
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  {currency} {order.grand_total.toFixed(2)}
+                </Text>
             </Group>
+              
+              {order.advance_paid && order.advance_paid > 0 && (
+                <Group justify="space-between" mt="xs">
+                  <Text size="xs" c="dimmed">Advance Paid</Text>
+                  <Text size="sm" fw={500} c="green">
+                    {currency} {order.advance_paid.toFixed(2)}
+                  </Text>
+                </Group>
+              )}
+              
+              {(order.grand_total - (order.advance_paid || 0)) > 0 && (
+                <Group justify="space-between" mt="xs">
+                  <Text size="xs" c="dimmed">Outstanding</Text>
+                  <Text size="sm" fw={500} c="red">
+                    {currency} {(order.grand_total - (order.advance_paid || 0)).toFixed(2)}
+                  </Text>
+                </Group>
+              )}
+            </div>
           </Card>
         ))}
       </SimpleGrid>
@@ -1003,25 +1126,102 @@ export function OrdersPage() {
   };
 
   return (
-    <>
-      <Title order={1} mb="md">My Orders</Title>
-      <Group grow mb="xl">
+    <div style={{ 
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      minHeight: '100vh',
+      padding: '20px'
+    }}>
+      {/* Modern Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        borderRadius: '16px',
+        padding: '24px',
+        marginBottom: '24px',
+        color: 'white',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <div>
+            <Title order={1} c="white" mb="xs" style={{ fontSize: '2rem', fontWeight: '700' }}>
+              📋 My Orders
+            </Title>
+            <Text size="lg" c="rgba(255,255,255,0.8)" style={{ fontWeight: '400' }}>
+              Manage and track your sales orders
+            </Text>
+          </div>
+          <div style={{
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '12px',
+            padding: '12px',
+            textAlign: 'center'
+          }}>
+            <Text size="sm" c="white" fw={500}>Total Orders</Text>
+            <Text size="xl" c="white" fw={700}>{orders.length}</Text>
+          </div>
+        </div>
+        
+        {/* Modern Filter Section */}
+        <div style={{
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '12px',
+          padding: '16px',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <Group grow>
         <TextInput
-          placeholder="Filter by customer name..."
-          leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} />}
+              placeholder="🔍 Search by customer name..."
+              leftSection={<IconSearch style={{ width: rem(18), height: rem(18) }} />}
           value={customerFilter}
           onChange={(event) => setCustomerFilter(event.currentTarget.value)}
+              styles={{
+                input: {
+                  background: 'rgba(255,255,255,0.9)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  '&:focus': {
+                    background: 'white',
+                    boxShadow: '0 0 0 2px rgba(255,255,255,0.3)'
+                  }
+                }
+              }}
         />
         <TextInput
           type="date"
-          placeholder="Filter by date"
+              placeholder="📅 Filter by date"
           value={dateFilter ? dateFilter.toISOString().split('T')[0] : ''}
           onChange={(event) => setDateFilter(event.currentTarget.value ? new Date(event.currentTarget.value) : null)}
+              styles={{
+                input: {
+                  background: 'rgba(255,255,255,0.9)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  '&:focus': {
+                    background: 'white',
+                    boxShadow: '0 0 0 2px rgba(255,255,255,0.3)'
+                  }
+                }
+              }}
         />
       </Group>
+        </div>
+      </div>
+      
+      {/* Content Area */}
+      <div style={{
+        background: 'white',
+        borderRadius: '16px',
+        padding: '24px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        minHeight: '60vh'
+      }}>
       {renderContent()}
+      </div>
 
-      {/* Temporary HTML Modal to test if Mantine Modal is the issue */}
+      {/* Modern Order Details Modal */}
       {selectedOrder && (
         <div style={{
           position: 'fixed',
@@ -1029,144 +1229,442 @@ export function OrdersPage() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'rgba(0,0,0,0.6)',
           zIndex: 1000,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          padding: '20px',
+          backdropFilter: 'blur(8px)'
         }}>
           <div style={{
             backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            maxWidth: '600px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto',
+            borderRadius: '20px',
+            maxWidth: '800px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'hidden',
             color: 'black',
             position: 'relative',
             zIndex: 1001,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0, color: 'black' }}>Order: {selectedOrder.name}</h2>
-              <button 
+            {/* Modal Header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              padding: '20px 24px',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <Text size="xl" fw={700} c="white" mb="xs">
+                  📄 Order Details
+                </Text>
+                <Text size="sm" c="rgba(255,255,255,0.8)">
+                  {selectedOrder.name}
+                </Text>
+              </div>
+              <button
                 onClick={() => {
           setSelectedOrder(null);
           setDetailedOrder(null);
                   setShowPaymentForm(false);
-                  setPaymentAmount('');
-                  setPaymentMethod('');
+                  setShowPrintPreview(false);
                 }}
-                style={{ padding: '8px 16px', backgroundColor: '#ccc', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+                }}
               >
-                Close
+                ✕
               </button>
             </div>
             
+            {/* Modal Content */}
+            <div style={{ 
+              padding: '24px',
+              overflow: 'auto',
+              flex: 1,
+              background: '#f8f9fa'
+            }}>
+            
             {isDetailLoading && (
-              <div style={{ textAlign: 'center', padding: '40px' }}>
-                Loading order details...
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '60px 20px',
+                background: 'white',
+                borderRadius: '12px',
+                margin: '20px 0'
+              }}>
+                <Loader size="lg" />
+                <Text mt="md" c="dimmed" size="lg">Loading order details...</Text>
               </div>
             )}
 
           {!isDetailLoading && detailedOrder && (
               <div>
-                
-                <div style={{ marginBottom: '20px' }}>
-                  <strong>Customer:</strong> {detailedOrder.customer_name || detailedOrder.customer}<br />
-                  <strong>Status:</strong> {getStatusText(detailedOrder.docstatus)}<br />
-                  <strong>Payment Status:</strong> {getPaymentStatus(detailedOrder)}<br />
-                  <strong>Date:</strong> {new Date(detailedOrder.creation).toLocaleString()}<br />
-                  <strong>Grand Total:</strong> {currency} {detailedOrder.grand_total.toFixed(2)}<br />
-                  <strong>Advance Paid:</strong> {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}<br />
-                  {detailedOrder.outstanding_amount !== undefined && (
-                    <>
-                      <strong>Outstanding Amount:</strong> {currency} {(detailedOrder.outstanding_amount || 0).toFixed(2)}<br />
-                    </>
-                  )}
+                {/* Order Summary Cards */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                  gap: '16px',
+                  marginBottom: '24px'
+                }}>
+                  {/* Customer Card */}
+                  <div style={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    color: 'white',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                  }}>
+                    <Text size="sm" c="rgba(255,255,255,0.8)" mb="xs" fw={500}>Customer</Text>
+                    <Text size="lg" fw={600} c="white">
+                      {detailedOrder.customer_name || detailedOrder.customer}
+                    </Text>
+                  </div>
+
+                  {/* Status Card */}
+                  <div style={{
+                    background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    color: 'white',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                  }}>
+                    <Text size="sm" c="rgba(255,255,255,0.8)" mb="xs" fw={500}>Status</Text>
+                    <Text size="lg" fw={600} c="white">
+                      {getStatusText(detailedOrder.docstatus)}
+                    </Text>
+                  </div>
+
+                  {/* Payment Status Card */}
+                  <div style={{
+                    background: detailedOrder.advance_paid && detailedOrder.advance_paid > 0 ? 
+                      (detailedOrder.advance_paid >= detailedOrder.grand_total ? 
+                        'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : 
+                        'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)') :
+                      'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    color: 'white',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                  }}>
+                    <Text size="sm" c="rgba(255,255,255,0.8)" mb="xs" fw={500}>Payment Status</Text>
+                    <Text size="lg" fw={600} c="white">
+                      {getPaymentStatus(detailedOrder)}
+                    </Text>
+                  </div>
+
+                  {/* Date Card */}
+                  <div style={{
+                    background: 'linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    color: 'white',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                  }}>
+                    <Text size="sm" c="rgba(255,255,255,0.8)" mb="xs" fw={500}>Order Date</Text>
+                    <Text size="lg" fw={600} c="white">
+                      {new Date(detailedOrder.creation).toLocaleDateString()}
+                    </Text>
+                    <Text size="xs" c="rgba(255,255,255,0.7)">
+                      {new Date(detailedOrder.creation).toLocaleTimeString()}
+                    </Text>
+                  </div>
                 </div>
 
+                {/* Financial Summary */}
+                <div style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  marginBottom: '24px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                  border: '1px solid #e9ecef'
+                }}>
+                  <Text size="lg" fw={600} mb="md" style={{ color: '#495057' }}>💰 Financial Summary</Text>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: '16px'
+                  }}>
+                    <div style={{ textAlign: 'center', padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
+                      <Text size="sm" c="dimmed" mb="xs">Grand Total</Text>
+                      <Text size="xl" fw={700} style={{ 
+                        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text'
+                      }}>
+                        {currency} {detailedOrder.grand_total.toFixed(2)}
+                      </Text>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
+                      <Text size="sm" c="dimmed" mb="xs">Advance Paid</Text>
+                      <Text size="xl" fw={700} c="green">
+                        {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                      </Text>
+                    </div>
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: '16px', 
+                      background: (detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 ? '#fff5f5' : '#f0fff4',
+                      borderRadius: '8px',
+                      border: (detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 ? '1px solid #fed7d7' : '1px solid #c6f6d5'
+                    }}>
+                      <Text size="sm" c="dimmed" mb="xs">Outstanding</Text>
+                      <Text size="xl" fw={700} c={(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 ? 'red' : 'green'}>
+                        {currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}
+                      </Text>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Items Table */}
                 {detailedOrder.items && detailedOrder.items.length > 0 && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <h3>Items:</h3>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#f5f5f5' }}>
-                          <th style={{ border: '1px solid #ccc', padding: '8px' }}>Item</th>
-                          <th style={{ border: '1px solid #ccc', padding: '8px' }}>Qty</th>
-                          <th style={{ border: '1px solid #ccc', padding: '8px' }}>Rate</th>
-                          <th style={{ border: '1px solid #ccc', padding: '8px' }}>Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {detailedOrder.items.map(item => (
-                          <tr key={item.item_code}>
-                            <td style={{ border: '1px solid #ccc', padding: '8px' }}>{item.item_name}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '8px' }}>{item.qty || 0}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '8px' }}>{currency} {(item.rate || 0).toFixed(2)}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '8px' }}>{currency} {((item.qty || 0) * (item.rate || 0)).toFixed(2)}</td>
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    marginBottom: '24px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                    border: '1px solid #e9ecef'
+                  }}>
+                    <Text size="lg" fw={600} mb="md" style={{ color: '#495057' }}>📦 Order Items</Text>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ 
+                        width: '100%', 
+                        borderCollapse: 'collapse',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <thead>
+                          <tr style={{ 
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white'
+                          }}>
+                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600' }}>Item</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600' }}>Qty</th>
+                            <th style={{ padding: '16px', textAlign: 'right', fontWeight: '600' }}>Rate</th>
+                            <th style={{ padding: '16px', textAlign: 'right', fontWeight: '600' }}>Total</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {detailedOrder.items.map((item, index) => (
+                            <tr key={item.item_code} style={{ 
+                              backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8f9fa',
+                              transition: 'background-color 0.2s ease'
+                            }}>
+                              <td style={{ padding: '16px', fontWeight: '500', color: '#495057' }}>
+                                {item.item_name}
+                              </td>
+                              <td style={{ padding: '16px', textAlign: 'center', fontWeight: '500' }}>
+                                {item.qty || 0}
+                              </td>
+                              <td style={{ padding: '16px', textAlign: 'right', fontWeight: '500' }}>
+                                {currency} {(item.rate || 0).toFixed(2)}
+                              </td>
+                              <td style={{ padding: '16px', textAlign: 'right', fontWeight: '600', color: '#495057' }}>
+                                {currency} {((item.qty || 0) * (item.rate || 0)).toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
 
+                {/* Action Buttons */}
                 {!showPaymentForm ? (
-                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '16px', 
+                    justifyContent: 'flex-end',
+                    marginTop: '24px',
+                    padding: '20px',
+                    background: 'white',
+                    borderRadius: '12px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                    border: '1px solid #e9ecef'
+                  }}>
                     <button 
                       onClick={handlePrintPreview}
-                      style={{ padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      style={{ 
+                        padding: '12px 24px', 
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '8px', 
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+                      }}
                     >
-                      Print Preview
+                      🖨️ Print Preview
                     </button>
-                      {detailedOrder.docstatus === 1 && (detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 && (
-                        <button 
-                          onClick={handleCompletePayment}
-                          style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                        >
-                          Collect Payment
-                        </button>
-                      )}
+                    {detailedOrder.docstatus === 1 && (detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 && (
+                      <button 
+                        onClick={handleCompletePayment}
+                        style={{ 
+                          padding: '12px 24px', 
+                          background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '8px', 
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 4px 15px rgba(40, 167, 69, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 20px rgba(40, 167, 69, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
+                        }}
+                      >
+                        💳 Collect Payment
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #dee2e6' }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: 'black' }}>💳 Collect Payment</h3>
+                  <div style={{ 
+                    marginTop: '24px', 
+                    padding: '24px', 
+                    background: 'white', 
+                    borderRadius: '12px', 
+                    border: '1px solid #e9ecef',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      marginBottom: '20px',
+                      paddingBottom: '16px',
+                      borderBottom: '2px solid #e9ecef'
+                    }}>
+                      <Text size="lg" fw={600} style={{ color: '#495057' }}>💳 Collect Payment</Text>
+                    </div>
                     
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: 'black' }}>
+                    {/* Payment Summary */}
+                    <div style={{
+                      background: '#f8f9fa',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      marginBottom: '20px',
+                      border: '1px solid #e9ecef'
+                    }}>
+                      <Text size="sm" fw={600} mb="xs" style={{ color: '#495057' }}>Payment Summary</Text>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div>
+                          <Text size="xs" c="dimmed">Already Paid</Text>
+                          <Text size="sm" fw={500} c="green">
+                            {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                          </Text>
+                        </div>
+                        <div>
+                          <Text size="xs" c="dimmed">Remaining</Text>
+                          <Text size="sm" fw={500} c="red">
+                            {currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}
+                          </Text>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginBottom: '20px' }}>
+                      <Text size="sm" fw={600} mb="xs" style={{ color: '#495057' }}>
                         Payment Amount ({currency})
-                      </label>
+                      </Text>
                       <input
                         type="number"
                         value={paymentAmount}
                         onChange={(e) => setPaymentAmount(e.target.value)}
                         style={{ 
                           width: '100%', 
-                          padding: '8px', 
-                          border: '1px solid #ccc', 
-                          borderRadius: '4px',
-                          fontSize: '16px'
+                          padding: '12px 16px', 
+                          border: '2px solid #e9ecef', 
+                          borderRadius: '8px',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          transition: 'all 0.2s ease',
+                          background: 'white'
                         }}
                         placeholder="Enter payment amount"
                         step="0.01"
                         min="0"
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#667eea';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e9ecef';
+                          e.target.style.boxShadow = 'none';
+                        }}
                       />
                     </div>
 
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: 'black' }}>
+                    <div style={{ marginBottom: '24px' }}>
+                      <Text size="sm" fw={600} mb="xs" style={{ color: '#495057' }}>
                         Payment Method
-                      </label>
+                      </Text>
                       <select
                         value={paymentMethod}
                         onChange={(e) => setPaymentMethod(e.target.value)}
                         style={{ 
                           width: '100%', 
-                          padding: '8px', 
-                          border: '1px solid #ccc', 
-                          borderRadius: '4px',
-                          fontSize: '16px'
+                          padding: '12px 16px', 
+                          border: '2px solid #e9ecef', 
+                          borderRadius: '8px',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          transition: 'all 0.2s ease',
+                          background: 'white',
+                          cursor: 'pointer'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#667eea';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e9ecef';
+                          e.target.style.boxShadow = 'none';
                         }}
                       >
                         <option value="">Select payment method</option>
@@ -1178,43 +1676,80 @@ export function OrdersPage() {
                       </select>
                     </div>
 
-                      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#e9ecef', borderRadius: '4px' }}>
-                        <strong>Order Total:</strong> {currency} {detailedOrder.grand_total.toFixed(2)}<br />
-                        <strong>Already Paid:</strong> {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}<br />
-                        <strong>Remaining:</strong> {currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}<br />
-                        <strong>Payment Amount:</strong> {currency} {paymentAmount || '0.00'}
-                      </div>
-
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    {/* Payment Form Buttons */}
+                    <div style={{ 
+                      display: 'flex', 
+                      gap: '16px', 
+                      justifyContent: 'flex-end',
+                      marginTop: '24px',
+                      paddingTop: '20px',
+                      borderTop: '2px solid #e9ecef'
+                    }}>
                       <button 
                         onClick={handleCancelPayment}
                         disabled={isProcessingPayment}
                         style={{ 
-                          padding: '8px 16px', 
-                          backgroundColor: '#6c757d', 
+                          padding: '12px 24px', 
+                          background: 'linear-gradient(135deg, #6c757d 0%, #495057 100%)', 
                           color: 'white', 
                           border: 'none', 
-                          borderRadius: '4px', 
+                          borderRadius: '8px', 
                           cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
-                          opacity: isProcessingPayment ? 0.6 : 1
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          transition: 'all 0.2s ease',
+                          opacity: isProcessingPayment ? 0.6 : 1,
+                          boxShadow: '0 4px 15px rgba(108, 117, 125, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isProcessingPayment) {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(108, 117, 125, 0.4)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isProcessingPayment) {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(108, 117, 125, 0.3)';
+                          }
                         }}
                       >
-                        Cancel
+                        ❌ Cancel
                       </button>
                       <button 
                         onClick={handlePaymentSubmit}
                         disabled={isProcessingPayment || !paymentAmount || !paymentMethod}
                         style={{ 
-                          padding: '8px 16px', 
-                          backgroundColor: isProcessingPayment ? '#6c757d' : '#28a745', 
+                          padding: '12px 24px', 
+                          background: isProcessingPayment || !paymentAmount || !paymentMethod ? 
+                            'linear-gradient(135deg, #adb5bd 0%, #6c757d 100%)' : 
+                            'linear-gradient(135deg, #28a745 0%, #20c997 100%)', 
                           color: 'white', 
                           border: 'none', 
-                          borderRadius: '4px', 
-                          cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
-                          opacity: isProcessingPayment ? 0.6 : 1
+                          borderRadius: '8px', 
+                          cursor: isProcessingPayment || !paymentAmount || !paymentMethod ? 'not-allowed' : 'pointer',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          transition: 'all 0.2s ease',
+                          opacity: isProcessingPayment || !paymentAmount || !paymentMethod ? 0.6 : 1,
+                          boxShadow: isProcessingPayment || !paymentAmount || !paymentMethod ? 
+                            '0 4px 15px rgba(173, 181, 189, 0.3)' : 
+                            '0 4px 15px rgba(40, 167, 69, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isProcessingPayment && paymentAmount && paymentMethod) {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(40, 167, 69, 0.4)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isProcessingPayment && paymentAmount && paymentMethod) {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
+                          }
                         }}
                       >
-                        {isProcessingPayment ? 'Processing...' : 'Process Payment'}
+                        {isProcessingPayment ? '⏳ Processing...' : '✅ Process Payment'}
                       </button>
                     </div>
                   </div>
@@ -1225,7 +1760,7 @@ export function OrdersPage() {
             {!isDetailLoading && !detailedOrder && (
               <div style={{ textAlign: 'center', padding: '40px', color: 'red' }}>
                 ❌ No order details available
-              </div>
+      </div>
             )}
           </div>
         </div>
@@ -1268,33 +1803,42 @@ export function OrdersPage() {
             flexDirection: 'column',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
           }}>
-            {/* Header */}
+            {/* Modern Header */}
             <div style={{
-              padding: '20px',
-              borderBottom: '1px solid #e9ecef',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              padding: '20px 24px',
+              color: 'white',
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center',
-              backgroundColor: '#f8f9fa'
+              alignItems: 'center'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <button 
                   onClick={() => setShowPrintPreview(false)}
                   style={{ 
-                    padding: '8px 12px', 
-                    backgroundColor: '#6c757d', 
+                    padding: '10px 16px', 
+                    background: 'rgba(255,255,255,0.2)', 
                     color: 'white', 
                     border: 'none', 
-                    borderRadius: '4px', 
+                    borderRadius: '8px', 
                     cursor: 'pointer',
                     fontSize: '14px',
-                    fontWeight: 'bold'
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
                   }}
                 >
                   ← Back
                 </button>
-                <h3 style={{ margin: 0, color: '#495057' }}>Print Preview - {detailedOrder.name}</h3>
-      </div>
+                <Text size="lg" fw={600} c="white">
+                  🖨️ Print Preview - {detailedOrder.name}
+                </Text>
+              </div>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <select 
                   value={printOrientation}
@@ -1588,10 +2132,10 @@ export function OrdersPage() {
               </div>
             </div>
           </div>
-      </div>
+        </div>
         );
       })()}
-
+      </div>
     </>
   );
 }

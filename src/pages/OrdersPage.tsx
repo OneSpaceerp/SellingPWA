@@ -28,10 +28,20 @@ export function OrdersPage() {
   const printRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
+    content: () => {
+      console.log('Getting print content...');
+      console.log('Print ref current:', printRef.current);
+      console.log('Print ref innerHTML:', printRef.current?.innerHTML);
+      return printRef.current;
+    },
     documentTitle: `Order-${selectedOrder?.name}`,
     onBeforeGetContent: () => {
       console.log('Preparing to print...');
+      console.log('Print ref current:', printRef.current);
+      if (!printRef.current) {
+        console.error('Print ref is null!');
+        return Promise.reject('Print ref is null');
+      }
       return Promise.resolve();
     },
     onAfterPrint: () => {
@@ -39,7 +49,9 @@ export function OrdersPage() {
     },
     onPrintError: (error: any) => {
       console.error('Print error:', error);
-    }
+    },
+    removeAfterPrint: false,
+    suppressErrors: false
   } as any);
 
   useEffect(() => {
@@ -622,7 +634,14 @@ export function OrdersPage() {
         </div>
       )}
 
-      <div style={{ display: 'none' }}>
+      <div style={{ 
+        position: 'absolute', 
+        left: '-9999px', 
+        top: '-9999px',
+        visibility: 'hidden',
+        width: '210mm',
+        height: '297mm'
+      }}>
         <div ref={printRef}>
           {detailedOrder && <OrderPrintLayout order={detailedOrder} currency={currency} />}
         </div>

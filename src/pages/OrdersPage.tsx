@@ -7,7 +7,6 @@ import { notifications } from '@mantine/notifications';
 import { IconSearch, IconCreditCard } from '@tabler/icons-react';
 import { useReactToPrint } from 'react-to-print';
 import { OrderPrintLayout } from '../components/OrderPrintLayout';
-import { useNavigate } from 'react-router-dom';
 
 export function OrdersPage() {
   const [customerFilter, setCustomerFilter] = useState('');
@@ -24,7 +23,6 @@ export function OrdersPage() {
   const [modeOfPayments, setModeOfPayments] = useState<any[]>([]);
   const currency = useSettingsStore((state) => state.currency);
   const user = authService.getLoggedInUser();
-  const navigate = useNavigate();
 
   const printRef = useRef<HTMLDivElement>(null);
 

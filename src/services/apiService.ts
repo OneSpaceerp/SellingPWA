@@ -195,6 +195,15 @@ const getModeOfPayments = async (): Promise<any[]> => get<any[]>(`resource/Mode 
 
 const getCompanyDetails = async (company: string): Promise<any> => get<any>(`resource/Company/${encodeURIComponent(company)}`);
 
+const getDefaultAccounts = async (company: string): Promise<any> => {
+  const companyDetails = await getCompanyDetails(company);
+  return {
+    cash: companyDetails.default_cash_account || 'Cash',
+    bank: companyDetails.default_bank_account || 'Bank',
+    receivable: companyDetails.default_receivable_account || 'Debtors'
+  };
+};
+
 const saveDoc = async (doc: any): Promise<any> => {
   const doctype = encodeURIComponent(doc.doctype);
   // The 'doc' object already contains all necessary fields.
@@ -219,6 +228,7 @@ export const apiService = {
   getModeOfPaymentDetails,
   getModeOfPayments,
   getCompanyDetails,
+  getDefaultAccounts,
   saveDoc,
   submitDoc,
 };

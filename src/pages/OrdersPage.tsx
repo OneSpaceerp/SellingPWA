@@ -327,6 +327,300 @@ export function OrdersPage() {
     }
   };
 
+  const handleExportPDF = () => {
+    console.log('Starting PDF export...');
+    
+    if (!detailedOrder) {
+      console.error('No order data available for PDF export');
+      return;
+    }
+    
+    try {
+      // Calculate values to ensure they're properly computed
+      const advancePaid = detailedOrder.advance_paid || 0;
+      const grandTotal = detailedOrder.grand_total || 0;
+      const outstanding = grandTotal - advancePaid;
+      
+      console.log('PDF Export Calculations:');
+      console.log('Advance Paid:', advancePaid);
+      console.log('Grand Total:', grandTotal);
+      console.log('Outstanding:', outstanding);
+      
+      // Create a new window for PDF generation
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      
+      if (!printWindow) {
+        console.error('Could not open print window - popup blocked');
+        notifications.show({
+          title: 'PDF Export Error',
+          message: 'Please allow popups for this site to enable PDF export',
+          color: 'red',
+        });
+        return;
+      }
+      
+      // Create the PDF content HTML
+      const pdfContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Order ${detailedOrder.name}</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              * { box-sizing: border-box; }
+              body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                margin: 0; 
+                padding: 20px; 
+                background: white;
+                color: #333;
+                line-height: 1.6;
+              }
+              .print-container {
+                max-width: 800px;
+                margin: 0 auto;
+                background: white;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                border-radius: 8px;
+                overflow: hidden;
+              }
+              .header { 
+                text-align: center; 
+                padding: 30px 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+              }
+              .header h1 { margin: 0; font-size: 2.5em; font-weight: 300; }
+              .header h2 { margin: '10px 0 0'; font-size: 1.5em; opacity: 0.9; }
+              .order-info { 
+                padding: 30px; 
+                background: #f8f9fa;
+                border-bottom: 1px solid #e9ecef;
+              }
+              .info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 20px;
+              }
+              .info-item {
+                background: white;
+                padding: 15px;
+                border-radius: 6px;
+                border-left: 4px solid #667eea;
+              }
+              .info-item strong { color: #495057; }
+              .status-badges {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-top: 15px;
+              }
+              .status { 
+                display: inline-block; 
+                padding: 6px 12px; 
+                border-radius: 20px; 
+                color: white; 
+                font-weight: 600;
+                font-size: 0.9em;
+              }
+              .status.approved { background: linear-gradient(45deg, #28a745, #20c997); }
+              .status.fully-paid { background: linear-gradient(45deg, #28a745, #20c997); }
+              .status.partially-paid { background: linear-gradient(45deg, #007bff, #6f42c1); }
+              .status.not-paid { background: linear-gradient(45deg, #dc3545, #e83e8c); }
+              .items-section {
+                padding: 30px;
+              }
+              .items-table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin: 20px 0;
+                background: white;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              }
+              .items-table th { 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 15px;
+                text-align: left;
+                font-weight: 600;
+              }
+              .items-table td { 
+                padding: 15px;
+                border-bottom: 1px solid #e9ecef;
+              }
+              .items-table tr:hover {
+                background: #f8f9fa;
+              }
+              .totals { 
+                padding: 30px;
+                background: #f8f9fa;
+                border-top: 1px solid #e9ecef;
+              }
+              .totals-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+                max-width: 400px;
+                margin-left: auto;
+              }
+              .total-item {
+                background: white;
+                padding: 15px;
+                border-radius: 6px;
+                text-align: center;
+                border: 2px solid #e9ecef;
+              }
+              .total-item.final {
+                border-color: #28a745;
+                background: linear-gradient(135deg, #28a745, #20c997);
+                color: white;
+                font-weight: bold;
+              }
+              .total-item.outstanding {
+                border-color: #dc3545;
+                background: linear-gradient(135deg, #dc3545, #e83e8c);
+                color: white;
+                font-weight: bold;
+              }
+              @media print {
+                body { margin: 0; padding: 0; }
+                .print-container { box-shadow: none; border-radius: 0; }
+                .header { background: #667eea !important; -webkit-print-color-adjust: exact; }
+                .status.approved, .status.fully-paid { background: #28a745 !important; -webkit-print-color-adjust: exact; }
+                .status.partially-paid { background: #007bff !important; -webkit-print-color-adjust: exact; }
+                .status.not-paid { background: #dc3545 !important; -webkit-print-color-adjust: exact; }
+                .items-table th { background: #667eea !important; -webkit-print-color-adjust: exact; }
+                .total-item.final { background: #28a745 !important; -webkit-print-color-adjust: exact; }
+                .total-item.outstanding { background: #dc3545 !important; -webkit-print-color-adjust: exact; }
+              }
+              @media (max-width: 768px) {
+                body { padding: 10px; }
+                .header h1 { font-size: 2em; }
+                .header h2 { font-size: 1.2em; }
+                .order-info, .items-section, .totals { padding: 20px; }
+                .info-grid { grid-template-columns: 1fr; }
+                .totals-grid { grid-template-columns: 1fr; }
+                .items-table { font-size: 0.9em; }
+                .items-table th, .items-table td { padding: 10px; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-container">
+              <div class="header">
+                <h1>Sales Order</h1>
+                <h2>${detailedOrder.name}</h2>
+              </div>
+              
+              <div class="order-info">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <strong>Customer:</strong><br>
+                    ${detailedOrder.customer_name || detailedOrder.customer}
+                  </div>
+                  <div class="info-item">
+                    <strong>Date:</strong><br>
+                    ${new Date(detailedOrder.creation).toLocaleString()}
+                  </div>
+                  <div class="info-item">
+                    <strong>Grand Total:</strong><br>
+                    ${currency} ${grandTotal.toFixed(2)}
+                  </div>
+                  <div class="info-item">
+                    <strong>Advance Paid:</strong><br>
+                    ${currency} ${advancePaid.toFixed(2)}
+                  </div>
+                </div>
+                
+                <div class="status-badges">
+                  <span class="status approved">Approved</span>
+                  <span class="status ${getPaymentStatus(detailedOrder).includes('Fully Paid') ? 'fully-paid' : 
+                                       getPaymentStatus(detailedOrder).includes('Partially Paid') ? 'partially-paid' : 'not-paid'}">
+                    ${getPaymentStatus(detailedOrder)}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="items-section">
+                <h3 style="margin-top: 0; color: #495057;">Order Items</h3>
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Quantity</th>
+                      <th>Rate</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${detailedOrder.items ? detailedOrder.items.map(item => `
+                      <tr>
+                        <td>${item.item_name}</td>
+                        <td>${item.qty || 0}</td>
+                        <td>${currency} ${(item.rate || 0).toFixed(2)}</td>
+                        <td>${currency} ${((item.qty || 0) * (item.rate || 0)).toFixed(2)}</td>
+                      </tr>
+                    `).join('') : ''}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="totals">
+                <div class="totals-grid">
+                  <div class="total-item">
+                    <strong>Grand Total</strong><br>
+                    ${currency} ${grandTotal.toFixed(2)}
+                  </div>
+                  <div class="total-item">
+                    <strong>Advance Paid</strong><br>
+                    ${currency} ${advancePaid.toFixed(2)}
+                  </div>
+                  <div class="total-item ${outstanding > 0 ? 'outstanding' : 'final'}">
+                    <strong>Outstanding</strong><br>
+                    ${currency} ${outstanding.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      printWindow.document.write(pdfContent);
+      printWindow.document.close();
+      
+      // Wait for content to load, then trigger PDF save
+      printWindow.onload = () => {
+        console.log('PDF content loaded, opening print dialog...');
+        setTimeout(() => {
+          printWindow.print();
+          // Close window after a delay to allow PDF generation
+          setTimeout(() => {
+            printWindow.close();
+          }, 2000);
+        }, 500);
+      };
+      
+      notifications.show({
+        title: 'PDF Export',
+        message: 'PDF export initiated. Use "Save as PDF" in the print dialog.',
+        color: 'blue',
+      });
+      
+    } catch (error) {
+      console.error('PDF export error:', error);
+      notifications.show({
+        title: 'PDF Export Error',
+        message: 'Failed to export PDF. Please try again.',
+        color: 'red',
+      });
+    }
+  };
+
   useEffect(() => {
     if (user) {
       setIsLoading(true);
@@ -1246,11 +1540,20 @@ export function OrdersPage() {
                 <button 
                   onClick={() => {
                     setShowPrintPreview(false);
+                    handleExportPDF();
+                  }}
+                  style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  📄 Export PDF
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowPrintPreview(false);
                     handlePrint();
                   }}
                   style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
-                  Print Now
+                  🖨️ Print Now
                 </button>
               </div>
             </div>

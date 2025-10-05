@@ -133,18 +133,43 @@ export function OrdersPage() {
         mode_of_payment: paymentMethod,
         company: 'Your Company', // This should come from settings
         posting_date: new Date().toISOString().split('T')[0],
-        reference_no: paymentMethod === 'Cash' ? undefined : `PAY-${Date.now()}`,
-        reference_date: paymentMethod === 'Cash' ? undefined : new Date().toISOString().split('T')[0],
+        // Only include reference fields for non-cash payments
+        ...(paymentMethod !== 'Cash' && {
+          reference_no: `PAY-${Date.now()}`,
+          reference_date: new Date().toISOString().split('T')[0],
+        }),
       };
 
       console.log('Creating payment entry:', paymentPayload);
+      console.log('Payment method:', paymentMethod);
+      console.log('Is cash payment:', paymentMethod === 'Cash');
       
-      // Create the payment entry
-      const paymentEntry = await apiService.createPaymentEntry(paymentPayload);
-      console.log('Payment entry created:', paymentEntry);
+      // Try creating payment entry directly instead of using ERPNext method
+      const paymentEntryDoc = {
+        doctype: 'Payment Entry',
+        payment_type: 'Receive',
+        party_type: 'Customer',
+        party: detailedOrder.customer,
+        paid_amount: parseFloat(paymentAmount),
+        received_amount: parseFloat(paymentAmount),
+        paid_to: paymentMethod === 'Cash' ? 'Cash' : 'Bank',
+        paid_to_account: paymentMethod === 'Cash' ? 'Cash' : 'Bank',
+        mode_of_payment: paymentMethod,
+        company: 'Your Company',
+        posting_date: new Date().toISOString().split('T')[0],
+        reference_no: paymentMethod !== 'Cash' ? `PAY-${Date.now()}` : undefined,
+        reference_date: paymentMethod !== 'Cash' ? new Date().toISOString().split('T')[0] : undefined,
+        references: [{
+          reference_doctype: 'Sales Order',
+          reference_name: detailedOrder.name,
+          allocated_amount: parseFloat(paymentAmount)
+        }]
+      };
 
-      // Save the payment entry
-      const savedPayment = await apiService.saveDoc(paymentEntry);
+      console.log('Creating payment entry document:', paymentEntryDoc);
+
+      // Save the payment entry directly
+      const savedPayment = await apiService.saveDoc(paymentEntryDoc);
       console.log('Payment entry saved:', savedPayment);
 
       // Submit the payment entry

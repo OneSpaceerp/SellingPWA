@@ -630,8 +630,18 @@ export function OrdersPage() {
       `;
       
       // Write content to iframe
-      iframe.contentDocument.write(pdfContent);
-      iframe.contentDocument.close();
+      if (iframe.contentDocument) {
+        iframe.contentDocument.write(pdfContent);
+        iframe.contentDocument.close();
+      } else {
+        console.error('Could not access iframe contentDocument');
+        notifications.show({
+          title: 'PDF Export Error',
+          message: 'Failed to access iframe content. Please try again.',
+          color: 'red',
+        });
+        return;
+      }
       
       // Clean up iframe after a delay
       setTimeout(() => {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { apiService, type SalesOrder } from '../services/apiService';
 import { useSettingsStore } from '../store/settingsStore';
-import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge, Divider } from '@mantine/core';
+import { Title, TextInput, SimpleGrid, Card, Text, Group, rem, Center, Loader, Badge } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconSearch, IconCreditCard } from '@tabler/icons-react';
 

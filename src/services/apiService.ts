@@ -40,15 +40,23 @@ export interface SalesOrderPayload {
   [key: string]: any;
 }
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || '';
-console.log('API_BASE_URL configured as:', API_BASE_URL || '(empty - using proxy)');
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'https://lcs.nsd-eg.com';
+console.log('API_BASE_URL configured as:', API_BASE_URL);
 
 const get = async <T>(endpoint: string): Promise<T> => {
   const fullUrl = `${API_BASE_URL}/api/${endpoint}`;
   console.log('Making GET request to:', fullUrl);
-  console.log('Headers:', authService.getAuthHeaders());
+  
+  // Check authentication status
+  const user = authService.getLoggedInUser();
+  console.log('Current user from sessionStorage:', user);
+  console.log('Is authenticated:', authService.isAuthenticated());
+  
+  const headers = authService.getAuthHeaders();
+  console.log('Headers:', headers);
+  
   const response = await fetch(fullUrl, {
-    headers: authService.getAuthHeaders(),
+    headers,
     credentials: 'include',
   });
   console.log('Response status:', response.status);

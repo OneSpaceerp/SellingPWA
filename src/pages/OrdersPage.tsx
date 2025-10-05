@@ -20,9 +20,20 @@ export function OrdersPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [modeOfPayments, setModeOfPayments] = useState<any[]>([]);
   const [companyName, setCompanyName] = useState<string>('');
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [printOrientation, setPrintOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [printScale, setPrintScale] = useState(1);
   const currency = useSettingsStore((state) => state.currency);
   const user = authService.getLoggedInUser();
 
+
+  const handlePrintPreview = () => {
+    if (!detailedOrder) {
+      console.error('No order data available for printing');
+      return;
+    }
+    setShowPrintPreview(true);
+  };
 
   const handlePrint = () => {
     console.log('Starting print process...');
@@ -32,94 +43,274 @@ export function OrdersPage() {
       return;
     }
     
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    
-    if (!printWindow) {
-      console.error('Could not open print window');
-      return;
+    try {
+      // Create a new window for printing
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      
+      if (!printWindow) {
+        console.error('Could not open print window - popup blocked');
+        notifications.show({
+          title: 'Print Error',
+          message: 'Please allow popups for this site to enable printing',
+          color: 'red',
+        });
+        return;
+      }
+      
+      // Create the print content HTML with responsive design
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Order ${detailedOrder.name}</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              * { box-sizing: border-box; }
+              body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                margin: 0; 
+                padding: 20px; 
+                background: white;
+                color: #333;
+                line-height: 1.6;
+              }
+              .print-container {
+                max-width: 800px;
+                margin: 0 auto;
+                background: white;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                border-radius: 8px;
+                overflow: hidden;
+              }
+              .header { 
+                text-align: center; 
+                padding: 30px 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+              }
+              .header h1 { margin: 0; font-size: 2.5em; font-weight: 300; }
+              .header h2 { margin: 10px 0 0; font-size: 1.5em; opacity: 0.9; }
+              .order-info { 
+                padding: 30px; 
+                background: #f8f9fa;
+                border-bottom: 1px solid #e9ecef;
+              }
+              .info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 20px;
+              }
+              .info-item {
+                background: white;
+                padding: 15px;
+                border-radius: 6px;
+                border-left: 4px solid #667eea;
+              }
+              .info-item strong { color: #495057; }
+              .status-badges {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-top: 15px;
+              }
+              .status { 
+                display: inline-block; 
+                padding: 6px 12px; 
+                border-radius: 20px; 
+                color: white; 
+                font-weight: 600;
+                font-size: 0.9em;
+              }
+              .status.approved { background: linear-gradient(45deg, #28a745, #20c997); }
+              .status.fully-paid { background: linear-gradient(45deg, #28a745, #20c997); }
+              .status.partially-paid { background: linear-gradient(45deg, #007bff, #6f42c1); }
+              .status.not-paid { background: linear-gradient(45deg, #dc3545, #e83e8c); }
+              .items-section {
+                padding: 30px;
+              }
+              .items-table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin: 20px 0;
+                background: white;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              }
+              .items-table th { 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 15px;
+                text-align: left;
+                font-weight: 600;
+              }
+              .items-table td { 
+                padding: 15px;
+                border-bottom: 1px solid #e9ecef;
+              }
+              .items-table tr:hover {
+                background: #f8f9fa;
+              }
+              .totals { 
+                padding: 30px;
+                background: #f8f9fa;
+                border-top: 1px solid #e9ecef;
+              }
+              .totals-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+                max-width: 400px;
+                margin-left: auto;
+              }
+              .total-item {
+                background: white;
+                padding: 15px;
+                border-radius: 6px;
+                text-align: center;
+                border: 2px solid #e9ecef;
+              }
+              .total-item.final {
+                border-color: #28a745;
+                background: linear-gradient(135deg, #28a745, #20c997);
+                color: white;
+                font-weight: bold;
+              }
+              .total-item.outstanding {
+                border-color: #dc3545;
+                background: linear-gradient(135deg, #dc3545, #e83e8c);
+                color: white;
+                font-weight: bold;
+              }
+              @media print {
+                body { margin: 0; padding: 0; }
+                .print-container { box-shadow: none; border-radius: 0; }
+                .header { background: #667eea !important; -webkit-print-color-adjust: exact; }
+                .status.approved, .status.fully-paid { background: #28a745 !important; -webkit-print-color-adjust: exact; }
+                .status.partially-paid { background: #007bff !important; -webkit-print-color-adjust: exact; }
+                .status.not-paid { background: #dc3545 !important; -webkit-print-color-adjust: exact; }
+                .items-table th { background: #667eea !important; -webkit-print-color-adjust: exact; }
+                .total-item.final { background: #28a745 !important; -webkit-print-color-adjust: exact; }
+                .total-item.outstanding { background: #dc3545 !important; -webkit-print-color-adjust: exact; }
+              }
+              @media (max-width: 768px) {
+                body { padding: 10px; }
+                .header h1 { font-size: 2em; }
+                .header h2 { font-size: 1.2em; }
+                .order-info, .items-section, .totals { padding: 20px; }
+                .info-grid { grid-template-columns: 1fr; }
+                .totals-grid { grid-template-columns: 1fr; }
+                .items-table { font-size: 0.9em; }
+                .items-table th, .items-table td { padding: 10px; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-container">
+              <div class="header">
+                <h1>Sales Order</h1>
+                <h2>${detailedOrder.name}</h2>
+              </div>
+              
+              <div class="order-info">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <strong>Customer:</strong><br>
+                    ${detailedOrder.customer_name || detailedOrder.customer}
+                  </div>
+                  <div class="info-item">
+                    <strong>Date:</strong><br>
+                    ${new Date(detailedOrder.creation).toLocaleString()}
+                  </div>
+                  <div class="info-item">
+                    <strong>Grand Total:</strong><br>
+                    ${currency} ${detailedOrder.grand_total.toFixed(2)}
+                  </div>
+                  <div class="info-item">
+                    <strong>Advance Paid:</strong><br>
+                    ${currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                  </div>
+                </div>
+                
+                <div class="status-badges">
+                  <span class="status approved">Approved</span>
+                  <span class="status ${getPaymentStatus(detailedOrder).includes('Fully Paid') ? 'fully-paid' : 
+                                       getPaymentStatus(detailedOrder).includes('Partially Paid') ? 'partially-paid' : 'not-paid'}">
+                    ${getPaymentStatus(detailedOrder)}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="items-section">
+                <h3 style="margin-top: 0; color: #495057;">Order Items</h3>
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Quantity</th>
+                      <th>Rate</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${detailedOrder.items ? detailedOrder.items.map(item => `
+                      <tr>
+                        <td>${item.item_name}</td>
+                        <td>${item.qty || 0}</td>
+                        <td>${currency} ${(item.rate || 0).toFixed(2)}</td>
+                        <td>${currency} ${((item.qty || 0) * (item.rate || 0)).toFixed(2)}</td>
+                      </tr>
+                    `).join('') : ''}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="totals">
+                <div class="totals-grid">
+                  <div class="total-item">
+                    <strong>Grand Total</strong><br>
+                    ${currency} ${detailedOrder.grand_total.toFixed(2)}
+                  </div>
+                  <div class="total-item">
+                    <strong>Advance Paid</strong><br>
+                    ${currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                  </div>
+                  <div class="total-item ${(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 ? 'outstanding' : 'final'}">
+                    <strong>Outstanding</strong><br>
+                    ${currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      
+      // Wait for content to load, then print
+      printWindow.onload = () => {
+        console.log('Print content loaded, opening print dialog...');
+        setTimeout(() => {
+          printWindow.print();
+          // Close window after a delay to allow printing
+          setTimeout(() => {
+            printWindow.close();
+          }, 1000);
+        }, 500);
+      };
+      
+    } catch (error) {
+      console.error('Print error:', error);
+      notifications.show({
+        title: 'Print Error',
+        message: 'Failed to open print dialog. Please try again.',
+        color: 'red',
+      });
     }
-    
-    // Create the print content HTML
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Order ${detailedOrder.name}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .order-info { margin-bottom: 20px; }
-            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            .items-table th { background-color: #f2f2f2; }
-            .totals { text-align: right; margin-top: 20px; }
-            .status { display: inline-block; padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; }
-            .status.approved { background-color: #28a745; }
-            .status.fully-paid { background-color: #28a745; }
-            .status.partially-paid { background-color: #007bff; }
-            .status.not-paid { background-color: #dc3545; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Sales Order</h1>
-            <h2>${detailedOrder.name}</h2>
-          </div>
-          
-          <div class="order-info">
-            <p><strong>Customer:</strong> ${detailedOrder.customer_name || detailedOrder.customer}</p>
-            <p><strong>Date:</strong> ${new Date(detailedOrder.creation).toLocaleString()}</p>
-            <p><strong>Status:</strong> 
-              <span class="status approved">Approved</span>
-              <span class="status ${getPaymentStatus(detailedOrder).includes('Fully Paid') ? 'fully-paid' : 
-                                   getPaymentStatus(detailedOrder).includes('Partially Paid') ? 'partially-paid' : 'not-paid'}">
-                ${getPaymentStatus(detailedOrder)}
-              </span>
-            </p>
-            <p><strong>Grand Total:</strong> ${currency} ${detailedOrder.grand_total.toFixed(2)}</p>
-            <p><strong>Advance Paid:</strong> ${currency} {(detailedOrder.advance_paid || 0).toFixed(2)}</p>
-          </div>
-          
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Quantity</th>
-                <th>Rate</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${detailedOrder.items ? detailedOrder.items.map(item => `
-                <tr>
-                  <td>${item.item_name}</td>
-                  <td>${item.qty || 0}</td>
-                  <td>${currency} ${(item.rate || 0).toFixed(2)}</td>
-                  <td>${currency} ${((item.qty || 0) * (item.rate || 0)).toFixed(2)}</td>
-                </tr>
-              `).join('') : ''}
-            </tbody>
-          </table>
-          
-          <div class="totals">
-            <p><strong>Grand Total: ${currency} ${detailedOrder.grand_total.toFixed(2)}</strong></p>
-            <p><strong>Advance Paid: ${currency} {(detailedOrder.advance_paid || 0).toFixed(2)}</strong></p>
-            <p><strong>Outstanding: ${currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}</strong></p>
-          </div>
-        </body>
-      </html>
-    `;
-    
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    
-    // Wait for content to load, then print
-    printWindow.onload = () => {
-      console.log('Print content loaded, opening print dialog...');
-      printWindow.print();
-      printWindow.close();
-    };
   };
 
   useEffect(() => {
@@ -586,10 +777,10 @@ export function OrdersPage() {
                 {!showPaymentForm ? (
                   <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                     <button 
-                      onClick={handlePrint}
+                      onClick={handlePrintPreview}
                       style={{ padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                     >
-                      Print
+                      Print Preview
                     </button>
                       {detailedOrder.docstatus === 1 && (detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 && (
                         <button 
@@ -700,6 +891,292 @@ export function OrdersPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Print Preview Modal */}
+      {showPrintPreview && detailedOrder && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            width: '100%',
+            maxWidth: '900px',
+            maxHeight: '90vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '20px',
+              borderBottom: '1px solid #e9ecef',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              backgroundColor: '#f8f9fa'
+            }}>
+              <h3 style={{ margin: 0, color: '#495057' }}>Print Preview - {detailedOrder.name}</h3>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <select 
+                  value={printOrientation}
+                  onChange={(e) => setPrintOrientation(e.target.value as 'portrait' | 'landscape')}
+                  style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                >
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                </select>
+                <select 
+                  value={printScale}
+                  onChange={(e) => setPrintScale(parseFloat(e.target.value))}
+                  style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                >
+                  <option value={0.5}>50%</option>
+                  <option value={0.75}>75%</option>
+                  <option value={1}>100%</option>
+                  <option value={1.25}>125%</option>
+                  <option value={1.5}>150%</option>
+                </select>
+                <button 
+                  onClick={() => setShowPrintPreview(false)}
+                  style={{ padding: '8px 16px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            {/* Preview Content */}
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '20px',
+              backgroundColor: '#f8f9fa'
+            }}>
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                transform: `scale(${printScale})`,
+                transformOrigin: 'top center',
+                margin: '0 auto',
+                maxWidth: printOrientation === 'landscape' ? '1000px' : '800px',
+                minHeight: printOrientation === 'landscape' ? '600px' : '800px'
+              }}>
+                {/* Print Content */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  textAlign: 'center',
+                  padding: '30px 20px'
+                }}>
+                  <h1 style={{ margin: 0, fontSize: '2.5em', fontWeight: 300 }}>Sales Order</h1>
+                  <h2 style={{ margin: '10px 0 0', fontSize: '1.5em', opacity: 0.9 }}>{detailedOrder.name}</h2>
+                </div>
+                
+                <div style={{ padding: '30px', background: '#f8f9fa', borderBottom: '1px solid #e9ecef' }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                    gap: '20px',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={{ background: 'white', padding: '15px', borderRadius: '6px', borderLeft: '4px solid #667eea' }}>
+                      <strong style={{ color: '#495057' }}>Customer:</strong><br />
+                      {detailedOrder.customer_name || detailedOrder.customer}
+                    </div>
+                    <div style={{ background: 'white', padding: '15px', borderRadius: '6px', borderLeft: '4px solid #667eea' }}>
+                      <strong style={{ color: '#495057' }}>Date:</strong><br />
+                      {new Date(detailedOrder.creation).toLocaleString()}
+                    </div>
+                    <div style={{ background: 'white', padding: '15px', borderRadius: '6px', borderLeft: '4px solid #667eea' }}>
+                      <strong style={{ color: '#495057' }}>Grand Total:</strong><br />
+                      {currency} {detailedOrder.grand_total.toFixed(2)}
+                    </div>
+                    <div style={{ background: 'white', padding: '15px', borderRadius: '6px', borderLeft: '4px solid #667eea' }}>
+                      <strong style={{ color: '#495057' }}>Advance Paid:</strong><br />
+                      {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.9em',
+                      background: 'linear-gradient(45deg, #28a745, #20c997)'
+                    }}>
+                      Approved
+                    </span>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.9em',
+                      background: getPaymentStatus(detailedOrder).includes('Fully Paid') ? 
+                        'linear-gradient(45deg, #28a745, #20c997)' :
+                        getPaymentStatus(detailedOrder).includes('Partially Paid') ? 
+                        'linear-gradient(45deg, #007bff, #6f42c1)' :
+                        'linear-gradient(45deg, #dc3545, #e83e8c)'
+                    }}>
+                      {getPaymentStatus(detailedOrder)}
+                    </span>
+                  </div>
+                </div>
+                
+                <div style={{ padding: '30px' }}>
+                  <h3 style={{ marginTop: 0, color: '#495057' }}>Order Items</h3>
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    margin: '20px 0',
+                    background: 'white',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                  }}>
+                    <thead>
+                      <tr>
+                        <th style={{
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: 'white',
+                          padding: '15px',
+                          textAlign: 'left',
+                          fontWeight: 600
+                        }}>Item</th>
+                        <th style={{
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: 'white',
+                          padding: '15px',
+                          textAlign: 'left',
+                          fontWeight: 600
+                        }}>Quantity</th>
+                        <th style={{
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: 'white',
+                          padding: '15px',
+                          textAlign: 'left',
+                          fontWeight: 600
+                        }}>Rate</th>
+                        <th style={{
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: 'white',
+                          padding: '15px',
+                          textAlign: 'left',
+                          fontWeight: 600
+                        }}>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailedOrder.items ? detailedOrder.items.map((item: any, index: number) => (
+                        <tr key={index} style={{ borderBottom: '1px solid #e9ecef' }}>
+                          <td style={{ padding: '15px' }}>{item.item_name}</td>
+                          <td style={{ padding: '15px' }}>{item.qty || 0}</td>
+                          <td style={{ padding: '15px' }}>{currency} {(item.rate || 0).toFixed(2)}</td>
+                          <td style={{ padding: '15px' }}>{currency} {((item.qty || 0) * (item.rate || 0)).toFixed(2)}</td>
+                        </tr>
+                      )) : null}
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div style={{ padding: '30px', background: '#f8f9fa', borderTop: '1px solid #e9ecef' }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '15px',
+                    maxWidth: '400px',
+                    marginLeft: 'auto'
+                  }}>
+                    <div style={{
+                      background: 'white',
+                      padding: '15px',
+                      borderRadius: '6px',
+                      textAlign: 'center',
+                      border: '2px solid #e9ecef'
+                    }}>
+                      <strong>Grand Total</strong><br />
+                      {currency} {detailedOrder.grand_total.toFixed(2)}
+                    </div>
+                    <div style={{
+                      background: 'white',
+                      padding: '15px',
+                      borderRadius: '6px',
+                      textAlign: 'center',
+                      border: '2px solid #e9ecef'
+                    }}>
+                      <strong>Advance Paid</strong><br />
+                      {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                    </div>
+                    <div style={{
+                      background: (detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 ? 
+                        'linear-gradient(135deg, #dc3545, #e83e8c)' : 
+                        'linear-gradient(135deg, #28a745, #20c997)',
+                      color: 'white',
+                      padding: '15px',
+                      borderRadius: '6px',
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                      border: '2px solid ' + ((detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 ? '#dc3545' : '#28a745')
+                    }}>
+                      <strong>Outstanding</strong><br />
+                      {currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '20px',
+              borderTop: '1px solid #e9ecef',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              backgroundColor: '#f8f9fa'
+            }}>
+              <div style={{ color: '#6c757d', fontSize: '0.9em' }}>
+                Preview shows how the document will look when printed
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  onClick={() => setShowPrintPreview(false)}
+                  style={{ padding: '10px 20px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowPrintPreview(false);
+                    handlePrint();
+                  }}
+                  style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  Print Now
+                </button>
+              </div>
+            </div>
+          </div>
+      </div>
       )}
 
     </>

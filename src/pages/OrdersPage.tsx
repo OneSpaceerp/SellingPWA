@@ -2136,6 +2136,7 @@ export function OrdersPage() {
         </div>
         );
       })()}
+      </div>
     </>
   );
 }

@@ -110,9 +110,9 @@ export function OrdersPage() {
 
   const handleCompletePayment = () => {
     if (detailedOrder) {
-      // Use outstanding amount if available, otherwise use grand total
-      const amountToPay = detailedOrder.outstanding_amount || detailedOrder.grand_total;
-      setPaymentAmount(amountToPay.toString());
+      // Calculate remaining amount (grand total - advance paid)
+      const remainingAmount = detailedOrder.grand_total - (detailedOrder.advance_paid || 0);
+      setPaymentAmount(remainingAmount.toString());
       setShowPaymentForm(true);
     }
   };
@@ -270,13 +270,14 @@ export function OrdersPage() {
   };
 
   const getPaymentStatus = (order: any) => {
-    const outstanding = order.outstanding_amount || order.grand_total;
-    const paid = order.grand_total - outstanding;
+    // ERPNext uses 'advance_paid' field for tracking payments
+    const advancePaid = order.advance_paid || 0;
+    const grandTotal = order.grand_total || 0;
     
-    if (outstanding === 0) {
+    if (advancePaid >= grandTotal) {
       return '✅ Fully Paid';
-    } else if (paid > 0) {
-      return `💰 Partially Paid (${currency} ${paid.toFixed(2)} paid)`;
+    } else if (advancePaid > 0) {
+      return `💰 Partially Paid (${currency} ${advancePaid.toFixed(2)} paid)`;
     } else {
       return '❌ Not Paid';
     }
@@ -430,6 +431,7 @@ export function OrdersPage() {
                   <strong>Payment Status:</strong> {getPaymentStatus(detailedOrder)}<br />
                   <strong>Date:</strong> {new Date(detailedOrder.creation).toLocaleString()}<br />
                   <strong>Grand Total:</strong> {currency} {detailedOrder.grand_total.toFixed(2)}<br />
+                  <strong>Advance Paid:</strong> {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}<br />
                   {detailedOrder.outstanding_amount !== undefined && (
                     <>
                       <strong>Outstanding Amount:</strong> {currency} {(detailedOrder.outstanding_amount || 0).toFixed(2)}<br />
@@ -471,14 +473,14 @@ export function OrdersPage() {
                     >
                       Print
                     </button>
-                    {detailedOrder.docstatus === 1 && (
-                      <button 
-                        onClick={handleCompletePayment}
-                        style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                      >
-                        Collect Payment
-                      </button>
-                    )}
+                      {detailedOrder.docstatus === 1 && (detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 && (
+                        <button 
+                          onClick={handleCompletePayment}
+                          style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          Collect Payment
+                        </button>
+                      )}
                   </div>
                 ) : (
                   <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #dee2e6' }}>
@@ -529,11 +531,12 @@ export function OrdersPage() {
                       </select>
                     </div>
 
-                    <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#e9ecef', borderRadius: '4px' }}>
-                      <strong>Order Total:</strong> {currency} {detailedOrder.grand_total.toFixed(2)}<br />
-                      <strong>Outstanding:</strong> {currency} {(detailedOrder.outstanding_amount || detailedOrder.grand_total).toFixed(2)}<br />
-                      <strong>Payment Amount:</strong> {currency} {paymentAmount || '0.00'}
-                    </div>
+                      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#e9ecef', borderRadius: '4px' }}>
+                        <strong>Order Total:</strong> {currency} {detailedOrder.grand_total.toFixed(2)}<br />
+                        <strong>Already Paid:</strong> {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}<br />
+                        <strong>Remaining:</strong> {currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}<br />
+                        <strong>Payment Amount:</strong> {currency} {paymentAmount || '0.00'}
+                      </div>
 
                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                       <button 

@@ -132,11 +132,11 @@ const getSalesOrder = async (order_id: string): Promise<any> => {
   console.log('Fetching order details for:', order_id);
   console.log('API_BASE_URL:', API_BASE_URL);
   
-  // Include outstanding_amount in the fields to fetch
-  const fields = [
-    'name', 'docstatus', 'customer', 'customer_name', 'grand_total', 
-    'outstanding_amount', 'creation', 'items'
-  ];
+          // Include payment-related fields to fetch
+          const fields = [
+            'name', 'docstatus', 'customer', 'customer_name', 'grand_total', 
+            'outstanding_amount', 'advance_paid', 'creation', 'items'
+          ];
   const fieldsParam = encodeURIComponent(JSON.stringify(fields));
   
   // Try different endpoint formats with fields parameter

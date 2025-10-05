@@ -129,12 +129,12 @@ export function OrdersPage() {
         party_type: 'Customer',
         party: detailedOrder.customer,
         paid_amount: parseFloat(paymentAmount),
-        paid_to: 'Cash',
+        paid_to: paymentMethod === 'Cash' ? 'Cash' : 'Bank',
         mode_of_payment: paymentMethod,
         company: 'Your Company', // This should come from settings
         posting_date: new Date().toISOString().split('T')[0],
-        reference_no: `PAY-${Date.now()}`,
-        reference_date: new Date().toISOString().split('T')[0],
+        reference_no: paymentMethod === 'Cash' ? undefined : `PAY-${Date.now()}`,
+        reference_date: paymentMethod === 'Cash' ? undefined : new Date().toISOString().split('T')[0],
       };
 
       console.log('Creating payment entry:', paymentPayload);
@@ -170,9 +170,22 @@ export function OrdersPage() {
 
     } catch (error) {
       console.error('Payment processing failed:', error);
+      
+      // Extract meaningful error message
+      let errorMessage = 'Failed to process payment. Please try again.';
+      if (error instanceof Error) {
+        if (error.message.includes('ValidationError')) {
+          errorMessage = 'Payment validation failed. Please check your payment details.';
+        } else if (error.message.includes('Reference No')) {
+          errorMessage = 'Reference number is required for this payment method.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       notifications.show({
         title: 'Payment Failed',
-        message: 'Failed to process payment. Please try again.',
+        message: errorMessage,
         color: 'red',
       });
     } finally {

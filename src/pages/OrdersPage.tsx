@@ -32,6 +32,10 @@ export function OrdersPage() {
       console.error('No order data available for printing');
       return;
     }
+    console.log('Opening print preview for order:', detailedOrder);
+    console.log('Advance paid value:', detailedOrder.advance_paid);
+    console.log('Grand total value:', detailedOrder.grand_total);
+    console.log('Outstanding calculation:', detailedOrder.grand_total - (detailedOrder.advance_paid || 0));
     setShowPrintPreview(true);
   };
 
@@ -894,7 +898,18 @@ export function OrdersPage() {
       )}
 
       {/* Print Preview Modal */}
-      {showPrintPreview && detailedOrder && (
+      {showPrintPreview && detailedOrder && (() => {
+        // Calculate values to ensure they're properly computed
+        const advancePaid = detailedOrder.advance_paid || 0;
+        const grandTotal = detailedOrder.grand_total || 0;
+        const outstanding = grandTotal - advancePaid;
+        
+        console.log('Print Preview Calculations:');
+        console.log('Advance Paid:', advancePaid);
+        console.log('Grand Total:', grandTotal);
+        console.log('Outstanding:', outstanding);
+        
+        return (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -1018,9 +1033,10 @@ export function OrdersPage() {
                     color: '#856404'
                   }}>
                     <strong>Debug Info:</strong><br />
-                    Advance Paid: {detailedOrder.advance_paid}<br />
-                    Grand Total: {detailedOrder.grand_total}<br />
-                    Outstanding: {detailedOrder.grand_total - (detailedOrder.advance_paid || 0)}
+                    Advance Paid Raw: {JSON.stringify(detailedOrder.advance_paid)}<br />
+                    Advance Paid Calculated: {advancePaid}<br />
+                    Grand Total: {grandTotal}<br />
+                    Outstanding Calculated: {outstanding}
                   </div>
                   
                   <div style={{
@@ -1039,11 +1055,11 @@ export function OrdersPage() {
                     </div>
                     <div style={{ background: 'white', padding: '15px', borderRadius: '6px', borderLeft: '4px solid #667eea' }}>
                       <strong style={{ color: '#495057' }}>Grand Total:</strong><br />
-                      {currency} {detailedOrder.grand_total.toFixed(2)}
+                      {currency} {grandTotal.toFixed(2)}
                     </div>
                     <div style={{ background: 'white', padding: '15px', borderRadius: '6px', borderLeft: '4px solid #667eea' }}>
                       <strong style={{ color: '#495057' }}>Advance Paid:</strong><br />
-                      {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                      {currency} {advancePaid.toFixed(2)}
                     </div>
                   </div>
                   
@@ -1146,8 +1162,10 @@ export function OrdersPage() {
                   }}>
                     <strong>Totals Debug:</strong><br />
                     Advance Paid Raw: {JSON.stringify(detailedOrder.advance_paid)}<br />
-                    Grand Total Raw: {JSON.stringify(detailedOrder.grand_total)}<br />
-                    Calculation: {detailedOrder.grand_total} - {(detailedOrder.advance_paid || 0)} = {detailedOrder.grand_total - (detailedOrder.advance_paid || 0)}
+                    Advance Paid Calculated: {advancePaid}<br />
+                    Grand Total: {grandTotal}<br />
+                    Outstanding Calculated: {outstanding}<br />
+                    Calculation: {grandTotal} - {advancePaid} = {outstanding}
                   </div>
                   
                   <div style={{
@@ -1165,7 +1183,7 @@ export function OrdersPage() {
                       border: '2px solid #e9ecef'
                     }}>
                       <strong>Grand Total</strong><br />
-                      {currency} {detailedOrder.grand_total.toFixed(2)}
+                      {currency} {grandTotal.toFixed(2)}
                     </div>
                     <div style={{
                       background: 'white',
@@ -1175,10 +1193,10 @@ export function OrdersPage() {
                       border: '2px solid #e9ecef'
                     }}>
                       <strong>Advance Paid</strong><br />
-                      {currency} {(detailedOrder.advance_paid || 0).toFixed(2)}
+                      {currency} {advancePaid.toFixed(2)}
                     </div>
                     <div style={{
-                      background: (detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 ? 
+                      background: outstanding > 0 ? 
                         'linear-gradient(135deg, #dc3545, #e83e8c)' : 
                         'linear-gradient(135deg, #28a745, #20c997)',
                       color: 'white',
@@ -1186,10 +1204,10 @@ export function OrdersPage() {
                       borderRadius: '6px',
                       textAlign: 'center',
                       fontWeight: 'bold',
-                      border: '2px solid ' + ((detailedOrder.grand_total - (detailedOrder.advance_paid || 0)) > 0 ? '#dc3545' : '#28a745')
+                      border: '2px solid ' + (outstanding > 0 ? '#dc3545' : '#28a745')
                     }}>
                       <strong>Outstanding</strong><br />
-                      {currency} {(detailedOrder.grand_total - (detailedOrder.advance_paid || 0)).toFixed(2)}
+                      {currency} {outstanding.toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -1228,7 +1246,8 @@ export function OrdersPage() {
             </div>
           </div>
       </div>
-      )}
+        );
+      })()}
 
     </>
   );

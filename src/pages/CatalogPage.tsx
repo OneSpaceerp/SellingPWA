@@ -76,7 +76,7 @@ export function CatalogPage() {
       );
     }
     return (
-      <SimpleGrid cols={{ base: 1, sm: 1, md: 1, lg: 1 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0', padding: '0 16px' }}>
+      <SimpleGrid cols={{ base: 1, sm: 1, md: 1, lg: 1 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0', padding: '0 8px' }}>
         {filteredItems.map((item) => (
           <Card 
             key={item.name}

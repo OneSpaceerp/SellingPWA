@@ -156,11 +156,11 @@ export function CatalogPage() {
                 <div style={{ marginBottom: '12px' }}>
                   <Text size="sm" c="dimmed" mb="xs">Stock Quantity</Text>
                   <Badge 
-                    color={item.actual_qty > 0 ? 'green' : 'red'}
+                    color={(item.actual_qty || 0) > 0 ? 'green' : 'red'}
                     variant="light"
                     style={{
-                      background: item.actual_qty > 0 ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)',
-                      color: item.actual_qty > 0 ? '#28a745' : '#dc3545',
+                      background: (item.actual_qty || 0) > 0 ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)',
+                      color: (item.actual_qty || 0) > 0 ? '#28a745' : '#dc3545',
                       fontWeight: '600',
                       fontSize: '12px'
                     }}

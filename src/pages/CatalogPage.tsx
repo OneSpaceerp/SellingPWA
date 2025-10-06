@@ -4,7 +4,7 @@ import { apiService, type Item } from '../services/apiService';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { notifications } from '@mantine/notifications';
-import { Title, TextInput, SimpleGrid, Card, Text, Button, Group, rem, Center, Loader, Badge } from '@mantine/core';
+import { Title, TextInput, SimpleGrid, Card, Text, Button, rem, Center, Loader, Badge } from '@mantine/core';
 import { IconSearch, IconCircleCheck } from '@tabler/icons-react';
 
 export function CatalogPage() {

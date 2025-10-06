@@ -20,6 +20,27 @@ html {
   height: 100%;
 }
 
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+}
+
+/* Override Mantine AppShell margins */
+.mantine-AppShell-root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.mantine-AppShell-main {
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  width: 100% !important;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -73,4 +94,28 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Override Mantine Tabs styling to remove border but keep underline */
+.mantine-Tabs-tab {
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 4px !important;
+}
+
+.mantine-Tabs-tab[data-active="true"] {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.mantine-Tabs-tab[data-active="true"]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background-color: #228be6;
+  border-radius: 1px;
 }

@@ -13,7 +13,7 @@ export function AppLayout() {
         header={{ height: 70 }}
         footer={{ height: 80 }}
         padding={0}
-        style={{ margin: 0, padding: 0 }}
+        style={{ margin: 0, padding: 0, position: 'relative' }}
       >
       <AppShell.Header style={{ 
         position: 'fixed', 
@@ -55,7 +55,9 @@ export function AppLayout() {
           margin: 0,
           paddingLeft: 0,
           paddingRight: 0,
-          width: '100%'
+          width: '100%',
+          position: 'relative',
+          overflow: 'auto'
         }}>
         <Outlet />
       </AppShell.Main>

@@ -1128,9 +1128,11 @@ export function OrdersPage() {
   return (
     <>
       <div style={{ 
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        minHeight: '100vh',
-        padding: '20px'
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      minHeight: '100vh',
+      padding: '0',
+      width: '100%',
+      margin: 0
       }}>
       {/* Modern Header */}
       <div style={{

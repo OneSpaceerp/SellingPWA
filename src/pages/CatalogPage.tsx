@@ -76,7 +76,7 @@ export function CatalogPage() {
       );
     }
     return (
-      <SimpleGrid cols={{ base: 1, sm: 1, md: 1, lg: 1 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0 20px' }}>
+      <SimpleGrid cols={{ base: 1, sm: 1, md: 1, lg: 1 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0', padding: '0 20px' }}>
         {filteredItems.map((item) => (
           <Card 
             key={item.name}
@@ -88,9 +88,10 @@ export function CatalogPage() {
               cursor: 'pointer',
               overflow: 'hidden',
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               gap: '16px',
-              padding: '16px'
+              padding: '16px',
+              minHeight: '120px'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
@@ -119,7 +120,7 @@ export function CatalogPage() {
 
             {/* Product Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={600} size="md" truncate="end" style={{ color: '#495057', marginBottom: '4px' }}>
+              <Text fw={600} size="md" style={{ color: '#495057', marginBottom: '4px', wordWrap: 'break-word', lineHeight: '1.3' }}>
                 {item.item_name}
               </Text>
               <Text size="sm" c="dimmed" mb="xs">
@@ -202,7 +203,8 @@ export function CatalogPage() {
         padding: '24px',
         marginBottom: '24px',
         color: 'white',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+        width: '100%'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>

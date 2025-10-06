@@ -1,9 +1,6 @@
-import { AppShell, Group, Tabs, Title, Image } from '@mantine/core';
+import { AppShell, Group, Tabs, Title } from '@mantine/core';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { IconHome, IconShoppingCart, IconSettings, IconListDetails, IconReceipt } from '@tabler/icons-react';
-
-// Try different logo sources
-const NestSDLogo = '/NestSD.svg';
 
 export function AppLayout() {
   const navigate = useNavigate();

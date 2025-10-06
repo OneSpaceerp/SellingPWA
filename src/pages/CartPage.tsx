@@ -24,14 +24,15 @@ export function CartPage() {
       <div style={{ 
         background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
         minHeight: '100vh',
-        padding: '20px'
+        padding: '0'
       }}>
         <div style={{
           background: 'white',
           borderRadius: '16px',
           padding: '60px 24px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          textAlign: 'center'
+          textAlign: 'center',
+          margin: '20px'
         }}>
           <Text size="4xl" mb="md">🛒</Text>
           <Title order={1} mb="md" style={{ color: '#495057' }}>Your Cart is Empty</Title>
@@ -64,7 +65,6 @@ export function CartPage() {
       {/* Modern Header */}
       <div style={{
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        borderRadius: '16px',
         padding: '24px',
         marginBottom: '24px',
         color: 'white',

@@ -982,7 +982,7 @@ export function OrdersPage() {
       );
     }
     return (
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing={{ base: 'md', sm: 'lg' }}>
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0 20px' }}>
         {filteredOrders.map((order: SalesOrder) => (
           <Card 
             key={order.name} 
@@ -1137,7 +1137,6 @@ export function OrdersPage() {
       {/* Modern Header */}
       <div style={{
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        borderRadius: '16px',
         padding: '24px',
         marginBottom: '24px',
         color: 'white',

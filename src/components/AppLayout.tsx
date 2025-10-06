@@ -10,11 +10,12 @@ export function AppLayout() {
   const activeTab = location.pathname;
 
   return (
-    <AppShell
-      header={{ height: 70 }}
-      footer={{ height: 80 }}
-      padding={0}
-    >
+      <AppShell
+        header={{ height: 70 }}
+        footer={{ height: 80 }}
+        padding={0}
+        style={{ margin: 0, padding: 0 }}
+      >
       <AppShell.Header style={{ 
         position: 'fixed', 
         top: 0, 
@@ -30,8 +31,8 @@ export function AppLayout() {
             <Image 
               src={NestSDLogo} 
               alt="NestSD Logo" 
-              width={40} 
-              height={40}
+              width={24} 
+              height={24}
               style={{ filter: 'brightness(0) invert(1)' }}
             />
             <Title order={3} c="white" style={{ fontWeight: '700' }}>
@@ -41,11 +42,15 @@ export function AppLayout() {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main style={{ 
-        paddingTop: '70px', 
-        paddingBottom: '80px',
-        minHeight: '100vh'
-      }}>
+        <AppShell.Main style={{ 
+          paddingTop: '70px', 
+          paddingBottom: '80px', 
+          minHeight: '100vh',
+          margin: 0,
+          paddingLeft: 0,
+          paddingRight: 0,
+          width: '100%'
+        }}>
         <Outlet />
       </AppShell.Main>
 

@@ -15,6 +15,7 @@ export interface Item {
   item_group: string;
   stock_uom: string;
   standard_rate: number;
+  actual_qty?: number;
 }
 
 export interface Customer {

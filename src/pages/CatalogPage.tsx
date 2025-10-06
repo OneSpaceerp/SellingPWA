@@ -76,7 +76,7 @@ export function CatalogPage() {
       );
     }
     return (
-      <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing={{ base: 'md', sm: 'lg' }}>
+      <SimpleGrid cols={{ base: 1, sm: 1, md: 1, lg: 1 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0 20px' }}>
         {filteredItems.map((item) => (
           <Card 
             key={item.name}
@@ -86,7 +86,11 @@ export function CatalogPage() {
               borderRadius: '12px',
               transition: 'all 0.2s ease',
               cursor: 'pointer',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '16px'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
@@ -100,19 +104,21 @@ export function CatalogPage() {
             {/* Product Image Placeholder */}
             <div style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              height: '120px',
-              margin: '-16px -16px 16px -16px',
+              height: '80px',
+              width: '80px',
+              borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              fontSize: '2rem'
+              fontSize: '1.5rem',
+              flexShrink: 0
             }}>
               📦
             </div>
 
             {/* Product Info */}
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={600} size="md" truncate="end" style={{ color: '#495057', marginBottom: '4px' }}>
                 {item.item_name}
               </Text>
@@ -134,63 +140,46 @@ export function CatalogPage() {
             </div>
 
             {/* Price and Stock Info */}
-            <div style={{
-              background: '#f8f9fa',
-              borderRadius: '8px',
-              padding: '12px',
-              border: '1px solid #e9ecef'
-            }}>
-              <Group justify="space-between" mb="md">
-                <Text fw={700} size="lg" style={{ 
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}>
-                  {currency} {item.standard_rate || '0.00'}
-                </Text>
-              </Group>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+              <Text fw={700} size="lg" style={{ 
+                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
+                {currency} {item.standard_rate || '0.00'}
+              </Text>
               
               {/* Stock Quantity Display */}
               {customer && (
-                <div style={{ marginBottom: '12px' }}>
-                  <Text size="sm" c="dimmed" mb="xs">Stock Quantity</Text>
-                  <Badge 
-                    color={(item.actual_qty || 0) > 0 ? 'green' : 'red'}
-                    variant="light"
-                    style={{
-                      background: (item.actual_qty || 0) > 0 ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)',
-                      color: (item.actual_qty || 0) > 0 ? '#28a745' : '#dc3545',
-                      fontWeight: '600',
-                      fontSize: '12px'
-                    }}
-                  >
-                    {item.actual_qty || 0} units
-                  </Badge>
-                </div>
+                <Badge 
+                  color={(item.actual_qty || 0) > 0 ? 'green' : 'red'}
+                  variant="light"
+                  style={{
+                    background: (item.actual_qty || 0) > 0 ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)',
+                    color: (item.actual_qty || 0) > 0 ? '#28a745' : '#dc3545',
+                    fontWeight: '600',
+                    fontSize: '12px'
+                  }}
+                >
+                  {(item.actual_qty || 0)} units
+                </Badge>
               )}
               
               <Button 
                 variant="filled" 
-                fullWidth 
+                size="sm"
                 style={{
                   background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
                   border: 'none',
                   borderRadius: '8px',
                   fontWeight: '600',
-                  transition: 'all 0.2s ease'
+                  fontSize: '0.8rem',
+                  minWidth: '100px'
                 }}
                 onClick={() => handleAddToCart(item)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
               >
-                🛒 Add to Cart
+                🛒 Add
               </Button>
             </div>
           </Card>
@@ -210,7 +199,6 @@ export function CatalogPage() {
       {/* Modern Header */}
       <div style={{
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        borderRadius: '16px',
         padding: '24px',
         marginBottom: '24px',
         color: 'white',

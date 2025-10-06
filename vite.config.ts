@@ -36,6 +36,7 @@ export default defineConfig({
       },
     }),
   ],
+  assetsInclude: ['**/*.svg'],
   test: {
     globals: true,
     environment: 'jsdom',

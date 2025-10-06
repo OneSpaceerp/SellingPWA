@@ -32,7 +32,7 @@ export function CartPage() {
           padding: '60px 24px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           textAlign: 'center',
-          margin: '20px 8px'
+          margin: '20px 0'
         }}>
           <Text size="4xl" mb="md">🛒</Text>
           <Title order={1} mb="md" style={{ color: '#495057' }}>Your Cart is Empty</Title>

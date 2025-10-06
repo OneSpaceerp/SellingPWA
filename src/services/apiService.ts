@@ -107,7 +107,34 @@ const post = async <T>(endpoint: string, payload: any): Promise<T> => {
 
 const getPosProfiles = async (): Promise<PosProfile[]> => get<PosProfile[]>(`resource/POS Profile?fields=${encodeURIComponent('["name", "company", "currency"]')}`);
 const getPosProfileDetails = async (profileName: string): Promise<PosProfileData> => get<PosProfileData>(`resource/POS Profile/${encodeURIComponent(profileName)}`);
-const getItems = async (itemGroups: string[]): Promise<Item[]> => get<Item[]>(`resource/Item?fields=${encodeURIComponent('["name", "item_name", "item_group", "stock_uom", "standard_rate"]')}&filters=${encodeURIComponent(JSON.stringify([["item_group", "in", itemGroups]]))}&limit_page_length=0`);
+const getItems = async (itemGroups: string[]): Promise<Item[]> => {
+  // First get the items
+  const items = await get<Item[]>(`resource/Item?fields=${encodeURIComponent('["name", "item_name", "item_group", "stock_uom", "standard_rate"]')}&filters=${encodeURIComponent(JSON.stringify([["item_group", "in", itemGroups]]))}&limit_page_length=0`);
+  
+  // Then get stock quantities from Bin doctype
+  try {
+    const bins = await get<any[]>(`resource/Bin?fields=${encodeURIComponent('["item_code", "actual_qty"]')}&filters=${encodeURIComponent(JSON.stringify([["item_code", "in", items.map(item => item.name)]]))}&limit_page_length=0`);
+    
+    // Create a map of item_code to actual_qty
+    const stockMap = new Map();
+    bins.forEach(bin => {
+      stockMap.set(bin.item_code, (stockMap.get(bin.item_code) || 0) + bin.actual_qty);
+    });
+    
+    // Add actual_qty to items
+    return items.map(item => ({
+      ...item,
+      actual_qty: stockMap.get(item.name) || 0
+    }));
+  } catch (error) {
+    console.warn('Could not fetch stock quantities:', error);
+    // Return items with actual_qty as 0 if stock fetch fails
+    return items.map(item => ({
+      ...item,
+      actual_qty: 0
+    }));
+  }
+};
 const getCustomers = async (customerGroups: string[]): Promise<Customer[]> => get<Customer[]>(`resource/Customer?fields=${encodeURIComponent('["name", "customer_name", "customer_group"]')}&filters=${encodeURIComponent(JSON.stringify([["customer_group", "in", customerGroups]]))}&limit_page_length=0`);
 const createSalesOrder = async (payload: SalesOrderPayload): Promise<any> => post<any>('resource/Sales Order', payload);
 

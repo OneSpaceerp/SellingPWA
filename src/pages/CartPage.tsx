@@ -68,7 +68,8 @@ export function CartPage() {
         padding: '24px',
         marginBottom: '24px',
         color: 'white',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+        width: '100%'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>

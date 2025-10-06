@@ -982,7 +982,7 @@ export function OrdersPage() {
       );
     }
     return (
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0', padding: '0 20px' }}>
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0', padding: '0 16px' }}>
         {filteredOrders.map((order: SalesOrder) => (
           <Card 
             key={order.name} 

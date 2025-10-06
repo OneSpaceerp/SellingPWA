@@ -189,7 +189,7 @@ export function DashboardPage() {
       </div>
 
       {/* Statistics Cards */}
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg" mb="xl" style={{ margin: '0', padding: '0 16px' }}>
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg" mb="xl" style={{ margin: '0', padding: '0 8px' }}>
         <Card style={{
           background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
           color: 'white',
@@ -298,8 +298,8 @@ export function DashboardPage() {
         padding: '24px',
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         marginBottom: '24px',
-        margin: '0 16px',
-        width: 'calc(100% - 32px)'
+        margin: '0 8px',
+        width: 'calc(100% - 16px)'
       }}>
         <div style={{ 
           display: 'flex', 

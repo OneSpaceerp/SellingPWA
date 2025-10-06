@@ -1,7 +1,7 @@
 import { AppShell, Group, Tabs, Title, Image } from '@mantine/core';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { IconHome, IconShoppingCart, IconSettings, IconListDetails, IconReceipt } from '@tabler/icons-react';
-const NestSDLogo = '/NestSD.svg';
+import NestSDLogo from '../assets/NestSD.svg';
 
 export function AppLayout() {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ export function AppLayout() {
         boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
         <Group h="100%" px="md" justify="space-between">
-          <Group gap="sm">
+          <Group gap="sm" align="center">
             <Image 
               src={NestSDLogo} 
               alt="NestSD Logo" 
@@ -35,7 +35,7 @@ export function AppLayout() {
               height={24}
               style={{ filter: 'brightness(0) invert(1)' }}
             />
-            <Title order={3} c="white" style={{ fontWeight: '700' }}>
+            <Title order={3} c="white" style={{ fontWeight: '700', margin: 0 }}>
               Nest Selling
             </Title>
           </Group>

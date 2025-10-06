@@ -74,67 +74,32 @@ export function AppLayout() {
         padding: '8px 16px'
       }}>
         <Tabs value={activeTab} onChange={(value) => navigate(value || '/')}>
-          <Tabs.List grow style={{ border: 'none' }}>
-            <Tabs.Tab 
-              value="/" 
-              style={{ 
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 4px'
-              }}
-            >
+          <Tabs.List grow>
+            <Tabs.Tab value="/">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                 <IconHome size="1.2rem" />
                 <span style={{ fontSize: '0.75rem' }}>Home</span>
               </div>
             </Tabs.Tab>
-            <Tabs.Tab 
-              value="/catalog"
-              style={{ 
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 4px'
-              }}
-            >
+            <Tabs.Tab value="/catalog">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                 <IconListDetails size="1.2rem" />
                 <span style={{ fontSize: '0.75rem' }}>Catalog</span>
               </div>
             </Tabs.Tab>
-            <Tabs.Tab 
-              value="/cart"
-              style={{ 
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 4px'
-              }}
-            >
+            <Tabs.Tab value="/cart">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                 <IconShoppingCart size="1.2rem" />
                 <span style={{ fontSize: '0.75rem' }}>Cart</span>
               </div>
             </Tabs.Tab>
-            <Tabs.Tab 
-              value="/orders"
-              style={{ 
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 4px'
-              }}
-            >
+            <Tabs.Tab value="/orders">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                 <IconReceipt size="1.2rem" />
                 <span style={{ fontSize: '0.75rem' }}>Orders</span>
               </div>
             </Tabs.Tab>
-            <Tabs.Tab 
-              value="/settings"
-              style={{ 
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 4px'
-              }}
-            >
+            <Tabs.Tab value="/settings">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                 <IconSettings size="1.2rem" />
                 <span style={{ fontSize: '0.75rem' }}>Settings</span>

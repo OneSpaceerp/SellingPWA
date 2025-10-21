@@ -32,7 +32,7 @@ export function CartPage() {
           padding: '60px 24px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           textAlign: 'center',
-          margin: '20px 0'
+          margin: '20px 0.06rem'
         }}>
           <Text size="4xl" mb="md">🛒</Text>
           <Title order={1} mb="md" style={{ color: '#495057' }}>Your Cart is Empty</Title>
@@ -56,7 +56,7 @@ export function CartPage() {
 
   return (
     <div style={{ 
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      background: '#f8f9fa',
       minHeight: '100vh',
       padding: '0',
       width: '100%',
@@ -69,7 +69,8 @@ export function CartPage() {
         marginBottom: '24px',
         color: 'white',
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-        width: '100%'
+        width: '100%',
+        borderRadius: '16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>

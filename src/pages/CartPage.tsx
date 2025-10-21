@@ -12,7 +12,6 @@ export function CartPage() {
   const grandTotal = useCartStore((state) => state.grandTotal);
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const updateRate = useCartStore((state) => state.updateRate);
   const setItemDiscount = useCartStore((state) => state.setItemDiscount);
   const setAdditionalDiscount = useCartStore((state) => state.setAdditionalDiscount);
   const additionalDiscountType = useCartStore((state) => state.additionalDiscountType);

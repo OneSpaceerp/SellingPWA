@@ -1,6 +1,6 @@
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { Title, Button, Group, Text, SimpleGrid, NumberInput, ActionIcon, Badge, Card } from '@mantine/core';
+import { Title, Button, Group, Text, SimpleGrid, NumberInput, ActionIcon, Badge, Card, Select } from '@mantine/core';
 import { IconTrash, IconUserPlus, IconUserEdit, IconShoppingCart, IconCreditCard } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,6 +13,12 @@ export function CartPage() {
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const updateRate = useCartStore((state) => state.updateRate);
+  const setItemDiscount = useCartStore((state) => state.setItemDiscount);
+  const setAdditionalDiscount = useCartStore((state) => state.setAdditionalDiscount);
+  const additionalDiscountType = useCartStore((state) => state.additionalDiscountType);
+  const additionalDiscountValue = useCartStore((state) => state.additionalDiscountValue);
+  const subTotal = useCartStore((state) => state.subTotal);
+  const discountAmount = useCartStore((state) => state.discountAmount);
   const clearCart = useCartStore((state) => state.clearCart);
 
   const currency = useSettingsStore((state) => state.currency);
@@ -224,23 +230,62 @@ export function CartPage() {
                   
                   <Group gap="md" align="center">
                     <div>
-                      <Text size="sm" fw={500} mb="xs" c="dimmed">Rate</Text>
+                      <Text size="sm" fw={500} mb="xs" c="dimmed">Price</Text>
                       <NumberInput
                         value={item.standard_rate}
-                        onChange={(value) => updateRate(item.name, Number(value))}
                         prefix={`${currency} `}
                         min={0}
                         step={0.01}
                         style={{ width: '140px' }}
                         size="sm"
+                        readOnly
                         styles={{
                           input: {
                             borderRadius: '8px',
                             border: '2px solid #e9ecef',
-                            fontWeight: '500'
+                            fontWeight: '500',
+                            backgroundColor: '#f8f9fa',
+                            color: '#6c757d'
                           }
                         }}
                       />
+                    </div>
+                    <div>
+                      <Text size="sm" fw={500} mb="xs" c="dimmed">Discount</Text>
+                      <Group gap="xs">
+                        <NumberInput
+                          value={item.itemDiscountValue || 0}
+                          onChange={(value) => setItemDiscount(item.name, item.itemDiscountType || 'Percentage', Number(value))}
+                          min={0}
+                          step={0.01}
+                          style={{ width: '80px' }}
+                          size="sm"
+                          styles={{
+                            input: {
+                              borderRadius: '8px',
+                              border: '2px solid #e9ecef',
+                              fontWeight: '500'
+                            }
+                          }}
+                        />
+                        <Select
+                          value={item.itemDiscountType || 'Percentage'}
+                          onChange={(value) => setItemDiscount(item.name, value as 'Percentage' | 'Amount', item.itemDiscountValue || 0)}
+                          data={[
+                            { value: 'Percentage', label: '%' },
+                            { value: 'Amount', label: currency }
+                          ]}
+                          style={{ width: '60px' }}
+                          size="sm"
+                          styles={{
+                            input: {
+                              borderRadius: '8px',
+                              border: '2px solid #e9ecef',
+                              fontWeight: '500'
+                            }
+                          }}
+                        />
+                      </Group>
                     </div>
                     <Text size="lg" c="dimmed" mt="xl">×</Text>
                     <div>
@@ -271,7 +316,19 @@ export function CartPage() {
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text'
                   }}>
-                    {currency} {((item.standard_rate || 0) * item.quantity).toFixed(2)}
+                    {currency} {(() => {
+                      const itemTotal = (item.standard_rate || 0) * item.quantity;
+                      if (item.itemDiscountType && item.itemDiscountValue) {
+                        let discount = 0;
+                        if (item.itemDiscountType === 'Percentage') {
+                          discount = (itemTotal * item.itemDiscountValue) / 100;
+                        } else {
+                          discount = item.itemDiscountValue;
+                        }
+                        return (itemTotal - discount).toFixed(2);
+                      }
+                      return itemTotal.toFixed(2);
+                    })()}
                   </Text>
                   <ActionIcon 
                     color="red" 
@@ -291,6 +348,79 @@ export function CartPage() {
           ))}
         </SimpleGrid>
       </div>
+
+      {/* Total Discount Section */}
+      <Card style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '16px',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
+        border: '1px solid #e9ecef'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          marginBottom: '16px',
+          paddingBottom: '12px',
+          borderBottom: '2px solid #e9ecef'
+        }}>
+          <Title order={3} style={{ color: '#495057', margin: 0 }}>💰 Total Discount</Title>
+        </div>
+        
+        <Group gap="md" align="flex-end">
+          <div>
+            <Text size="sm" fw={500} mb="xs" c="dimmed">Discount Amount</Text>
+            <NumberInput
+              value={additionalDiscountValue}
+              onChange={(value) => setAdditionalDiscount(additionalDiscountType, Number(value))}
+              min={0}
+              step={0.01}
+              style={{ width: '120px' }}
+              size="sm"
+              styles={{
+                input: {
+                  borderRadius: '8px',
+                  border: '2px solid #e9ecef',
+                  fontWeight: '500'
+                }
+              }}
+            />
+          </div>
+          <div>
+            <Text size="sm" fw={500} mb="xs" c="dimmed">Type</Text>
+            <Select
+              value={additionalDiscountType}
+              onChange={(value) => setAdditionalDiscount(value as 'Percentage' | 'Amount', additionalDiscountValue)}
+              data={[
+                { value: 'Percentage', label: 'Percentage (%)' },
+                { value: 'Amount', label: `Amount (${currency})` }
+              ]}
+              style={{ width: '140px' }}
+              size="sm"
+              styles={{
+                input: {
+                  borderRadius: '8px',
+                  border: '2px solid #e9ecef',
+                  fontWeight: '500'
+                }
+              }}
+            />
+          </div>
+          <div>
+            <Text size="sm" fw={500} mb="xs" c="dimmed">Subtotal</Text>
+            <Text fw={600} size="lg" style={{ color: '#495057' }}>
+              {currency} {subTotal().toFixed(2)}
+            </Text>
+          </div>
+          <div>
+            <Text size="sm" fw={500} mb="xs" c="dimmed">Discount</Text>
+            <Text fw={600} size="lg" style={{ color: '#dc3545' }}>
+              -{currency} {discountAmount().toFixed(2)}
+            </Text>
+          </div>
+        </Group>
+      </Card>
 
       {/* Grand Total and Checkout */}
       <Card style={{

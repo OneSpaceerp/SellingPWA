@@ -3,6 +3,8 @@ import { type Item, type Customer } from '../services/apiService';
 
 export interface CartItem extends Item {
   quantity: number;
+  itemDiscountType?: DiscountType;
+  itemDiscountValue?: number;
 }
 
 export type DiscountType = 'Percentage' | 'Amount';
@@ -16,6 +18,7 @@ interface CartState {
   removeItem: (itemName: string) => void;
   updateQuantity: (itemName: string, quantity: number) => void;
   updateRate: (itemName: string, rate: number) => void;
+  setItemDiscount: (itemName: string, type: DiscountType, value: number) => void;
   setCustomer: (customer: Customer | null) => void;
   setAdditionalDiscount: (type: DiscountType, value: number) => void;
   clearCart: () => void;
@@ -72,6 +75,16 @@ export const useCartStore = create<CartState>((set, get) => ({
     }));
   },
 
+  setItemDiscount: (itemName, type, value) => {
+    set((state) => ({
+      items: state.items.map((item) =>
+        item.name === itemName 
+          ? { ...item, itemDiscountType: type, itemDiscountValue: value } 
+          : item
+      ),
+    }));
+  },
+
   setCustomer: (customer) => {
     set({ customer });
   },
@@ -92,7 +105,20 @@ export const useCartStore = create<CartState>((set, get) => ({
   subTotal: () => {
     return get().items.reduce((total, item) => {
       const price = item.standard_rate || 0;
-      return total + (price * item.quantity);
+      const itemTotal = price * item.quantity;
+      
+      // Apply item-level discount
+      if (item.itemDiscountType && item.itemDiscountValue) {
+        let discount = 0;
+        if (item.itemDiscountType === 'Percentage') {
+          discount = (itemTotal * item.itemDiscountValue) / 100;
+        } else {
+          discount = item.itemDiscountValue;
+        }
+        return total + (itemTotal - discount);
+      }
+      
+      return total + itemTotal;
     }, 0);
   },
 

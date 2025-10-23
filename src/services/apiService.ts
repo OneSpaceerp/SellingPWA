@@ -22,6 +22,32 @@ export interface Customer {
   name: string;
   customer_name: string;
   customer_group: string;
+  email_id?: string;
+  mobile_no?: string;
+  phone?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  country?: string;
+}
+
+export interface CustomerContact {
+  email_id?: string;
+  mobile_no?: string;
+  phone?: string;
+  is_primary_contact?: boolean;
+}
+
+export interface CustomerAddress {
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  country?: string;
+  is_primary_address?: boolean;
 }
 
 export interface PosProfile {
@@ -221,6 +247,18 @@ const postMethod = async <T>(method: string, payload: any): Promise<T> => {
 
 const createPaymentEntry = async (payload: PaymentEntryPayload): Promise<any> => postMethod<any>('method/erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry', payload);
 
+const createCustomer = async (customerData: any): Promise<any> => {
+  return post<any>('resource/Customer', customerData);
+};
+
+const createContact = async (contactData: any): Promise<any> => {
+  return post<any>('resource/Contact', contactData);
+};
+
+const createAddress = async (addressData: any): Promise<any> => {
+  return post<any>('resource/Address', addressData);
+};
+
 const getModeOfPaymentDetails = async (name: string): Promise<any> => get<any>(`resource/Mode of Payment/${encodeURIComponent(name)}`);
 
 const getModeOfPayments = async (): Promise<any[]> => get<any[]>(`resource/Mode of Payment?fields=${encodeURIComponent('["name", "mode_of_payment"]')}&limit_page_length=0`);
@@ -263,4 +301,7 @@ export const apiService = {
   getDefaultAccounts,
   saveDoc,
   submitDoc,
+  createCustomer,
+  createContact,
+  createAddress,
 };

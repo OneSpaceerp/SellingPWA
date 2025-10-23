@@ -11,6 +11,7 @@ import { CartPage } from './pages/CartPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { SelectCustomerPage } from './pages/SelectCustomerPage';
+import { NewCustomerPage } from './pages/NewCustomerPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { PaymentPage } from './pages/PaymentPage';
 import { useSettingsStore } from './store/settingsStore';
@@ -42,6 +43,7 @@ function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/select-customer" element={<SelectCustomerPage />} />
+        <Route path="/new-customer" element={<NewCustomerPage />} />
         <Route path="/payment/:orderId" element={<PaymentPage />} />
       </Route>
     </Routes>

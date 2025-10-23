@@ -3,7 +3,8 @@ import { apiService, type Customer } from '../services/apiService';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useNavigate } from 'react-router-dom';
-import { Title, TextInput, ScrollArea, Table, Loader, Center, Text, Paper } from '@mantine/core';
+import { Title, TextInput, ScrollArea, Table, Loader, Center, Text, Paper, Button, Group } from '@mantine/core';
+import { IconUserPlus } from '@tabler/icons-react';
 
 export function SelectCustomerPage() {
   const [search, setSearch] = useState('');
@@ -49,7 +50,21 @@ export function SelectCustomerPage() {
 
   return (
     <>
-      <Title order={1} mb="md">Select a Customer</Title>
+      <Group justify="space-between" align="center" mb="md">
+        <Title order={1}>Select a Customer</Title>
+        <Button
+          onClick={() => navigate('/new-customer')}
+          leftSection={<IconUserPlus size={16} />}
+          style={{
+            background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+            border: 'none',
+            borderRadius: '8px',
+            fontWeight: '600'
+          }}
+        >
+          Add New Customer
+        </Button>
+      </Group>
       <TextInput
         placeholder="Search for a customer..."
         value={search}

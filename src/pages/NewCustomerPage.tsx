@@ -13,14 +13,11 @@ import {
   Stack,
   Text,
   Divider,
-  NumberInput,
   Select,
-  Textarea,
   Grid,
   Badge,
   Alert,
-  Loader,
-  Center
+  Loader
 } from '@mantine/core';
 import { IconUserPlus, IconMail, IconPhone, IconMapPin, IconCheck, IconAlertCircle } from '@tabler/icons-react';
 

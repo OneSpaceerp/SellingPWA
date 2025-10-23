@@ -165,18 +165,35 @@ export function CartPage() {
               <Text c="dimmed" size="md">No customer selected</Text>
             )}
           </div>
-          <Button
-            onClick={() => navigate('/select-customer')}
-            style={{
-              background: 'linear-gradient(135deg, #007bff 0%, #6f42c1 100%)',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: '600'
-            }}
-            leftSection={customer ? <IconUserEdit size={16} /> : <IconUserPlus size={16} />}
-          >
-            {customer ? 'Change Customer' : 'Select Customer'}
-          </Button>
+          <Group gap="sm">
+            <Button
+              onClick={() => navigate('/select-customer')}
+              style={{
+                background: 'linear-gradient(135deg, #007bff 0%, #6f42c1 100%)',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '600'
+              }}
+              leftSection={customer ? <IconUserEdit size={16} /> : <IconUserPlus size={16} />}
+            >
+              {customer ? 'Change Customer' : 'Select Customer'}
+            </Button>
+            {!customer && (
+              <Button
+                onClick={() => navigate('/new-customer')}
+                variant="outline"
+                style={{
+                  borderColor: '#28a745',
+                  color: '#28a745',
+                  borderRadius: '8px',
+                  fontWeight: '600'
+                }}
+                leftSection={<IconUserPlus size={16} />}
+              >
+                Add New
+              </Button>
+            )}
+          </Group>
         </Group>
       </Card>
 

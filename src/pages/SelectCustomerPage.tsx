@@ -37,6 +37,8 @@ export function SelectCustomerPage() {
 
   const handleEditCustomer = (customer: Customer, e: React.MouseEvent) => {
     e.stopPropagation(); // Stop event from propagating to row click
+    console.log('Edit button clicked for customer:', customer.name);
+    console.log('Navigating to:', `/edit-customer/${customer.name}`);
     navigate(`/edit-customer/${customer.name}`);
   };
 

@@ -56,15 +56,19 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   updateQuantity: (itemName, quantity) => {
-    if (quantity <= 0) {
-      get().removeItem(itemName);
-    } else {
+    // Only remove item if quantity is explicitly 0 or negative
+    // Ignore invalid values (NaN, undefined, null) to prevent accidental deletion
+    if (quantity && quantity > 0) {
       set((state) => ({
         items: state.items.map((item) =>
           item.name === itemName ? { ...item, quantity } : item
         ),
       }));
+    } else if (quantity === 0) {
+      // Only remove when explicitly set to 0
+      get().removeItem(itemName);
     }
+    // If quantity is invalid (NaN, undefined, null), do nothing
   },
 
   updateRate: (itemName, rate) => {

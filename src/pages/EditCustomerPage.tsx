@@ -44,8 +44,10 @@ interface AddressFormData {
 }
 
 export function EditCustomerPage() {
+  console.log('EditCustomerPage component rendered');
   const navigate = useNavigate();
   const { customerId } = useParams<{ customerId: string }>();
+  console.log('customerId from useParams:', customerId);
   const { posProfile } = useSettingsStore();
   
   const [isLoading, setIsLoading] = useState(false);
@@ -64,17 +66,25 @@ export function EditCustomerPage() {
   });
 
   useEffect(() => {
+    console.log('EditCustomerPage useEffect triggered with customerId:', customerId);
     if (!customerId) {
+      console.log('No customerId, navigating back');
       navigate(-1);
       return;
     }
 
     const loadCustomerData = async () => {
+      console.log('Starting to load customer data for:', customerId);
       setIsLoadingData(true);
       try {
         // Fetch customer details first
+        console.log('Fetching customer details...');
         const customer = await apiService.getCustomerDetails(customerId);
         console.log('Customer loaded:', customer);
+        
+        if (!customer) {
+          throw new Error('Customer data is empty');
+        }
         
         // Try to fetch contacts and addresses separately
         let contacts: Contact[] = [];
@@ -93,6 +103,13 @@ export function EditCustomerPage() {
         } catch (addressError) {
           console.warn('Could not load addresses:', addressError);
         }
+
+        console.log('Setting form data with:', {
+          customer_name: customer.customer_name,
+          customer_group: customer.customer_group,
+          contactsCount: contacts.length,
+          addressesCount: addresses.length
+        });
 
         setFormData({
           customer_id: customerId,
@@ -133,12 +150,12 @@ export function EditCustomerPage() {
         console.error('Error loading customer data:', error);
         notifications.show({
           title: 'Error',
-          message: 'Failed to load customer data. Please try again.',
+          message: `Failed to load customer data: ${error instanceof Error ? error.message : 'Unknown error'}`,
           color: 'red',
           icon: <IconAlertCircle size={16} />,
         });
-        // Don't navigate back immediately, show error instead
       } finally {
+        console.log('Loading complete, setting isLoadingData to false');
         setIsLoadingData(false);
       }
     };
@@ -707,4 +724,3 @@ export function EditCustomerPage() {
     </div>
   );
 }
-

@@ -87,7 +87,14 @@ export interface PosProfile {
 
 export interface SalesOrderPayload {
   customer: string;
-  items: { item_code: string; qty: number; rate: number }[];
+  items: { 
+    item_code: string; 
+    qty: number; 
+    rate: number;
+    discount_percentage?: number;
+    discount_amount?: number;
+    [key: string]: any;
+  }[];
   additional_discount_percentage?: number;
   discount_amount?: number;
   update_stock: 1;

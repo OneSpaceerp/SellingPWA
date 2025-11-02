@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSettingsStore } from '../store/settingsStore';
-import { apiService } from '../services/apiService';
+import { apiService, type Contact, type Address } from '../services/apiService';
 import { notifications } from '@mantine/notifications';
 import {
   Title,
@@ -72,11 +72,27 @@ export function EditCustomerPage() {
     const loadCustomerData = async () => {
       setIsLoadingData(true);
       try {
-        const [customer, contacts, addresses] = await Promise.all([
-          apiService.getCustomerDetails(customerId),
-          apiService.getCustomerContacts(customerId),
-          apiService.getCustomerAddresses(customerId),
-        ]);
+        // Fetch customer details first
+        const customer = await apiService.getCustomerDetails(customerId);
+        console.log('Customer loaded:', customer);
+        
+        // Try to fetch contacts and addresses separately
+        let contacts: Contact[] = [];
+        let addresses: Address[] = [];
+        
+        try {
+          contacts = await apiService.getCustomerContacts(customerId);
+          console.log('Contacts loaded:', contacts);
+        } catch (contactError) {
+          console.warn('Could not load contacts:', contactError);
+        }
+        
+        try {
+          addresses = await apiService.getCustomerAddresses(customerId);
+          console.log('Addresses loaded:', addresses);
+        } catch (addressError) {
+          console.warn('Could not load addresses:', addressError);
+        }
 
         setFormData({
           customer_id: customerId,
@@ -121,7 +137,7 @@ export function EditCustomerPage() {
           color: 'red',
           icon: <IconAlertCircle size={16} />,
         });
-        navigate(-1);
+        // Don't navigate back immediately, show error instead
       } finally {
         setIsLoadingData(false);
       }

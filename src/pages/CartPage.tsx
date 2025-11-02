@@ -308,7 +308,7 @@ export function CartPage() {
                       <Text size="sm" fw={500} mb="xs" c="dimmed">Quantity</Text>
                       <NumberInput
                         value={item.quantity}
-                        onChange={(value) => updateQuantity(item.name, Number(value))}
+                        onChange={(value) => updateQuantity(item.name, value === '' ? undefined : Number(value))}
                         min={0} 
                         step={1} 
                         style={{ width: '100px' }}

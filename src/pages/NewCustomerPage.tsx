@@ -17,9 +17,10 @@ import {
   Grid,
   Badge,
   Alert,
-  Loader
+  Loader,
+  ActionIcon
 } from '@mantine/core';
-import { IconUserPlus, IconMail, IconPhone, IconMapPin, IconCheck, IconAlertCircle } from '@tabler/icons-react';
+import { IconUserPlus, IconMail, IconPhone, IconMapPin, IconCheck, IconAlertCircle, IconTrash, IconPlus } from '@tabler/icons-react';
 
 export function NewCustomerPage() {
   const navigate = useNavigate();
@@ -32,10 +33,15 @@ export function NewCustomerPage() {
     customer_name: '',
     customer_group: '',
     
-    // Contact info
-    email_id: '',
-    mobile_no: '',
-    phone: '',
+    // Contact info (dynamic array)
+    contacts: [
+      {
+        first_name: '',
+        email_id: '',
+        mobile_no: '',
+        phone: '',
+      }
+    ],
     
     // Address info
     address_line1: '',
@@ -44,11 +50,6 @@ export function NewCustomerPage() {
     state: '',
     pincode: '',
     country: 'Egypt', // Default country
-    
-    // Additional contact
-    additional_email: '',
-    additional_mobile: '',
-    additional_phone: '',
   });
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -56,6 +57,39 @@ export function NewCustomerPage() {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleContactChange = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: prev.contacts.map((contact, i) =>
+        i === index ? { ...contact, [field]: value } : contact
+      )
+    }));
+  };
+
+  const addContact = () => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: [
+        ...prev.contacts,
+        {
+          first_name: '',
+          email_id: '',
+          mobile_no: '',
+          phone: '',
+        }
+      ]
+    }));
+  };
+
+  const removeContact = (index: number) => {
+    if (formData.contacts.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        contacts: prev.contacts.filter((_, i) => i !== index)
+      }));
+    }
   };
 
   const handleSubmit = async () => {
@@ -84,23 +118,26 @@ export function NewCustomerPage() {
       const customer = await apiService.createCustomer(customerData);
       console.log('Customer created:', customer);
 
-      // Create primary contact if email or mobile provided
-      if (formData.email_id || formData.mobile_no || formData.phone) {
-        const contactData = {
-          doctype: 'Contact',
-          first_name: formData.customer_name,
-          email_id: formData.email_id || '',
-          mobile_no: formData.mobile_no || '',
-          phone: formData.phone || '',
-          is_primary_contact: 1,
-          links: [{
-            link_doctype: 'Customer',
-            link_name: customer.name
-          }]
-        };
+      // Create all contacts from the contacts array
+      for (let i = 0; i < formData.contacts.length; i++) {
+        const contact = formData.contacts[i];
+        if (contact.email_id || contact.mobile_no || contact.phone) {
+          const contactData = {
+            doctype: 'Contact',
+            first_name: contact.first_name || (i === 0 ? formData.customer_name : `${formData.customer_name} - Contact ${i + 1}`),
+            email_id: contact.email_id || '',
+            mobile_no: contact.mobile_no || '',
+            phone: contact.phone || '',
+            is_primary_contact: i === 0 ? 1 : 0,
+            links: [{
+              link_doctype: 'Customer',
+              link_name: customer.name
+            }]
+          };
 
-        await apiService.createContact(contactData);
-        console.log('Contact created');
+          await apiService.createContact(contactData);
+          console.log(`Contact ${i + 1} created`);
+        }
       }
 
       // Create primary address if address provided
@@ -126,33 +163,15 @@ export function NewCustomerPage() {
         console.log('Address created');
       }
 
-      // Create additional contact if provided
-      if (formData.additional_email || formData.additional_mobile || formData.additional_phone) {
-        const additionalContactData = {
-          doctype: 'Contact',
-          first_name: `${formData.customer_name} - Additional Contact`,
-          email_id: formData.additional_email || '',
-          mobile_no: formData.additional_mobile || '',
-          phone: formData.additional_phone || '',
-          is_primary_contact: 0,
-          links: [{
-            link_doctype: 'Customer',
-            link_name: customer.name
-          }]
-        };
-
-        await apiService.createContact(additionalContactData);
-        console.log('Additional contact created');
-      }
-
-      // Set the created customer in the cart store
+      // Set the created customer in the cart store (use first contact as primary)
+      const primaryContact = formData.contacts[0] || {};
       setCustomer({
         name: customer.name,
         customer_name: customer.customer_name,
         customer_group: customer.customer_group,
-        email_id: formData.email_id,
-        mobile_no: formData.mobile_no,
-        phone: formData.phone,
+        email_id: primaryContact.email_id,
+        mobile_no: primaryContact.mobile_no,
+        phone: primaryContact.phone,
         address_line1: formData.address_line1,
         address_line2: formData.address_line2,
         city: formData.city,
@@ -257,51 +276,95 @@ export function NewCustomerPage() {
               </Card>
 
               {/* Contact Information */}
-              <Card style={{
-                background: 'white',
-                borderRadius: '12px',
-                padding: '24px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-                border: '1px solid #e9ecef'
-              }}>
-                <Group mb="md">
-                  <IconMail size={20} color="#667eea" />
-                  <Text fw={600} size="lg" c="#495057">Contact Information</Text>
-                </Group>
-                
-                <Grid>
-                  <Grid.Col span={{ base: 12, md: 4 }}>
-                    <TextInput
-                      label="Email"
-                      placeholder="customer@example.com"
-                      value={formData.email_id}
-                      onChange={(e) => handleInputChange('email_id', e.target.value)}
-                      leftSection={<IconMail size={16} />}
-                      size="md"
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, md: 4 }}>
-                    <TextInput
-                      label="Mobile Number"
-                      placeholder="+20 123 456 7890"
-                      value={formData.mobile_no}
-                      onChange={(e) => handleInputChange('mobile_no', e.target.value)}
-                      leftSection={<IconPhone size={16} />}
-                      size="md"
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, md: 4 }}>
-                    <TextInput
-                      label="Phone Number"
-                      placeholder="+20 2 1234 5678"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      leftSection={<IconPhone size={16} />}
-                      size="md"
-                    />
-                  </Grid.Col>
-                </Grid>
-              </Card>
+              {formData.contacts.map((contact, index) => (
+                <Card
+                  key={index}
+                  style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
+                    border: '1px solid #e9ecef'
+                  }}
+                >
+                  <Group mb="md" justify="space-between">
+                    <Group>
+                      <IconMail size={20} color="#667eea" />
+                      <Text fw={600} size="lg" c="#495057">
+                        {index === 0 ? 'Primary Contact' : `Contact ${index + 1}`}
+                      </Text>
+                      {index === 0 && (
+                        <Badge color="blue" size="sm">Primary</Badge>
+                      )}
+                    </Group>
+                    {index > 0 && (
+                      <ActionIcon
+                        color="red"
+                        variant="light"
+                        onClick={() => removeContact(index)}
+                      >
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    )}
+                  </Group>
+                  
+                  <Grid>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <TextInput
+                        label="Contact Name"
+                        placeholder={index === 0 ? formData.customer_name : "Enter contact name"}
+                        value={contact.first_name}
+                        onChange={(e) => handleContactChange(index, 'first_name', e.target.value)}
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <TextInput
+                        label="Email"
+                        placeholder="email@example.com"
+                        value={contact.email_id}
+                        onChange={(e) => handleContactChange(index, 'email_id', e.target.value)}
+                        leftSection={<IconMail size={16} />}
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <TextInput
+                        label="Mobile Number"
+                        placeholder="+20 123 456 7890"
+                        value={contact.mobile_no}
+                        onChange={(e) => handleContactChange(index, 'mobile_no', e.target.value)}
+                        leftSection={<IconPhone size={16} />}
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <TextInput
+                        label="Phone Number"
+                        placeholder="+20 2 1234 5678"
+                        value={contact.phone}
+                        onChange={(e) => handleContactChange(index, 'phone', e.target.value)}
+                        leftSection={<IconPhone size={16} />}
+                        size="md"
+                      />
+                    </Grid.Col>
+                  </Grid>
+                </Card>
+              ))}
+              
+              {/* Add Contact Button */}
+              <Button
+                onClick={addContact}
+                variant="light"
+                leftSection={<IconPlus size={16} />}
+                style={{
+                  borderColor: '#667eea',
+                  color: '#667eea',
+                  borderRadius: '8px'
+                }}
+              >
+                Add Another Contact
+              </Button>
 
               {/* Address Information */}
               <Card style={{
@@ -374,52 +437,6 @@ export function NewCustomerPage() {
                 </Grid>
               </Card>
 
-              {/* Additional Contact */}
-              <Card style={{
-                background: 'white',
-                borderRadius: '12px',
-                padding: '24px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-                border: '1px solid #e9ecef'
-              }}>
-                <Group mb="md">
-                  <IconMail size={20} color="#667eea" />
-                  <Text fw={600} size="lg" c="#495057">Additional Contact (Optional)</Text>
-                </Group>
-                
-                <Grid>
-                  <Grid.Col span={{ base: 12, md: 4 }}>
-                    <TextInput
-                      label="Additional Email"
-                      placeholder="additional@example.com"
-                      value={formData.additional_email}
-                      onChange={(e) => handleInputChange('additional_email', e.target.value)}
-                      leftSection={<IconMail size={16} />}
-                      size="md"
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, md: 4 }}>
-                    <TextInput
-                      label="Additional Mobile"
-                      placeholder="+20 987 654 3210"
-                      value={formData.additional_mobile}
-                      onChange={(e) => handleInputChange('additional_mobile', e.target.value)}
-                      leftSection={<IconPhone size={16} />}
-                      size="md"
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, md: 4 }}>
-                    <TextInput
-                      label="Additional Phone"
-                      placeholder="+20 2 9876 5432"
-                      value={formData.additional_phone}
-                      onChange={(e) => handleInputChange('additional_phone', e.target.value)}
-                      leftSection={<IconPhone size={16} />}
-                      size="md"
-                    />
-                  </Grid.Col>
-                </Grid>
-              </Card>
             </Stack>
           </Grid.Col>
 
@@ -451,9 +468,8 @@ export function NewCustomerPage() {
                   <Divider />
                   
                   <div>
-                    <Text size="sm" c="dimmed">Primary Contact</Text>
-                    <Text size="sm">{formData.email_id || 'No email'}</Text>
-                    <Text size="sm">{formData.mobile_no || 'No mobile'}</Text>
+                    <Text size="sm" c="dimmed">Contacts</Text>
+                    <Text size="sm">{formData.contacts.length} contact(s) added</Text>
                   </div>
                   
                   <div>

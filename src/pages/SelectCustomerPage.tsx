@@ -38,8 +38,10 @@ export function SelectCustomerPage() {
   const handleEditCustomer = (customer: Customer, e: React.MouseEvent) => {
     e.stopPropagation(); // Stop event from propagating to row click
     console.log('Edit button clicked for customer:', customer.name);
-    console.log('Navigating to:', `/edit-customer/${customer.name}`);
-    navigate(`/edit-customer/${customer.name}`);
+    // Encode the customer ID to handle special characters like #
+    const encodedId = encodeURIComponent(customer.name);
+    console.log('Navigating to:', `/edit-customer/${encodedId}`);
+    navigate(`/edit-customer/${encodedId}`);
   };
 
   const filteredCustomers = customers.filter(customer =>

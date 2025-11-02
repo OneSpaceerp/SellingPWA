@@ -33,6 +33,35 @@ export interface Customer {
   country?: string;
 }
 
+export interface Contact {
+  name: string;
+  first_name: string;
+  email_id?: string;
+  mobile_no?: string;
+  phone?: string;
+  is_primary_contact: number;
+  links: {
+    link_doctype: string;
+    link_name: string;
+  }[];
+}
+
+export interface Address {
+  name: string;
+  address_title: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  country?: string;
+  is_primary_address: number;
+  links: {
+    link_doctype: string;
+    link_name: string;
+  }[];
+}
+
 export interface CustomerContact {
   email_id?: string;
   mobile_no?: string;
@@ -121,6 +150,40 @@ const post = async <T>(endpoint: string, payload: any): Promise<T> => {
     method: 'POST',
     headers: headers as HeadersInit,
     body: JSON.stringify(payload),
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API request failed: ${errorText}`);
+  }
+  const data = await response.json();
+  return data.data as T;
+};
+
+const put = async <T>(endpoint: string, payload: any): Promise<T> => {
+  const fullUrl = `${API_BASE_URL}/api/${endpoint}`;
+  const authHeaders = await authService.getAuthHeaders();
+  const headers = { ...authHeaders, 'Content-Type': 'application/json' };
+  const response = await fetch(fullUrl, {
+    method: 'PUT',
+    headers: headers as HeadersInit,
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API request failed: ${errorText}`);
+  }
+  const data = await response.json();
+  return data.data as T;
+};
+
+const deleteMethod = async <T>(endpoint: string): Promise<T> => {
+  const fullUrl = `${API_BASE_URL}/api/${endpoint}`;
+  const authHeaders = await authService.getAuthHeaders();
+  const response = await fetch(fullUrl, {
+    method: 'DELETE',
+    headers: authHeaders as HeadersInit,
     credentials: 'include',
   });
   if (!response.ok) {
@@ -286,6 +349,59 @@ const submitDoc = async (doc: any): Promise<any> => {
   return postMethod<any>('method/frappe.client.submit', { doc: doc });
 };
 
+const getCustomerDetails = async (customerId: string): Promise<any> => {
+  return get<any>(`resource/Customer/${encodeURIComponent(customerId)}`);
+};
+
+const getCustomerContacts = async (customerId: string): Promise<Contact[]> => {
+  // Note: We need to fetch all contacts and filter client-side due to Dynamic Link complexity
+  // Alternatively, use ERPNext's method API if available
+  try {
+    const fields = ['name', 'first_name', 'email_id', 'mobile_no', 'phone', 'is_primary_contact', 'links'];
+    const contacts = await getList<Contact[]>('Contact', [], fields);
+    // Filter to only contacts linked to this customer
+    return contacts.filter(contact => 
+      contact.links?.some(link => link.link_doctype === 'Customer' && link.link_name === customerId)
+    );
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    return [];
+  }
+};
+
+const getCustomerAddresses = async (customerId: string): Promise<Address[]> => {
+  // Note: We need to fetch all addresses and filter client-side due to Dynamic Link complexity
+  try {
+    const fields = ['name', 'address_title', 'address_line1', 'address_line2', 'city', 'state', 'pincode', 'country', 'is_primary_address', 'links'];
+    const addresses = await getList<Address[]>('Address', [], fields);
+    // Filter to only addresses linked to this customer
+    return addresses.filter(address => 
+      address.links?.some(link => link.link_doctype === 'Customer' && link.link_name === customerId)
+    );
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    return [];
+  }
+};
+
+const updateContact = async (contactId: string, data: any): Promise<any> => {
+  const payload = { ...data, doctype: 'Contact' };
+  return put<any>(`resource/Contact/${encodeURIComponent(contactId)}`, payload);
+};
+
+const updateAddress = async (addressId: string, data: any): Promise<any> => {
+  const payload = { ...data, doctype: 'Address' };
+  return put<any>(`resource/Address/${encodeURIComponent(addressId)}`, payload);
+};
+
+const deleteContact = async (contactId: string): Promise<any> => {
+  return deleteMethod<any>(`resource/Contact/${encodeURIComponent(contactId)}`);
+};
+
+const deleteAddress = async (addressId: string): Promise<any> => {
+  return deleteMethod<any>(`resource/Address/${encodeURIComponent(addressId)}`);
+};
+
 export const apiService = {
   getPosProfiles,
   getPosProfileDetails,
@@ -304,4 +420,11 @@ export const apiService = {
   createCustomer,
   createContact,
   createAddress,
+  getCustomerDetails,
+  getCustomerContacts,
+  getCustomerAddresses,
+  updateContact,
+  updateAddress,
+  deleteContact,
+  deleteAddress,
 };

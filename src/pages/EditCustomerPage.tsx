@@ -66,20 +66,24 @@ export function EditCustomerPage() {
   });
 
   useEffect(() => {
+    // Decode the customerId to handle special characters like #
+    const decodedCustomerId = customerId ? decodeURIComponent(customerId) : null;
     console.log('EditCustomerPage useEffect triggered with customerId:', customerId);
-    if (!customerId) {
+    console.log('Decoded customerId:', decodedCustomerId);
+    
+    if (!decodedCustomerId) {
       console.log('No customerId, navigating back');
       navigate(-1);
       return;
     }
 
     const loadCustomerData = async () => {
-      console.log('Starting to load customer data for:', customerId);
+      console.log('Starting to load customer data for:', decodedCustomerId);
       setIsLoadingData(true);
       try {
         // Fetch customer details first
         console.log('Fetching customer details...');
-        const customer = await apiService.getCustomerDetails(customerId);
+        const customer = await apiService.getCustomerDetails(decodedCustomerId);
         console.log('Customer loaded:', customer);
         
         if (!customer) {
@@ -91,14 +95,14 @@ export function EditCustomerPage() {
         let addresses: Address[] = [];
         
         try {
-          contacts = await apiService.getCustomerContacts(customerId);
+          contacts = await apiService.getCustomerContacts(decodedCustomerId);
           console.log('Contacts loaded:', contacts);
         } catch (contactError) {
           console.warn('Could not load contacts:', contactError);
         }
         
         try {
-          addresses = await apiService.getCustomerAddresses(customerId);
+          addresses = await apiService.getCustomerAddresses(decodedCustomerId);
           console.log('Addresses loaded:', addresses);
         } catch (addressError) {
           console.warn('Could not load addresses:', addressError);
@@ -112,7 +116,7 @@ export function EditCustomerPage() {
         });
 
         setFormData({
-          customer_id: customerId,
+          customer_id: decodedCustomerId,
           customer_name: customer.customer_name || '',
           customer_group: customer.customer_group || '',
           contacts: contacts.length > 0 
@@ -252,7 +256,7 @@ export function EditCustomerPage() {
             is_primary_contact: formData.contacts.indexOf(contact) === 0 ? 1 : 0,
             links: [{
               link_doctype: 'Customer',
-              link_name: customerId
+              link_name: formData.customer_id
             }]
           };
           await apiService.createContact(contactData);
@@ -296,7 +300,7 @@ export function EditCustomerPage() {
             is_shipping_address: 1,
             links: [{
               link_doctype: 'Customer',
-              link_name: customerId
+              link_name: formData.customer_id
             }]
           };
           await apiService.createAddress(addressData);
@@ -724,3 +728,4 @@ export function EditCustomerPage() {
     </div>
   );
 }
+

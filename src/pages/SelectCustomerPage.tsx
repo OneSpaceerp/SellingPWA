@@ -3,8 +3,8 @@ import { apiService, type Customer } from '../services/apiService';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useNavigate } from 'react-router-dom';
-import { Title, TextInput, ScrollArea, Table, Loader, Center, Text, Paper, Button, Group } from '@mantine/core';
-import { IconUserPlus } from '@tabler/icons-react';
+import { Title, TextInput, ScrollArea, Table, Loader, Center, Text, Paper, Button, Group, ActionIcon } from '@mantine/core';
+import { IconUserPlus, IconEdit } from '@tabler/icons-react';
 
 export function SelectCustomerPage() {
   const [search, setSearch] = useState('');
@@ -35,6 +35,11 @@ export function SelectCustomerPage() {
     navigate(-1); // Go back to the previous page (the cart)
   };
 
+  const handleEditCustomer = (customer: Customer, e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop event from propagating to row click
+    navigate(`/edit-customer/${customer.name}`);
+  };
+
   const filteredCustomers = customers.filter(customer =>
     customer.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
     customer.name.toLowerCase().includes(search.toLowerCase())
@@ -45,6 +50,16 @@ export function SelectCustomerPage() {
       <Table.Td>{customer.customer_name}</Table.Td>
       <Table.Td>{customer.name}</Table.Td>
       <Table.Td>{customer.customer_group}</Table.Td>
+      <Table.Td>
+        <ActionIcon
+          variant="subtle"
+          color="blue"
+          onClick={(e) => handleEditCustomer(customer, e)}
+          title="Edit customer"
+        >
+          <IconEdit size={16} />
+        </ActionIcon>
+      </Table.Td>
     </Table.Tr>
   ));
 
@@ -82,6 +97,7 @@ export function SelectCustomerPage() {
                   <Table.Th>Customer Name</Table.Th>
                   <Table.Th>ID</Table.Th>
                   <Table.Th>Group</Table.Th>
+                  <Table.Th>Actions</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>{rows}</Table.Tbody>

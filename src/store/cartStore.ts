@@ -16,7 +16,7 @@ interface CartState {
   additionalDiscountValue: number;
   addItem: (item: Item) => void;
   removeItem: (itemName: string) => void;
-  updateQuantity: (itemName: string, quantity: number) => void;
+  updateQuantity: (itemName: string, quantity: number | undefined) => void;
   updateRate: (itemName: string, rate: number) => void;
   setItemDiscount: (itemName: string, type: DiscountType, value: number) => void;
   setCustomer: (customer: Customer | null) => void;

@@ -6,6 +6,7 @@ import { authService } from '../services/authService';
 import { notifications } from '@mantine/notifications';
 import {
   Title,
+  TextInput,
   Textarea,
   Button,
   Card,
@@ -20,7 +21,6 @@ import {
   ActionIcon,
   NumberInput,
 } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
 import { IconCheck, IconAlertCircle, IconTrash, IconPlus, IconCalendar, IconUser, IconMessage, IconPackage } from '@tabler/icons-react';
 
 export function NewVisitPage() {
@@ -278,12 +278,13 @@ export function NewVisitPage() {
                     />
                   </Grid.Col>
                   <Grid.Col span={{ base: 12, md: 6 }}>
-                    <DatePickerInput
+                    <TextInput
+                      type="date"
                       label="Visit Date"
-                      value={new Date(formData.visit_date)}
-                      onChange={(date: Date | null) => setFormData((prev: typeof formData) => ({ 
+                      value={formData.visit_date}
+                      onChange={(e) => setFormData((prev: typeof formData) => ({ 
                         ...prev, 
-                        visit_date: date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0] 
+                        visit_date: e.target.value || new Date().toISOString().split('T')[0] 
                       }))}
                       required
                       size="md"

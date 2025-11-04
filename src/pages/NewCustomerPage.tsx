@@ -20,19 +20,31 @@ import {
   Loader,
   ActionIcon
 } from '@mantine/core';
-import { IconUserPlus, IconMail, IconPhone, IconMapPin, IconCheck, IconAlertCircle, IconTrash, IconPlus } from '@tabler/icons-react';
+import { IconUserPlus, IconMail, IconPhone, IconMapPin, IconCheck, IconAlertCircle, IconTrash, IconPlus, IconLocation } from '@tabler/icons-react';
+
+interface AddressFormData {
+  address_title: string;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  latitude?: string;
+  longitude?: string;
+}
 
 export function NewCustomerPage() {
   const navigate = useNavigate();
   const setCustomer = useCartStore((state) => state.setCustomer);
   const { posProfile } = useSettingsStore();
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     // Customer basic info
     customer_name: '',
     customer_group: '',
-    
+
     // Contact info (dynamic array)
     contacts: [
       {
@@ -42,14 +54,21 @@ export function NewCustomerPage() {
         phone: '',
       }
     ],
-    
-    // Address info
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    state: '',
-    pincode: '',
-    country: 'Egypt', // Default country
+
+    // Address info (dynamic array) - start with one empty address
+    addresses: [
+      {
+        address_title: '',
+        address_line1: '',
+        address_line2: '',
+        city: '',
+        state: '',
+        pincode: '',
+        country: 'Egypt',
+        latitude: '',
+        longitude: '',
+      }
+    ] as AddressFormData[],
   });
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -90,6 +109,91 @@ export function NewCustomerPage() {
         contacts: prev.contacts.filter((_, i) => i !== index)
       }));
     }
+  };
+
+  const handleAddressChange = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      addresses: prev.addresses.map((address, i) =>
+        i === index ? { ...address, [field]: value } : address
+      )
+    }));
+  };
+
+  const addAddress = () => {
+    setFormData(prev => ({
+      ...prev,
+      addresses: [
+        ...prev.addresses,
+        {
+          address_title: `${formData.customer_name || 'Customer'} - Address ${prev.addresses.length + 1}`,
+          address_line1: '',
+          address_line2: '',
+          city: '',
+          state: '',
+          pincode: '',
+          country: 'Egypt',
+          latitude: '',
+          longitude: '',
+        }
+      ]
+    }));
+  };
+
+  const removeAddress = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      addresses: prev.addresses.filter((_, i) => i !== index)
+    }));
+  };
+
+  const getCurrentLocation = (index: number) => {
+    if (!navigator.geolocation) {
+      notifications.show({
+        title: 'Error',
+        message: 'Geolocation is not supported by your browser',
+        color: 'red',
+        icon: <IconAlertCircle size={16} />,
+      });
+      return;
+    }
+
+    notifications.show({
+      title: 'Getting Location',
+      message: 'Please allow location access...',
+      color: 'blue',
+      icon: <IconLocation size={16} />,
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        handleAddressChange(index, 'latitude', latitude.toString());
+        handleAddressChange(index, 'longitude', longitude.toString());
+        notifications.show({
+          title: 'Location Retrieved',
+          message: `Location set: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+          color: 'green',
+          icon: <IconCheck size={16} />,
+        });
+      },
+      (error) => {
+        let errorMessage = 'Failed to get location';
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = 'Location access denied by user';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = 'Location information unavailable';
+        } else if (error.code === error.TIMEOUT) {
+          errorMessage = 'Location request timed out';
+        }
+        notifications.show({
+          title: 'Location Error',
+          message: errorMessage,
+          color: 'red',
+          icon: <IconAlertCircle size={16} />,
+        });
+      }
+    );
   };
 
   const handleSubmit = async () => {
@@ -140,31 +244,37 @@ export function NewCustomerPage() {
         }
       }
 
-      // Create primary address if address provided
-      if (formData.address_line1 || formData.city) {
-        const addressData = {
-          doctype: 'Address',
-          address_title: `${formData.customer_name} - Primary Address`,
-          address_line1: formData.address_line1 || '',
-          address_line2: formData.address_line2 || '',
-          city: formData.city || '',
-          state: formData.state || '',
-          pincode: formData.pincode || '',
-          country: formData.country || 'Egypt',
-          is_primary_address: 1,
-          is_shipping_address: 1,
-          links: [{
-            link_doctype: 'Customer',
-            link_name: customer.name
-          }]
-        };
+      // Create addresses if provided
+      for (let i = 0; i < formData.addresses.length; i++) {
+        const address = formData.addresses[i];
+        if (address.address_line1 || address.city) {
+          const addressData = {
+            doctype: 'Address',
+            address_title: address.address_title || `${formData.customer_name} - Address ${i + 1}`,
+            address_line1: address.address_line1 || '',
+            address_line2: address.address_line2 || '',
+            city: address.city || '',
+            state: address.state || '',
+            pincode: address.pincode || '',
+            country: address.country || 'Egypt',
+            latitude: address.latitude || '',
+            longitude: address.longitude || '',
+            is_primary_address: i === 0 ? 1 : 0,
+            is_shipping_address: 1,
+            links: [{
+              link_doctype: 'Customer',
+              link_name: customer.name
+            }]
+          };
 
-        await apiService.createAddress(addressData);
-        console.log('Address created');
+          await apiService.createAddress(addressData);
+          console.log(`Address ${i + 1} created`);
+        }
       }
 
-      // Set the created customer in the cart store (use first contact as primary)
+      // Set the created customer in the cart store (use first contact and address as primary)
       const primaryContact = formData.contacts[0] || {};
+      const primaryAddress = formData.addresses[0] || {};
       setCustomer({
         name: customer.name,
         customer_name: customer.customer_name,
@@ -172,12 +282,12 @@ export function NewCustomerPage() {
         email_id: primaryContact.email_id,
         mobile_no: primaryContact.mobile_no,
         phone: primaryContact.phone,
-        address_line1: formData.address_line1,
-        address_line2: formData.address_line2,
-        city: formData.city,
-        state: formData.state,
-        pincode: formData.pincode,
-        country: formData.country,
+        address_line1: primaryAddress.address_line1,
+        address_line2: primaryAddress.address_line2,
+        city: primaryAddress.city,
+        state: primaryAddress.state,
+        pincode: primaryAddress.pincode,
+        country: primaryAddress.country,
       });
 
       notifications.show({
@@ -366,76 +476,152 @@ export function NewCustomerPage() {
                 Add Another Contact
               </Button>
 
-              {/* Address Information */}
-              <Card style={{
-                background: 'white',
-                borderRadius: '12px',
-                padding: '24px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-                border: '1px solid #e9ecef'
-              }}>
-                <Group mb="md">
-                  <IconMapPin size={20} color="#667eea" />
-                  <Text fw={600} size="lg" c="#495057">Address Information</Text>
-                </Group>
-                
-                <Grid>
-                  <Grid.Col span={12}>
-                    <TextInput
-                      label="Address Line 1"
-                      placeholder="Street address, building number"
-                      value={formData.address_line1}
-                      onChange={(e) => handleInputChange('address_line1', e.target.value)}
-                      size="md"
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={12}>
-                    <TextInput
-                      label="Address Line 2"
-                      placeholder="Apartment, suite, unit, etc."
-                      value={formData.address_line2}
-                      onChange={(e) => handleInputChange('address_line2', e.target.value)}
-                      size="md"
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, md: 4 }}>
-                    <TextInput
-                      label="City"
-                      placeholder="City"
-                      value={formData.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                      size="md"
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, md: 4 }}>
-                    <TextInput
-                      label="State/Province"
-                      placeholder="State or Province"
-                      value={formData.state}
-                      onChange={(e) => handleInputChange('state', e.target.value)}
-                      size="md"
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, md: 4 }}>
-                    <TextInput
-                      label="Postal Code"
-                      placeholder="12345"
-                      value={formData.pincode}
-                      onChange={(e) => handleInputChange('pincode', e.target.value)}
-                      size="md"
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={12}>
-                    <TextInput
-                      label="Country"
-                      placeholder="Country"
-                      value={formData.country}
-                      onChange={(e) => handleInputChange('country', e.target.value)}
-                      size="md"
-                    />
-                  </Grid.Col>
-                </Grid>
-              </Card>
+                            {/* Address Information */}
+              {formData.addresses.map((address, index) => (
+                <Card
+                  key={index}
+                  style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
+                    border: '1px solid #e9ecef'
+                  }}
+                >
+                  <Group mb="md" justify="space-between">
+                    <Group>
+                      <IconMapPin size={20} color="#667eea" />
+                      <Text fw={600} size="lg" c="#495057">
+                        {index === 0 ? 'Primary Address' : `Address ${index + 1}`}                                                                              
+                      </Text>
+                      {index === 0 && (
+                        <Badge color="blue" size="sm">Primary</Badge>
+                      )}
+                    </Group>
+                    <ActionIcon
+                      color="red"
+                      variant="light"
+                      onClick={() => removeAddress(index)}
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+
+                  <Grid>
+                    <Grid.Col span={12}>
+                      <TextInput
+                        label="Address Title"
+                        placeholder="Address title"
+                        value={address.address_title}
+                        onChange={(e) => handleAddressChange(index, 'address_title', e.target.value)}                                                           
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={12}>
+                      <TextInput
+                        label="Address Line 1"
+                        placeholder="Street address, building number"
+                        value={address.address_line1}
+                        onChange={(e) => handleAddressChange(index, 'address_line1', e.target.value)}                                                           
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={12}>
+                      <TextInput
+                        label="Address Line 2"
+                        placeholder="Apartment, suite, unit, etc."
+                        value={address.address_line2}
+                        onChange={(e) => handleAddressChange(index, 'address_line2', e.target.value)}                                                           
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 4 }}>
+                      <TextInput
+                        label="City"
+                        placeholder="City"
+                        value={address.city}
+                        onChange={(e) => handleAddressChange(index, 'city', e.target.value)}                                                                    
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 4 }}>
+                      <TextInput
+                        label="State/Province"
+                        placeholder="State or Province"
+                        value={address.state}
+                        onChange={(e) => handleAddressChange(index, 'state', e.target.value)}                                                                   
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 4 }}>
+                      <TextInput
+                        label="Postal Code"
+                        placeholder="12345"
+                        value={address.pincode}
+                        onChange={(e) => handleAddressChange(index, 'pincode', e.target.value)}                                                                 
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={12}>
+                      <TextInput
+                        label="Country"
+                        placeholder="Country"
+                        value={address.country}
+                        onChange={(e) => handleAddressChange(index, 'country', e.target.value)}                                                                 
+                        size="md"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={12}>
+                      <Divider my="md" label="Location Coordinates" labelPosition="center" />
+                    </Grid.Col>
+                                         <Grid.Col span={12}>
+                       <Group gap="sm" align="flex-end">
+                         <TextInput
+                           label="Latitude"
+                           placeholder="e.g., 30.0444"
+                           value={address.latitude || ''}
+                           onChange={(e) => handleAddressChange(index, 'latitude', e.target.value)}
+                           size="md"
+                           style={{ flex: 1 }}
+                         />
+                         <TextInput
+                           label="Longitude"
+                           placeholder="e.g., 31.2357"
+                           value={address.longitude || ''}
+                           onChange={(e) => handleAddressChange(index, 'longitude', e.target.value)}
+                           size="md"
+                           style={{ flex: 1 }}
+                         />
+                         <Button
+                           onClick={() => getCurrentLocation(index)}
+                           variant="light"
+                           leftSection={<IconLocation size={16} />}
+                           style={{
+                             borderColor: '#667eea',
+                             color: '#667eea',
+                           }}
+                         >
+                           Get Location
+                         </Button>
+                       </Group>
+                     </Grid.Col>
+                  </Grid>
+                </Card>
+              ))}
+
+              {/* Add Address Button */}
+              <Button
+                onClick={addAddress}
+                variant="light"
+                leftSection={<IconPlus size={16} />}
+                style={{
+                  borderColor: '#667eea',
+                  color: '#667eea',
+                  borderRadius: '8px'
+                }}
+              >
+                Add Address
+              </Button>
 
             </Stack>
           </Grid.Col>
@@ -472,11 +658,9 @@ export function NewCustomerPage() {
                     <Text size="sm">{formData.contacts.length} contact(s) added</Text>
                   </div>
                   
-                  <div>
-                    <Text size="sm" c="dimmed">Address</Text>
-                    <Text size="sm">
-                      {formData.address_line1 ? `${formData.address_line1}, ${formData.city || ''}` : 'No address'}
-                    </Text>
+                                    <div>
+                    <Text size="sm" c="dimmed">Addresses</Text>
+                    <Text size="sm">{formData.addresses.length} address(es) added</Text>                                                                          
                   </div>
                 </Stack>
               </Card>

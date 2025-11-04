@@ -6,6 +6,8 @@ export interface PosProfileData {
   currency: string;
   item_groups: { item_group: string }[];
   customer_groups: { customer_group: string }[];
+  selling_price_list?: string;
+  price_list?: string;
   [key: string]: any;
 }
 
@@ -203,9 +205,38 @@ const deleteMethod = async <T>(endpoint: string): Promise<T> => {
 
 const getPosProfiles = async (): Promise<PosProfile[]> => get<PosProfile[]>(`resource/POS Profile?fields=${encodeURIComponent('["name", "company", "currency"]')}`);
 const getPosProfileDetails = async (profileName: string): Promise<PosProfileData> => get<PosProfileData>(`resource/POS Profile/${encodeURIComponent(profileName)}`);
-const getItems = async (itemGroups: string[]): Promise<Item[]> => {
+const getItems = async (itemGroups: string[], priceList?: string): Promise<Item[]> => {
   // First get the items
   const items = await get<Item[]>(`resource/Item?fields=${encodeURIComponent('["name", "item_name", "item_group", "stock_uom", "standard_rate"]')}&filters=${encodeURIComponent(JSON.stringify([["item_group", "in", itemGroups]]))}&limit_page_length=0`);
+  
+  console.log('Fetched items from API:', items.length);
+  // Log a sample item to debug price issues
+  if (items.length > 0) {
+    console.log('Sample item data:', {
+      name: items[0].name,
+      item_name: items[0].item_name,
+      standard_rate: items[0].standard_rate,
+      standard_rate_type: typeof items[0].standard_rate
+    });
+  }
+  
+  // Create a map for prices from Price List if provided
+  const priceMap = new Map<string, number>();
+  if (priceList) {
+    try {
+      console.log('Fetching prices from Price List:', priceList);
+      const itemPrices = await get<any[]>(`resource/Item Price?fields=${encodeURIComponent('["item_code", "price_list_rate"]')}&filters=${encodeURIComponent(JSON.stringify([["price_list", "=", priceList], ["item_code", "in", items.map(item => item.name)]]))}&limit_page_length=0`);
+      
+      itemPrices.forEach(ip => {
+        if (ip.price_list_rate && !isNaN(Number(ip.price_list_rate))) {
+          priceMap.set(ip.item_code, Number(ip.price_list_rate));
+        }
+      });
+      console.log(`Fetched ${priceMap.size} prices from Price List`);
+    } catch (error) {
+      console.warn('Could not fetch prices from Price List:', error);
+    }
+  }
   
   // Then get stock quantities from Bin doctype
   try {
@@ -217,18 +248,54 @@ const getItems = async (itemGroups: string[]): Promise<Item[]> => {
       stockMap.set(bin.item_code, (stockMap.get(bin.item_code) || 0) + bin.actual_qty);
     });
     
-    // Add actual_qty to items
-    return items.map(item => ({
-      ...item,
-      actual_qty: stockMap.get(item.name) || 0
-    }));
+    // Add actual_qty to items and ensure standard_rate is a number (not null/undefined)
+    // Use Price List rate if available, otherwise fall back to standard_rate
+    return items.map(item => {
+      let rate = item.standard_rate;
+      
+      // If we have a price from Price List, use it instead
+      if (priceMap.has(item.name)) {
+        rate = priceMap.get(item.name)!;
+        console.log(`Using Price List rate for ${item.name}: ${rate} (instead of standard_rate: ${item.standard_rate})`);
+      }
+      
+      // Handle null, undefined, or non-numeric values
+      const standardRate = (rate !== null && rate !== undefined && !isNaN(Number(rate))) ? Number(rate) : 0;
+      
+      if (standardRate === 0 && rate !== 0) {
+        console.warn(`Item ${item.name} (${item.item_name}) has invalid standard_rate:`, rate);
+      }
+      
+      return {
+        ...item,
+        standard_rate: standardRate,
+        actual_qty: stockMap.get(item.name) || 0
+      };
+    });
   } catch (error) {
     console.warn('Could not fetch stock quantities:', error);
-    // Return items with actual_qty as 0 if stock fetch fails
-    return items.map(item => ({
-      ...item,
-      actual_qty: 0
-    }));
+    // Return items with actual_qty as 0 if stock fetch fails, but still fix standard_rate
+    // Use Price List rate if available, otherwise fall back to standard_rate
+    return items.map(item => {
+      let rate = item.standard_rate;
+      
+      // If we have a price from Price List, use it instead
+      if (priceMap.has(item.name)) {
+        rate = priceMap.get(item.name)!;
+      }
+      
+      const standardRate = (rate !== null && rate !== undefined && !isNaN(Number(rate))) ? Number(rate) : 0;
+      
+      if (standardRate === 0 && rate !== 0) {
+        console.warn(`Item ${item.name} (${item.item_name}) has invalid standard_rate:`, rate);
+      }
+      
+      return {
+        ...item,
+        standard_rate: standardRate,
+        actual_qty: 0
+      };
+    });
   }
 };
 const getCustomers = async (customerGroups: string[]): Promise<Customer[]> => get<Customer[]>(`resource/Customer?fields=${encodeURIComponent('["name", "customer_name", "customer_group"]')}&filters=${encodeURIComponent(JSON.stringify([["customer_group", "in", customerGroups]]))}&limit_page_length=0`);

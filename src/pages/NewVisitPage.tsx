@@ -6,7 +6,6 @@ import { authService } from '../services/authService';
 import { notifications } from '@mantine/notifications';
 import {
   Title,
-  TextInput,
   Textarea,
   Button,
   Card,
@@ -20,8 +19,8 @@ import {
   Loader,
   ActionIcon,
   NumberInput,
-  DateInput,
 } from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
 import { IconCheck, IconAlertCircle, IconTrash, IconPlus, IconCalendar, IconUser, IconMessage, IconPackage } from '@tabler/icons-react';
 
 export function NewVisitPage() {
@@ -47,7 +46,7 @@ export function NewVisitPage() {
     // Load customers
     if (posProfile) {
       setLoadingCustomers(true);
-      const customerGroups = posProfile.customer_groups.map(g => g.customer_group);
+      const customerGroups = posProfile.customer_groups.map((g: { customer_group: string }) => g.customer_group);
       apiService.getCustomers(customerGroups)
         .then(data => {
           setCustomers(data);
@@ -62,7 +61,7 @@ export function NewVisitPage() {
     // Load items
     if (posProfile) {
       setLoadingItems(true);
-      const itemGroups = posProfile.item_groups.map(g => g.item_group);
+      const itemGroups = posProfile.item_groups.map((g: { item_group: string }) => g.item_group);
       const priceList = posProfile.selling_price_list || posProfile.price_list;
       apiService.getItems(itemGroups, priceList)
         .then(data => {
@@ -77,16 +76,16 @@ export function NewVisitPage() {
   }, [posProfile]);
 
   const handleSampleChange = (tempId: string, field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev: typeof formData) => ({
       ...prev,
-      samples: prev.samples.map(sample =>
+      samples: prev.samples.map((sample: typeof formData.samples[0]) =>
         sample.tempId === tempId ? { ...sample, [field]: value } : sample
       )
     }));
   };
 
   const addSample = () => {
-    setFormData(prev => ({
+    setFormData((prev: typeof formData) => ({
       ...prev,
       samples: [
         ...prev.samples,
@@ -100,9 +99,9 @@ export function NewVisitPage() {
   };
 
   const removeSample = (tempId: string) => {
-    setFormData(prev => ({
+    setFormData((prev: typeof formData) => ({
       ...prev,
-      samples: prev.samples.filter(s => s.tempId !== tempId)
+      samples: prev.samples.filter((s: typeof formData.samples[0]) => s.tempId !== tempId)
     }));
   };
 
@@ -129,7 +128,7 @@ export function NewVisitPage() {
 
     setIsLoading(true);
     try {
-      const selectedCustomer = customers.find(c => c.name === formData.customer);
+      const selectedCustomer = customers.find((c: Customer) => c.name === formData.customer);
       
       // Create visit
       const visitData: Visit = {
@@ -140,10 +139,10 @@ export function NewVisitPage() {
         customer_feedback: formData.customer_feedback || '',
         seller: seller,
         status: 'Completed',
-        samples: formData.samples.filter(s => s.item_code && s.qty > 0).map(s => ({
+        samples: formData.samples.filter((s: typeof formData.samples[0]) => s.item_code && s.qty > 0).map((s: typeof formData.samples[0]) => ({
           item_code: s.item_code,
           qty: s.qty,
-          uom: items.find(i => i.name === s.item_code)?.stock_uom || 'Nos',
+          uom: items.find((i: Item) => i.name === s.item_code)?.stock_uom || 'Nos',
         })),
       };
 
@@ -151,7 +150,7 @@ export function NewVisitPage() {
       console.log('Visit created:', visit);
 
       // If samples were provided, create stock entry
-      if (formData.samples.filter(s => s.item_code && s.qty > 0).length > 0 && posProfile?.company) {
+      if (formData.samples.filter((s: typeof formData.samples[0]) => s.item_code && s.qty > 0).length > 0 && posProfile?.company) {
         try {
           // Get or create warehouse with seller name
           const warehouseName = seller; // Warehouse name is the seller name
@@ -163,10 +162,10 @@ export function NewVisitPage() {
             stock_entry_type: 'Material Transfer',
             from_warehouse: posProfile.warehouse || warehouse,
             to_warehouse: warehouse,
-            items: formData.samples
-              .filter(s => s.item_code && s.qty > 0)
-              .map(s => {
-                const item = items.find(i => i.name === s.item_code);
+                          items: formData.samples
+                .filter((s: typeof formData.samples[0]) => s.item_code && s.qty > 0)
+              .map((s: typeof formData.samples[0]) => {
+                const item = items.find((i: Item) => i.name === s.item_code);
                 return {
                   item_code: s.item_code,
                   qty: s.qty,
@@ -215,7 +214,7 @@ export function NewVisitPage() {
     }
   };
 
-  const selectedCustomer = customers.find(c => c.name === formData.customer);
+  const selectedCustomer = customers.find((c: Customer) => c.name === formData.customer);
 
   return (
     <div style={{
@@ -269,8 +268,8 @@ export function NewVisitPage() {
                       label="Customer"
                       placeholder="Select customer"
                       value={formData.customer}
-                      onChange={(value) => setFormData(prev => ({ ...prev, customer: value || '' }))}
-                      data={customers.map(c => ({ value: c.name, label: c.customer_name }))}
+                      onChange={(value) => setFormData((prev: typeof formData) => ({ ...prev, customer: value || '' }))}
+                      data={customers.map((c: Customer) => ({ value: c.name, label: c.customer_name }))}
                       searchable
                       required
                       size="md"
@@ -279,10 +278,10 @@ export function NewVisitPage() {
                     />
                   </Grid.Col>
                   <Grid.Col span={{ base: 12, md: 6 }}>
-                    <DateInput
+                    <DatePickerInput
                       label="Visit Date"
                       value={new Date(formData.visit_date)}
-                      onChange={(date) => setFormData(prev => ({ 
+                      onChange={(date: Date | null) => setFormData((prev: typeof formData) => ({ 
                         ...prev, 
                         visit_date: date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0] 
                       }))}
@@ -311,7 +310,7 @@ export function NewVisitPage() {
                   label="Salesman Comments"
                   placeholder="Enter your comments about this visit..."
                   value={formData.visit_comments}
-                  onChange={(e) => setFormData(prev => ({ ...prev, visit_comments: e.target.value }))}
+                  onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, visit_comments: e.target.value }))}
                   minRows={4}
                   size="md"
                 />
@@ -334,7 +333,7 @@ export function NewVisitPage() {
                   label="Customer Feedback"
                   placeholder="Enter customer feedback..."
                   value={formData.customer_feedback}
-                  onChange={(e) => setFormData(prev => ({ ...prev, customer_feedback: e.target.value }))}
+                  onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, customer_feedback: e.target.value }))}
                   minRows={4}
                   size="md"
                 />
@@ -382,8 +381,8 @@ export function NewVisitPage() {
                                 label="Item"
                                 placeholder="Select item"
                                 value={sample.item_code}
-                                onChange={(value) => handleSampleChange(sample.tempId, 'item_code', value || '')}
-                                data={items.map(item => ({ 
+                                                                 onChange={(value: string | null) => handleSampleChange(sample.tempId, 'item_code', value || '')}
+                                data={items.map((item: Item) => ({ 
                                   value: item.name, 
                                   label: `${item.item_name} (${item.name})` 
                                 }))}
@@ -454,7 +453,7 @@ export function NewVisitPage() {
 
                   <div>
                     <Text size="sm" c="dimmed">Samples</Text>
-                    <Text size="sm">{formData.samples.filter(s => s.item_code && s.qty > 0).length} item(s)</Text>
+                    <Text size="sm">{formData.samples.filter((s: typeof formData.samples[0]) => s.item_code && s.qty > 0).length} item(s)</Text>
                   </div>
                 </Stack>
               </Card>

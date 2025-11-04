@@ -20,7 +20,7 @@ import {
   ActionIcon,
   Center
 } from '@mantine/core';
-import { IconUserEdit, IconMail, IconPhone, IconMapPin, IconCheck, IconAlertCircle, IconTrash, IconPlus } from '@tabler/icons-react';
+import { IconUserEdit, IconMail, IconPhone, IconMapPin, IconCheck, IconAlertCircle, IconTrash, IconPlus, IconLocation } from '@tabler/icons-react';
 
 interface ContactFormData {
   id?: string;
@@ -40,6 +40,8 @@ interface AddressFormData {
   state: string;
   pincode: string;
   country: string;
+  latitude?: string;
+  longitude?: string;
   isNew?: boolean;
 }
 
@@ -146,6 +148,8 @@ export function EditCustomerPage() {
                 state: a.state || '',
                 pincode: a.pincode || '',
                 country: a.country || 'Egypt',
+                latitude: (a as any).latitude || '',
+                longitude: (a as any).longitude || '',
                 isNew: false,
               }))
             : [],
@@ -214,15 +218,17 @@ export function EditCustomerPage() {
       ...prev,
       addresses: [
         ...prev.addresses,
-        {
+                {
           id: undefined,
-          address_title: `${formData.customer_name} - Address ${prev.addresses.length + 1}`,
+          address_title: `${formData.customer_name} - Address ${prev.addresses.length + 1}`,                                                                    
           address_line1: '',
           address_line2: '',
           city: '',
           state: '',
           pincode: '',
           country: 'Egypt',
+          latitude: '',
+          longitude: '',
           isNew: true,
         }
       ]
@@ -234,6 +240,55 @@ export function EditCustomerPage() {
       ...prev,
       addresses: prev.addresses.filter((_, i) => i !== index)
     }));
+  };
+
+  const getCurrentLocation = (index: number) => {
+    if (!navigator.geolocation) {
+      notifications.show({
+        title: 'Error',
+        message: 'Geolocation is not supported by your browser',
+        color: 'red',
+        icon: <IconAlertCircle size={16} />,
+      });
+      return;
+    }
+
+    notifications.show({
+      title: 'Getting Location',
+      message: 'Please allow location access...',
+      color: 'blue',
+      icon: <IconLocation size={16} />,
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        handleAddressChange(index, 'latitude', latitude.toString());
+        handleAddressChange(index, 'longitude', longitude.toString());
+        notifications.show({
+          title: 'Location Retrieved',
+          message: `Location set: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+          color: 'green',
+          icon: <IconCheck size={16} />,
+        });
+      },
+      (error) => {
+        let errorMessage = 'Failed to get location';
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = 'Location access denied by user';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = 'Location information unavailable';
+        } else if (error.code === error.TIMEOUT) {
+          errorMessage = 'Location request timed out';
+        }
+        notifications.show({
+          title: 'Location Error',
+          message: errorMessage,
+          color: 'red',
+          icon: <IconAlertCircle size={16} />,
+        });
+      }
+    );
   };
 
   const handleSubmit = async () => {
@@ -286,17 +341,19 @@ export function EditCustomerPage() {
         }
 
         if (address.isNew) {
-          // Create new address
+                    // Create new address
           const addressData = {
             doctype: 'Address',
-            address_title: address.address_title || `${formData.customer_name} - Address`,
+            address_title: address.address_title || `${formData.customer_name} - Address`,                                                                      
             address_line1: address.address_line1 || '',
             address_line2: address.address_line2 || '',
             city: address.city || '',
             state: address.state || '',
             pincode: address.pincode || '',
             country: address.country || 'Egypt',
-            is_primary_address: formData.addresses.indexOf(address) === 0 ? 1 : 0,
+            latitude: address.latitude || '',
+            longitude: address.longitude || '',
+            is_primary_address: formData.addresses.indexOf(address) === 0 ? 1 : 0,                                                                              
             is_shipping_address: 1,
             links: [{
               link_doctype: 'Customer',
@@ -306,16 +363,18 @@ export function EditCustomerPage() {
           await apiService.createAddress(addressData);
           console.log('Address created');
         } else if (address.id) {
-          // Update existing address
+                    // Update existing address
           const addressData = {
-            address_title: address.address_title || `${formData.customer_name} - Address`,
+            address_title: address.address_title || `${formData.customer_name} - Address`,                                                                      
             address_line1: address.address_line1 || '',
             address_line2: address.address_line2 || '',
             city: address.city || '',
             state: address.state || '',
             pincode: address.pincode || '',
             country: address.country || 'Egypt',
-            is_primary_address: formData.addresses.indexOf(address) === 0 ? 1 : 0,
+            latitude: address.latitude || '',
+            longitude: address.longitude || '',
+            is_primary_address: formData.addresses.indexOf(address) === 0 ? 1 : 0,                                                                              
           };
           await apiService.updateAddress(address.id, addressData);
           console.log('Address updated');
@@ -599,14 +658,48 @@ export function EditCustomerPage() {
                         size="md"
                       />
                     </Grid.Col>
-                    <Grid.Col span={12}>
+                                        <Grid.Col span={12}>
                       <TextInput
                         label="Country"
                         placeholder="Country"
                         value={address.country}
-                        onChange={(e) => handleAddressChange(index, 'country', e.target.value)}
+                        onChange={(e) => handleAddressChange(index, 'country', e.target.value)}                                                                 
                         size="md"
                       />
+                    </Grid.Col>
+                    <Grid.Col span={12}>
+                      <Divider my="md" label="Location Coordinates" labelPosition="center" />
+                    </Grid.Col>
+                    <Grid.Col span={12}>
+                      <Group gap="sm" align="flex-end">
+                        <TextInput
+                          label="Latitude"
+                          placeholder="e.g., 30.0444"
+                          value={address.latitude || ''}
+                          onChange={(e) => handleAddressChange(index, 'latitude', e.target.value)}
+                          size="md"
+                          style={{ flex: 1 }}
+                        />
+                        <TextInput
+                          label="Longitude"
+                          placeholder="e.g., 31.2357"
+                          value={address.longitude || ''}
+                          onChange={(e) => handleAddressChange(index, 'longitude', e.target.value)}
+                          size="md"
+                          style={{ flex: 1 }}
+                        />
+                        <Button
+                          onClick={() => getCurrentLocation(index)}
+                          variant="light"
+                          leftSection={<IconLocation size={16} />}
+                          style={{
+                            borderColor: '#667eea',
+                            color: '#667eea',
+                          }}
+                        >
+                          Get Location
+                        </Button>
+                      </Group>
                     </Grid.Col>
                   </Grid>
                 </Card>

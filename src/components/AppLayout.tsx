@@ -1,12 +1,28 @@
 import { AppShell, Group, Tabs, Title } from '@mantine/core';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { IconHome, IconShoppingCart, IconSettings, IconListDetails, IconReceipt } from '@tabler/icons-react';
+import { IconHome, IconShoppingCart, IconSettings, IconListDetails, IconReceipt, IconCalendar } from '@tabler/icons-react';
 
 export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const activeTab = location.pathname;
+  // Map pathname to active tab, handling sub-routes
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path === '/' || path.startsWith('/') && path !== '/catalog' && path !== '/cart' && path !== '/orders' && path !== '/service-plan' && path !== '/settings') {
+      // Handle sub-routes - check if it's a service plan related route
+      if (path.startsWith('/service-plan') || path.startsWith('/new-visit')) {
+        return '/service-plan';
+      }
+      // For other routes, return the base path or default to home
+      const basePaths = ['/catalog', '/cart', '/orders', '/settings'];
+      const matchedBase = basePaths.find(base => path.startsWith(base));
+      return matchedBase || '/';
+    }
+    return path;
+  };
+
+  const activeTab = getActiveTab();
 
   return (
       <AppShell
@@ -93,14 +109,20 @@ export function AppLayout() {
                 <span style={{ fontSize: '0.75rem' }}>Cart</span>
               </div>
             </Tabs.Tab>
-            <Tabs.Tab value="/orders">
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <Tabs.Tab value="/orders">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>                                                      
                 <IconReceipt size="1.2rem" />
                 <span style={{ fontSize: '0.75rem' }}>Orders</span>
               </div>
             </Tabs.Tab>
+            <Tabs.Tab value="/service-plan">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>                                                      
+                <IconCalendar size="1.2rem" />
+                <span style={{ fontSize: '0.75rem' }}>Visits</span>
+              </div>
+            </Tabs.Tab>
             <Tabs.Tab value="/settings">
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>                                                      
                 <IconSettings size="1.2rem" />
                 <span style={{ fontSize: '0.75rem' }}>Settings</span>
               </div>

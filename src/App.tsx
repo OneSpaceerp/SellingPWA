@@ -15,6 +15,8 @@ import { NewCustomerPage } from './pages/NewCustomerPage';
 import { EditCustomerPage } from './pages/EditCustomerPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { PaymentPage } from './pages/PaymentPage';
+import { ServicePlanPage } from './pages/ServicePlanPage';
+import { NewVisitPage } from './pages/NewVisitPage';
 import { useSettingsStore } from './store/settingsStore';
 import './App.css';
 
@@ -47,6 +49,8 @@ function App() {
         <Route path="/new-customer" element={<NewCustomerPage />} />
         <Route path="/edit-customer/:customerId" element={<EditCustomerPage />} />
         <Route path="/payment/:orderId" element={<PaymentPage />} />
+        <Route path="/service-plan" element={<ServicePlanPage />} />
+        <Route path="/new-visit" element={<NewVisitPage />} />
       </Route>
     </Routes>
   );

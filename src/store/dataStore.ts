@@ -8,7 +8,8 @@ interface DataState {
   error: string | null;
   syncData: (
     itemGroups: { item_group: string }[],
-    customerGroups: { customer_group: string }[]
+    customerGroups: { customer_group: string }[],
+    priceList?: string
   ) => Promise<void>;
 }
 
@@ -17,7 +18,7 @@ export const useDataStore = create<DataState>((set) => ({
   customers: [],
   isLoading: false,
   error: null,
-  syncData: async (itemGroups, customerGroups) => {
+  syncData: async (itemGroups, customerGroups, priceList) => {
     set({ isLoading: true, error: null });
     try {
       const itemGroupNames =
@@ -27,7 +28,7 @@ export const useDataStore = create<DataState>((set) => ({
 
       const [items, customers] = await Promise.all([
         itemGroupNames.length > 0
-          ? apiService.getItems(itemGroupNames)
+          ? apiService.getItems(itemGroupNames, priceList)
           : Promise.resolve([]),
         customerGroupNames.length > 0
           ? apiService.getCustomers(customerGroupNames)

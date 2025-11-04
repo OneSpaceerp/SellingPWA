@@ -9,6 +9,7 @@ import './i18n';
 // Import Mantine's core styles
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import '@mantine/dates/styles.css';
 import './index.css';
 
 const colorSchemeManager = localStorageColorSchemeManager({

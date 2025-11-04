@@ -459,6 +459,106 @@ const deleteAddress = async (addressId: string): Promise<any> => {
   return deleteMethod<any>(`resource/Address/${encodeURIComponent(addressId)}`);
 };
 
+export interface Visit {
+  name?: string;
+  customer: string;
+  customer_name?: string;
+  visit_date: string;
+  visit_comments?: string;
+  customer_feedback?: string;
+  status?: string;
+  seller?: string;
+  samples?: VisitSample[];
+}
+
+export interface VisitSample {
+  item_code: string;
+  item_name?: string;
+  qty: number;
+  uom?: string;
+}
+
+export interface ServicePlan {
+  name?: string;
+  customer: string;
+  customer_name?: string;
+  plan_date: string;
+  seller?: string;
+  visits?: Visit[];
+}
+
+const createVisit = async (visitData: Visit): Promise<any> => {
+  const payload = {
+    doctype: 'Visit',
+    ...visitData,
+  };
+  return post<any>('resource/Visit', payload);
+};
+
+const getVisits = async (seller?: string): Promise<Visit[]> => {
+  const filters = seller ? [['seller', '=', seller]] : [];
+  const fields = ['name', 'customer', 'customer_name', 'visit_date', 'visit_comments', 'customer_feedback', 'status', 'seller'];
+  return getList<Visit[]>('Visit', filters, fields);
+};
+
+const getVisit = async (visitId: string): Promise<Visit> => {
+  return get<Visit>(`resource/Visit/${encodeURIComponent(visitId)}`);
+};
+
+const updateVisit = async (visitId: string, visitData: Partial<Visit>): Promise<any> => {
+  const payload = { ...visitData, doctype: 'Visit' };
+  return put<any>(`resource/Visit/${encodeURIComponent(visitId)}`, payload);
+};
+
+const createServicePlan = async (planData: ServicePlan): Promise<any> => {
+  const payload = {
+    doctype: 'Service Plan',
+    ...planData,
+  };
+  return post<any>('resource/Service Plan', payload);
+};
+
+const getServicePlans = async (seller?: string): Promise<ServicePlan[]> => {
+  const filters = seller ? [['seller', '=', seller]] : [];
+  const fields = ['name', 'customer', 'customer_name', 'plan_date', 'seller'];
+  return getList<ServicePlan[]>('Service Plan', filters, fields);
+};
+
+const getServicePlan = async (planId: string): Promise<ServicePlan> => {
+  return get<ServicePlan>(`resource/Service Plan/${encodeURIComponent(planId)}`);
+};
+
+const getOrCreateWarehouse = async (warehouseName: string, company: string): Promise<string> => {
+  try {
+    // Try to get existing warehouse
+    const warehouse = await get<any>(`resource/Warehouse/${encodeURIComponent(warehouseName)}`);
+    return warehouse.name;
+  } catch (error) {
+    // Warehouse doesn't exist, create it
+    try {
+      const warehouseData = {
+        doctype: 'Warehouse',
+        warehouse_name: warehouseName,
+        company: company,
+        warehouse_type: 'Store',
+      };
+      const newWarehouse = await post<any>('resource/Warehouse', warehouseData);
+      return newWarehouse.name;
+    } catch (createError) {
+      console.error('Failed to create warehouse:', createError);
+      throw new Error(`Failed to create warehouse: ${warehouseName}`);
+    }
+  }
+};
+
+const createStockEntry = async (entryData: any): Promise<any> => {
+  const payload = {
+    doctype: 'Stock Entry',
+    ...entryData,
+  };
+  return post<any>('resource/Stock Entry', payload);
+};
+
 export const apiService = {
   getPosProfiles,
   getPosProfileDetails,
@@ -484,4 +584,13 @@ export const apiService = {
   updateAddress,
   deleteContact,
   deleteAddress,
+  createVisit,
+  getVisits,
+  getVisit,
+  updateVisit,
+  createServicePlan,
+  getServicePlans,
+  getServicePlan,
+  getOrCreateWarehouse,
+  createStockEntry,
 };

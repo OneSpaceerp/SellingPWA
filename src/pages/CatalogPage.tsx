@@ -25,7 +25,9 @@ export function CatalogPage() {
     if (posProfile) {
       setIsLoading(true);
       const itemGroups = posProfile.item_groups.map(g => g.item_group);
-      apiService.getItems(itemGroups)
+      // Get price list from POS Profile (could be selling_price_list or price_list)
+      const priceList = posProfile.selling_price_list || posProfile.price_list;
+      apiService.getItems(itemGroups, priceList)
         .then(data => {
           setItems(data);
           setIsLoading(false);
@@ -76,7 +78,7 @@ export function CatalogPage() {
       );
     }
     return (
-      <SimpleGrid cols={{ base: 1, sm: 1, md: 1, lg: 1 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0', padding: '0' }}>
+      <SimpleGrid cols={{ base: 1, sm: 1, md: 1, lg: 1 }} spacing={{ base: 'md', sm: 'lg' }} style={{ margin: '0.06rem', padding: '0.06rem' }}>
         {filteredItems.map((item) => (
           <Card 
             key={item.name}
@@ -190,8 +192,8 @@ export function CatalogPage() {
   };
 
   return (
-    <div style={{ 
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+    <div style={{
+      background: '#f8f9fa',
       minHeight: '100vh',
       padding: '0',
       width: '100%',
@@ -204,7 +206,8 @@ export function CatalogPage() {
         marginBottom: '24px',
         color: 'white',
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-        width: '100%'
+        width: '100%',
+        borderRadius: '16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>

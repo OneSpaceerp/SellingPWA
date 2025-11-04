@@ -32,8 +32,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         return;
       }
 
-      // Trigger data synchronization
-      await useDataStore.getState().syncData(profile.item_groups, profile.customer_groups);
+      // Trigger data synchronization with price list
+      const priceList = profile.selling_price_list || profile.price_list;
+      await useDataStore.getState().syncData(profile.item_groups, profile.customer_groups, priceList);
 
       set({
         posProfile: profile,

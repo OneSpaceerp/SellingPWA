@@ -117,7 +117,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         if (item.itemDiscountType === 'Percentage') {
           discount = (itemTotal * item.itemDiscountValue) / 100;
         } else {
-          discount = item.itemDiscountValue;
+          // For amount discounts, multiply by quantity (e.g., 20 EGP per item * 10 qty = 200 EGP total)
+          discount = item.itemDiscountValue * item.quantity;
         }
         return total + (itemTotal - discount);
       }

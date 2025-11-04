@@ -12,6 +12,7 @@ export function CartPage() {
   const grandTotal = useCartStore((state) => state.grandTotal);
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const updateRate = useCartStore((state) => state.updateRate);
   const setItemDiscount = useCartStore((state) => state.setItemDiscount);
   const setAdditionalDiscount = useCartStore((state) => state.setAdditionalDiscount);
   const additionalDiscountType = useCartStore((state) => state.additionalDiscountType);
@@ -249,19 +250,17 @@ export function CartPage() {
                       <Text size="sm" fw={500} mb="xs" c="dimmed">Price</Text>
                       <NumberInput
                         value={item.standard_rate}
+                        onChange={(value) => updateRate(item.name, value === '' ? item.standard_rate : Number(value))}
                         prefix={`${currency} `}
                         min={0}
                         step={0.01}
                         style={{ width: '140px' }}
                         size="sm"
-                        readOnly
                         styles={{
                           input: {
                             borderRadius: '8px',
                             border: '2px solid #e9ecef',
-                            fontWeight: '500',
-                            backgroundColor: '#f8f9fa',
-                            color: '#6c757d'
+                            fontWeight: '500'
                           }
                         }}
                       />
@@ -339,7 +338,8 @@ export function CartPage() {
                         if (item.itemDiscountType === 'Percentage') {
                           discount = (itemTotal * item.itemDiscountValue) / 100;
                         } else {
-                          discount = item.itemDiscountValue;
+                          // For amount discounts, multiply by quantity (e.g., 20 EGP per item * 10 qty = 200 EGP total)
+                          discount = item.itemDiscountValue * item.quantity;
                         }
                         return (itemTotal - discount).toFixed(2);
                       }

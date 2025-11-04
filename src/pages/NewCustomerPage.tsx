@@ -40,6 +40,7 @@ export function NewCustomerPage() {
   const { posProfile } = useSettingsStore();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     // Customer basic info
     customer_name: '',
@@ -148,6 +149,11 @@ export function NewCustomerPage() {
   };
 
   const getCurrentLocation = (index: number) => {
+    // Prevent multiple simultaneous requests
+    if (gettingLocation !== null) {
+      return;
+    }
+
     if (!navigator.geolocation) {
       notifications.show({
         title: 'Error',
@@ -158,11 +164,14 @@ export function NewCustomerPage() {
       return;
     }
 
+    setGettingLocation(index);
     notifications.show({
-      title: 'Getting Location',
-      message: 'Please allow location access...',
+      id: `location-${index}`,
+      title: 'Requesting Location Access',
+      message: 'Please allow location access in your browser',
       color: 'blue',
       icon: <IconLocation size={16} />,
+      autoClose: 5000,
     });
 
     navigator.geolocation.getCurrentPosition(
@@ -176,15 +185,16 @@ export function NewCustomerPage() {
           color: 'green',
           icon: <IconCheck size={16} />,
         });
+        setGettingLocation(null);
       },
       (error) => {
         let errorMessage = 'Failed to get location';
         if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = 'Location access denied by user';
+          errorMessage = 'Location access denied. Please enable location permissions in your browser settings and try again.';
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage = 'Location information unavailable';
+          errorMessage = 'Location information unavailable. Please check your device settings.';
         } else if (error.code === error.TIMEOUT) {
-          errorMessage = 'Location request timed out';
+          errorMessage = 'Location request timed out. Please try again.';
         }
         notifications.show({
           title: 'Location Error',
@@ -192,6 +202,12 @@ export function NewCustomerPage() {
           color: 'red',
           icon: <IconAlertCircle size={16} />,
         });
+        setGettingLocation(null);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
     );
   };
@@ -592,17 +608,19 @@ export function NewCustomerPage() {
                            size="md"
                            style={{ flex: 1 }}
                          />
-                         <Button
-                           onClick={() => getCurrentLocation(index)}
-                           variant="light"
-                           leftSection={<IconLocation size={16} />}
-                           style={{
-                             borderColor: '#667eea',
-                             color: '#667eea',
-                           }}
-                         >
-                           Get Location
-                         </Button>
+                                                   <Button
+                            onClick={() => getCurrentLocation(index)}
+                            variant="light"
+                            leftSection={gettingLocation === index ? <Loader size={16} /> : <IconLocation size={16} />}
+                            disabled={gettingLocation !== null}
+                            loading={gettingLocation === index}
+                            style={{
+                              borderColor: '#667eea',
+                              color: '#667eea',
+                            }}
+                          >
+                            {gettingLocation === index ? 'Getting Location...' : 'Get Location'}
+                          </Button>
                        </Group>
                      </Grid.Col>
                   </Grid>

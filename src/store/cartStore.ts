@@ -25,6 +25,7 @@ interface CartState {
   totalItems: () => number;
   subTotal: () => number;
   discountAmount: () => number;
+  totalDiscountAmount: () => number;
   grandTotal: () => number;
 }
 
@@ -134,6 +135,28 @@ export const useCartStore = create<CartState>((set, get) => ({
       return (sub * additionalDiscountValue) / 100;
     }
     return additionalDiscountValue;
+  },
+
+  totalDiscountAmount: () => {
+    const items = get().items;
+    
+    // Calculate original subtotal (without any discounts)
+    const originalSubTotal = items.reduce((total, item) => {
+      const price = item.standard_rate || 0;
+      return total + (price * item.quantity);
+    }, 0);
+    
+    // Get current subtotal (after item-level discounts)
+    const currentSubTotal = get().subTotal();
+    
+    // Item-level discount
+    const itemLevelDiscount = originalSubTotal - currentSubTotal;
+    
+    // Additional discount
+    const additionalDiscount = get().discountAmount();
+    
+    // Total discount
+    return itemLevelDiscount + additionalDiscount;
   },
 
   grandTotal: () => {

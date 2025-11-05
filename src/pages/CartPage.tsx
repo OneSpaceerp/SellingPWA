@@ -19,6 +19,7 @@ export function CartPage() {
   const additionalDiscountValue = useCartStore((state) => state.additionalDiscountValue);
   const subTotal = useCartStore((state) => state.subTotal);
   const discountAmount = useCartStore((state) => state.discountAmount);
+  const totalDiscountAmount = useCartStore((state) => state.totalDiscountAmount);
   const clearCart = useCartStore((state) => state.clearCart);
 
   const currency = useSettingsStore((state) => state.currency);
@@ -432,7 +433,7 @@ export function CartPage() {
           <div>
             <Text size="sm" fw={500} mb="xs" c="dimmed">Discount</Text>
             <Text fw={600} size="lg" style={{ color: '#dc3545' }}>
-              -{currency} {discountAmount().toFixed(2)}
+              -{currency} {totalDiscountAmount().toFixed(2)}
             </Text>
           </div>
         </Group>

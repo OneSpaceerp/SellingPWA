@@ -18,7 +18,6 @@ export function CartPage() {
   const additionalDiscountType = useCartStore((state) => state.additionalDiscountType);
   const additionalDiscountValue = useCartStore((state) => state.additionalDiscountValue);
   const subTotal = useCartStore((state) => state.subTotal);
-  const discountAmount = useCartStore((state) => state.discountAmount);
   const totalDiscountAmount = useCartStore((state) => state.totalDiscountAmount);
   const clearCart = useCartStore((state) => state.clearCart);
 

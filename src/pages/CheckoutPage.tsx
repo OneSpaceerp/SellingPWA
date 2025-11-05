@@ -9,7 +9,7 @@ import { IconAlertCircle, IconCircleCheck, IconBuildingWarehouse } from '@tabler
 import { Link, useNavigate } from 'react-router-dom';
 
 export function CheckoutPage() {
-  const { items, customer, grandTotal, clearCart, subTotal, discountAmount, additionalDiscountType, additionalDiscountValue, setAdditionalDiscount } = useCartStore();
+  const { items, customer, grandTotal, clearCart, subTotal, totalDiscountAmount, additionalDiscountType, additionalDiscountValue, setAdditionalDiscount } = useCartStore();
   const { currency, posProfile } = useSettingsStore();
   const navigate = useNavigate();
 
@@ -101,7 +101,7 @@ export function CheckoutPage() {
         <Group justify="space-between" mt="sm"><Text>Warehouse:</Text><Badge leftSection={<IconBuildingWarehouse size={14}/>} variant="light">{warehouse || 'Not Set'}</Badge></Group>
         <Divider my="sm" />
         <Group justify="space-between"><Text>Sub-total:</Text><Text>{currency} {subTotal().toFixed(2)}</Text></Group>
-        <Group justify="space-between"><Text c="red">Discount:</Text><Text c="red">{currency} -{discountAmount().toFixed(2)}</Text></Group>
+        <Group justify="space-between"><Text c="red">Discount:</Text><Text c="red">{currency} -{totalDiscountAmount().toFixed(2)}</Text></Group>
         <Divider my="sm" />
         <Group justify="space-between"><Text>Grand Total:</Text><Text fw={700} size="xl" data-testid="grand-total">{currency} {grandTotal().toFixed(2)}</Text></Group>
       </Paper>
